@@ -10,16 +10,32 @@ instance Show Polynomial where
        else if x == 0     
                then show (Poly xs)
                else " " ++ show x ++ " x^" ++ show (length xss - 1) ++ " +" ++ show (Poly xs)
-    
+
+compact :: Polynomial -> Polynomial
+compact (Poly []) = Poly []
+compact (Poly al) = 
+  Poly (f al)
+  where
+    f :: [Double] -> [Double]
+    f [] = [0]
+    f l@(a:as) = 
+      if a == 0.0
+        then f as
+        else l
+
 (<+>) :: Polynomial -> Polynomial -> Polynomial
 (Poly a) <+> (Poly b)
   | length a > length b = 
       let b' = (replicate (length a - length b) 0) ++ b
-      in  Poly (zipWith (+) a b')  
+      in  compact $ Poly (zipWith (+) a b')  
   | length a < length b =
       let a' = (replicate (length b - length a) 0) ++ a  
-      in  Poly (zipWith (+) a' b)    
-  | otherwise = Poly (zipWith (+) a b)
+      in  compact $ Poly (zipWith (+) a' b)    
+  | otherwise = compact $ Poly (zipWith (+) a b)
+
+(<->) :: Polynomial -> Polynomial -> Polynomial
+pa <-> (Poly b) = 
+  pa <+> (Poly (map ((-1)*) b))
 
 testpoly :: Polynomial
 testpoly = Poly [3,0,5]
@@ -39,9 +55,28 @@ _ <*> (Poly []) = Poly []
       let res = (map (e*) al) ++ (replicate d 0)
       in  Poly res
 
-polydiv :: Polynomial -> Polynomial -> Polynomial
-(Poly a) `polydiv` (Poly b) = undefined
+leadingTermDeg :: Polynomial -> Int
+leadingTermDeg (Poly al) = length al - 1
 
+isZeroPoly :: Polynomial -> Bool
+isZeroPoly (Poly []) = False
+isZeroPoly (Poly al) = and (map (==0.0) al)
+
+polydiv :: Polynomial -> Polynomial -> (Polynomial, Polynomial)
+(Poly []) `polydiv` _ = error "Invalid dividend polynomial!"
+_ `polydiv` (Poly []) = error "Invalid divisor polynomial!"
+pa@(Poly (a:as)) `polydiv` pb@(Poly (b:bs)) = 
+  if isZeroPoly pa
+    then ((Poly [0]), (Poly [0]))
+    else if (leadingTermDeg pa) < (leadingTermDeg pb)
+           then ((Poly [0]), pa)
+           else let deg_diff = leadingTermDeg pa - leadingTermDeg pb
+                    current_quo = Poly ((a / b) : (replicate deg_diff 0))
+                    current_sub = pb <*> current_quo
+                    current_rem = pa <-> current_sub
+                    (next_quo, final_rem) = current_rem `polydiv` pb
+                in  (current_sub <+> next_quo, final_rem)
 
 infixl 6 <+>
+infixl 6 <->
 infixl 7 <*>

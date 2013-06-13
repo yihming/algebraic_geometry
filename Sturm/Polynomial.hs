@@ -96,3 +96,23 @@ pa@(Poly (a:as)) `polydiv` pb@(Poly (b:bs)) =
 infixl 6 <+>
 infixl 6 <->
 infixl 7 <*>
+
+firstDerivative :: Polynomial -> Polynomial
+firstDerivative (Poly []) = Poly []
+firstDerivative (Poly as) =
+  if length as == 1
+    then Poly [0]
+    else Poly (f as)
+  where
+    f :: [Double] -> [Double]
+    f as@(e:el) =
+      if length as == 1
+        then []
+        else let deg = length as - 1
+             in  (e * (fromIntegral deg)):(f el)
+
+getValue :: Polynomial -> Double -> Double
+getValue (Poly []) _ = 0
+getValue (Poly as@(e:el)) n =
+  let deg = length as - 1
+  in  e * n^deg + (getValue (Poly el) n)

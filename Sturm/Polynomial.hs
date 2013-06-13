@@ -22,10 +22,22 @@ instance Show Polynomial where
   | otherwise = Poly (zipWith (+) a b)
 
 testpoly :: Polynomial
-testpoly = Poly [1.2, 3.0, 0, 0]
+testpoly = Poly [3,0,5]
+
+tp :: Polynomial
+tp = Poly [4,4]
 
 (<*>) :: Polynomial -> Polynomial -> Polynomial
-(Poly a) <*> (Poly b) = undefined
+(Poly []) <*> _ = Poly []
+_ <*> (Poly []) = Poly []
+(Poly as) <*> (Poly bl@(b:bs)) =
+  let degree = length bl - 1 
+  in (f as b degree) <+> ((Poly as) <*> (Poly bs))
+  where
+    f :: [Double] -> Double -> Int -> Polynomial
+    f al e d = 
+      let res = (map (e*) al) ++ (replicate d 0)
+      in  Poly res
 
 polydiv :: Polynomial -> Polynomial -> Polynomial
 (Poly a) `polydiv` (Poly b) = undefined

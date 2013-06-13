@@ -28,6 +28,11 @@ instance Show Polynomial where
                      0 -> " - " ++ show (-e)
                      _ -> " - " ++ show (-e) ++ " x^" ++ show (length l - 1) ++ f el
 
+instance Eq Polynomial where
+  (Poly []) == (Poly []) = True
+  (Poly (a:as)) == (Poly (b:bs)) = 
+    a == b && (Poly as) == (Poly bs)
+
 compact :: Polynomial -> Polynomial
 compact (Poly []) = Poly []
 compact (Poly al) = 

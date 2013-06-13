@@ -6,10 +6,27 @@ instance Show Polynomial where
   show (Poly []) = ""
   show (Poly xss@(x:xs)) = 
     if length xss == 1
-       then " " ++ show x
-       else if x == 0     
-               then show (Poly xs)
-               else " " ++ show x ++ " x^" ++ show (length xss - 1) ++ " +" ++ show (Poly xs)
+      then if x < 0
+             then " - " ++ show (-x)
+             else show x
+      else if x == 0
+             then show (Poly xs)
+             else show x ++ " x^" ++ show (length xss - 1) ++ f xs
+    where
+      f :: [Double] -> String
+      f [] = ""
+      f l@(e:el) =
+        if e == 0
+          then f el
+          else if e > 0
+                 then 
+                   case (length l - 1) of
+                     0 -> " + " ++ show e
+                     _ -> " + " ++ show e ++ " x^" ++ show (length l - 1) ++ f el
+                 else 
+                   case (length l - 1) of
+                     0 -> " - " ++ show (-e)
+                     _ -> " - " ++ show (-e) ++ " x^" ++ show (length l - 1) ++ f el
 
 compact :: Polynomial -> Polynomial
 compact (Poly []) = Poly []
@@ -36,12 +53,6 @@ compact (Poly al) =
 (<->) :: Polynomial -> Polynomial -> Polynomial
 pa <-> (Poly b) = 
   pa <+> (Poly (map ((-1)*) b))
-
-testpoly :: Polynomial
-testpoly = Poly [3,0,5]
-
-tp :: Polynomial
-tp = Poly [4,4]
 
 (<*>) :: Polynomial -> Polynomial -> Polynomial
 (Poly []) <*> _ = Poly []
@@ -75,7 +86,7 @@ pa@(Poly (a:as)) `polydiv` pb@(Poly (b:bs)) =
                     current_sub = pb <*> current_quo
                     current_rem = pa <-> current_sub
                     (next_quo, final_rem) = current_rem `polydiv` pb
-                in  (current_sub <+> next_quo, final_rem)
+                in  (current_quo <+> next_quo, final_rem)
 
 infixl 6 <+>
 infixl 6 <->

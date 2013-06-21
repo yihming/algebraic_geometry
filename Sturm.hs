@@ -1,6 +1,6 @@
 module Sturm where
 
-import Polynomial
+import Polynomial.Univariate
 
 
 test :: IO ()

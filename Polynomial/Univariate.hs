@@ -1,4 +1,4 @@
-module Polynomial where
+module Polynomial.Univariate where
 
 data Polynomial = Poly [Double]
 

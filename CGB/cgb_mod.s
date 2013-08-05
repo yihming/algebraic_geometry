@@ -667,7 +667,7 @@ static proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
 }
 
 
-proc cgb_mod(ideal Polys, ideal Equ, list DisEqu, list Vars, list Paras, list Aux, RingAll, RingVar)
+proc cgb_mod(ideal Polys, ideal Equ, list DisEqu, list Vars, list Paras, list Aux, RingAll, RingVar, link out)
 {
   list Variables = Vars;
   list Parameters = Paras;
@@ -684,6 +684,7 @@ proc cgb_mod(ideal Polys, ideal Equ, list DisEqu, list Vars, list Paras, list Au
 
   ideal G = cgb_mod_main(MPolys, Equ, DisEqu);
 
+/*
   print(newline+"number of checks: "+newline);
   print("trivial checks: "+string(Checks[2]));
   print("0-dim checks: "+string(Checks[3]));
@@ -691,7 +692,16 @@ proc cgb_mod(ideal Polys, ideal Equ, list DisEqu, list Vars, list Paras, list Au
   print("i-checks: "+string(Checks[5]));
   print("general checks: "+string(Checks[6]));
   print("total checks: "+string(Checks[1])+newline);
+*/
 
+  fprintf(out, "%snumber of checkes: %s", newline, newline) ;
+  fprintf(out, "trivial checks: %s", string(Checks[2]))	    ;
+  fprintf(out, "0-dim checks: %s", string(Checks[3]))	    ;
+  fprintf(out, "c-checks: %s", string(Checks[4]))	    ;
+  fprintf(out, "i-checks: %s", string(Checks[5]))	    ;
+  fprintf(out, "general checks: %s", string(Checks[6]))	    ;
+  fprintf(out, "total checks: %s%s", string(Checks[1]), newline) ;
+	
   keepring(RingAll);
   return(G, Modcgs);
 }

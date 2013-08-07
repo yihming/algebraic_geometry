@@ -1,7 +1,7 @@
 LIB "poly.lib";
 LIB "qhmoduli.lib";
 
-static proc S_Poly(poly p1, poly p2) {
+proc S_Poly(poly p1, poly p2) {
     poly m1, m2;
     poly s;
 
@@ -13,30 +13,29 @@ static proc S_Poly(poly p1, poly p2) {
     return(s);
 }
 
-static proc Poly_Multi_Division(poly p, list basis) {
+proc Poly_Multi_Division(poly p, list basis) {
     poly rem;
     list q;
     poly m;
-    int i, j, flag;
+    int i, j, division_occur;
 
-    for (i = 1; i <= size(basis); ++i) {
+    for (i = 1; i <= size(basis); i = i + 1) {
 	q = insert(q, 0);
     }
 
-    flag = 0;
-
     while (p != 0) {
-	for (i = 1; i <= size(basis); ++i) {
+	division_occur = 0;
+	for (i = 1; i <= size(basis); i = i + 1) {
 	    if (lead(p) / lead(basis[i]) != 0) {
 	        m = lead(p) / lead(basis[i]);
 	        q[i] = q[i] + m;
 		p = p - m * basis[i];
-	        flag = 1;
+	        division_occur = 1;
 		break;
 	    }
 	}
 
-	if (!flag) {
+	if (!division_occur) {
 	    rem = rem + lead(p);
 	    p = p - lead(p);
 	}

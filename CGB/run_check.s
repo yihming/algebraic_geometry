@@ -7,9 +7,11 @@ poly f2 = 2x + 2yc + d;
 poly f3 = x2 + 2xyc + xd + y2b;
 
 list g;
-g = insert(g, f1);
-g = insert(g, f2);
-g = insert(g, f3);
+g = insert(g, f1, size(g));
+g = insert(g, f2, size(g));
+g = insert(g, f3, size(g));
 
 poly s1 = S_Poly(f1, f2);
+poly rem;
+list q;
 (rem, q) = Poly_Multi_Division(s1, g);

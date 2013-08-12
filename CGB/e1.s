@@ -1,4 +1,3 @@
-
 //used by timer
 system("--ticks-per-sec",1000);
 
@@ -13,7 +12,6 @@ open(out);
 //auxillary variables. By using "u,v", the algorithm can perform module operators in polynomial rings.
 ring RingVar=(0, a, b, c, d),(u, v, x, y), lp;
 ring RingAll=0,(u,v, x, y, a, b, c, d), lp;
-
 //ideal
 ideal polys=2xc + 2yb, 2x + 2yc + d, x2 + 2xyc + y2b + xd ;
 
@@ -37,6 +35,7 @@ list Modcgs;
 //if you need "b<>0" at the beginning, then use "list(b)" instead of "list()".
 G, Modcgs = cgb_mod(polys, ideal(), list(), vars, paras, aux, RingAll, RingVar, out);
 
+	
 //time
 //print("time: "+string(rtimer-aaa));
 fprintf(out, "time: %s", string(rtimer-aaa));

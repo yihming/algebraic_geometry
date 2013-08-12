@@ -6,21 +6,22 @@ system("--ticks-per-sec",1000);
 LIB "cgb_mod.s"; 
 
 // Set the file link for output.
-link out = "example82.mp";
+link out = "e1.mp";
 open(out);
 	
 //the rings, where "x, y" are variables, "a, b, c" are parameters, and "u,v" are 
 //auxillary variables. By using "u,v", the algorithm can perform module operators in polynomial rings.
-ring RingVar=(0, v, u),(a, b, z, y, x),lp;
-ring RingAll=0,(a, b, z, y, x, v, u),lp;
-
+//ring RingVar=(0, a, b, c, d),(u, v, x, y), lp;
+//ring RingAll=0,(u,v, x, y, a, b, c, d), lp;
+ring RingVar = (0, a, b, c, d), (x, y), lp ;
+ring RingAll = 0, (x, y, a, b, c, d), lp;
 //ideal
-ideal polys=u*y + x, v*z+x+1;
+ideal polys=2xc + 2yb, 2x + 2yc + d, x2 + 2xyc + y2b + xd ;
 
 //variables
-list aux=a, b;
-list vars=z, y, x;
-list paras=v, u;
+//list aux=u,v;
+list vars=x, y;
+list paras=a, b, c, d;
 
 //timer
 rtimer=0; 
@@ -35,8 +36,9 @@ list Modcgs;
 //if you need "a=0" at the beginning, then use "ideal(a)" instead of "ideal()".
 //"list()" in the following input: the initial disequality constraints,
 //if you need "b<>0" at the beginning, then use "list(b)" instead of "list()".
-G, Modcgs = cgb_mod(polys, ideal(), list(), vars, paras, aux, RingAll, RingVar, out);
-
+//G, Modcgs = cgb_mod(polys, ideal(), list(), vars, paras, aux, RingAll, RingVar, out);
+G, Modcgs = cgb_mod(polys, ideal(), list(), vars, paras, RingAll, RingVar, out);
+	
 //time
 //print("time: "+string(rtimer-aaa));
 fprintf(out, "time: %s", string(rtimer-aaa));

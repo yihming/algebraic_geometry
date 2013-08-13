@@ -6,7 +6,7 @@ system("--ticks-per-sec",1000);
 LIB "cgb_mod.s"; 
 
 // Link to Output File.
-link out = "MPfile:w example81.mp" ;
+link out = "example81.mp" ;
 open(out)			   ;
 	
 //the rings, where "x, y" are variables, "a, b, c" are parameters, and "u,v" are 
@@ -15,7 +15,7 @@ ring RingVar=(0, v, u),(a, b, x),lp;
 ring RingAll=0,(a, b, x, v, u),lp;
 
 //ideal
-ideal polys=u*x, v*x;
+ideal polys=ux, vx;
 
 //variables
 list aux=a, b;

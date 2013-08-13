@@ -735,9 +735,12 @@ proc StringModCGS_mod(list modcgs)
   ideal V = groebner(ideal(Auxiliary[1], Auxiliary[2] - 1));
   int i, j;
 
+  // Show by branch.
   for (i = 1; i <= size(modcgs); i++)
   {
     Str = Str + "Branch " + string(i) + ":" + newline + "constraints: ";
+
+    // Show branch specifications.
     for (j = 1; j <= size(modcgs[i][1]); j++)
     {
       if (modcgs[i][1][j] != 0)
@@ -754,13 +757,19 @@ proc StringModCGS_mod(list modcgs)
     }
     Str = Str + newline + "Module Groebner basis: " + newline;
 
-    for (j = 1; j < size(modcgs[i][3]); j++)
-    {
-      Str = Str + "[" + string(reduce(modcgs[i][3][j], U)) 
-        + " , " + string(reduce(modcgs[i][3][j], V)) + "]," + newline;
-    }
-    Str = Str + "[" + string(reduce(modcgs[i][3][size(modcgs[i][3])], U)) 
-      + " , " + string(reduce(modcgs[i][3][size(modcgs[i][3])], V)) + "]." + newline + newline;
+   // Show Groebner Bases.
+   if (size(modcgs[i][3]) == 0) {
+     Str = Str + "[  ]." + newline + newline;
+   } else {
+     for (j = 1; j < size(modcgs[i][3]); j++) {
+       Str = Str + "[" + string(reduce(modcgs[i][3][j], U))
+	  + ", " + string(reduce(modcgs[i][3][j], V)) + "], " + newline ;
+     }
+     Str = Str + "[" + string(reduce(modcgs[i][3][size(modcgs[i][3])], U))
+	  + " , " + string(reduce(modcgs[i][3][size(modcgs[i][3])], V)) + "]."
+	  + newline + newline;
+   }
+	
   }
   
   return(Str);

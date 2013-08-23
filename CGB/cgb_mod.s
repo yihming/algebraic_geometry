@@ -44,6 +44,8 @@ PROCEDURES:
 KEYWORDS: comprehensive Gr\"obner system, comprehensive Gr\"obner basis
 ";
 
+LIB "ring.lib";
+	
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -684,15 +686,6 @@ proc cgb_mod(ideal Polys, ideal Equ, list DisEqu, list Vars, list Paras, list Au
 
   ideal G = cgb_mod_main(MPolys, Equ, DisEqu);
 
-/*
-  print(newline+"number of checks: "+newline);
-  print("trivial checks: "+string(Checks[2]));
-  print("0-dim checks: "+string(Checks[3]));
-  print("c-checks: "+string(Checks[4]));
-  print("i-checks: "+string(Checks[5]));
-  print("general checks: "+string(Checks[6]));
-  print("total checks: "+string(Checks[1])+newline);
-*/
 
   fprintf(out, "%snumber of checkes: %s", newline, newline) ;
   fprintf(out, "trivial checks: %s", string(Checks[2]))	    ;
@@ -707,7 +700,115 @@ proc cgb_mod(ideal Polys, ideal Equ, list DisEqu, list Vars, list Paras, list Au
 }
 
 
+proc extend_ring_with_aux(RingVar) {
+  string aux1 = "auxU";
+  string aux2 = "auxV";
+  list ring_var_config = ringlist(RingVar);
+  list tmp_config = ring_var_config;
+  int i;
 
+  ring_var_config[2][1] = aux1;
+  ring_var_config[2][2] = aux2;
+  for (i = 1; i <= size(tmp_config[2]); i++) {
+    ring_var_config[2][2 + i] = tmp_config[2][i];
+  }
+
+  return (ring_var_config);
+}
+	
+proc ring_var_to_all(RingVar) {
+  list ring_var_config = ringlist(RingVar);
+
+  // If RingVar is non-parametric, return its ringlist.
+  if (size(ring_var_config[1]) == 0) {
+    return (ring_var_config);
+  }
+
+  list ring_all_config = ring_var_config;
+  ring_all_config[1] = ring_var_config[1][1];
+
+  // Set parameters into the variable field of RingAll.
+  int i;
+  int cnt = size(ring_all_config[2]);
+  for (i = 1; i <= size(ring_var_config[1][2]); i++) {
+    ring_all_config[2][cnt + i] = ring_var_config[1][2][i];
+  }
+
+  return (ring_all_config);
+}
+
+
+proc cgb_mod_new(ideal Polys, ideal Equ, list DisEqu, OldRingVar, OldRingAll, link out)
+{
+  // The Base Ring is OldRingAll.
+  def BR = basering;
+
+  // Extend OldRingVar with two auxiliary variables auxU and auxV.
+  list new_ring_var_config = extend_ring_with_aux(OldRingVar);
+  def RingVar = ring(new_ring_var_config);
+
+  // Extend OldRingAll with two auxiliary variables auxU and auxV.
+  list new_ring_all_config = extend_ring_with_aux(OldRingAll);
+  def RingAll = ring(new_ring_all_config);
+
+  // Set NewRingVar as the Base Ring.
+  setring(RingVar);
+	
+  // Set Variable List.
+  list Variables;
+  int i;
+  for (i = 3; i <= nvars(RingVar); i++) {
+    Variables[i - 2] = var(i);
+  }
+
+  // Set Parameter List.
+  list Parameters;
+  for (i = 1; i <= npars(RingVar); i++) {
+    Parameters[i] = par(i);
+  }
+
+  // Set Auxiliary Variable List.
+  list Auxiliary;
+  Auxiliary[1] = var(1);
+  Auxiliary[2] = var(2);
+
+  poly VMinDPoly = Variables[size(Variables)];
+  list Checks = 0, 0, 0, 0, 0, 0;
+  list Modcgs;
+  export(Variables, Parameters, Auxiliary, VMinDPoly, Checks, Modcgs);
+
+  export(RingAll, RingVar);
+  setring(RingAll);
+
+  // Rebuild ideal Polys in RingAll.
+  show(BR)			;
+  show(basering)		;
+  fetchall(BR);
+  vector v;
+  for (i = 3; i <= nvars(RingAll); i++) {
+    v = v + gen(i - 2) * var(i);
+  }
+	
+  def map_btw = ideal(v);
+  mapall(OldRingVar, map_btw);
+  print(Polys)		     ;
+	
+  ideal MPolys = Add_Aux_Polys(Polys);
+
+  ideal G = cgb_mod_main(MPolys, Equ, DisEqu);
+
+
+  fprintf(out, "%snumber of checkes: %s", newline, newline) ;
+  fprintf(out, "trivial checks: %s", string(Checks[2]))	    ;
+  fprintf(out, "0-dim checks: %s", string(Checks[3]))	    ;
+  fprintf(out, "c-checks: %s", string(Checks[4]))	    ;
+  fprintf(out, "i-checks: %s", string(Checks[5]))	    ;
+  fprintf(out, "general checks: %s", string(Checks[6]))	    ;
+  fprintf(out, "total checks: %s%s", string(Checks[1]), newline) ;
+	
+  keepring(RingAll);
+  return(G, Modcgs);
+}
 
 
 
@@ -771,7 +872,6 @@ proc StringModCGS_mod(list modcgs)
    }
 	
   }
-  
   return(Str);
 }
 

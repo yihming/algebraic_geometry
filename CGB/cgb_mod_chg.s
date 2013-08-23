@@ -716,11 +716,6 @@ proc cgb_mod(ideal Polys, ideal Equ, list DisEqu, list Vars, list Paras, /*list 
   return(G, Modcgs);
 }
 
-
-
-
-
-
 proc StringCGB(ideal cgb)
 {
   string Str = newline + "Comprehensive Groebner Basis: " + newline + newline;
@@ -764,13 +759,19 @@ proc StringModCGS_mod(list modcgs)
     }
     Str = Str + newline + "Module Groebner basis: " + newline;
 
-    for (j = 1; j < size(modcgs[i][3]); j++)
-    {
-      Str = Str + "[" + string(reduce(modcgs[i][3][j], U)) 
-        + " , " + string(reduce(modcgs[i][3][j], V)) + "]," + newline;
+    // Show Groebner Basis.
+    if (size(modcgs[i][3]) == 0) {
+        Str = Str + "[  ]." + newline + newline;
+    } else {
+        for (j = 1; j < size(modcgs[i][3]); j++) {
+	    Str = Str + "[" + string(reduce(modcgs[i][3][j], U))
+	       + ", " + string(reduce(modcgs[i][3][j], V)) + "], " + newline;
+	}
+	Str = Str + "[" + string(reduce(modcgs[i][3][size(modcgs[i][3])], U))
+	   + ", " + string(reduce(modcgs[i][3][size(modcgs[i][3])], V)) + "]."
+	   + newline + newline;
     }
-    Str = Str + "[" + string(reduce(modcgs[i][3][size(modcgs[i][3])], U)) 
-      + " , " + string(reduce(modcgs[i][3][size(modcgs[i][3])], V)) + "]." + newline + newline;
+
   }
   
   return(Str);

@@ -21,6 +21,61 @@ proc set_global_rings() {
   setring(BR);
 	
 }
+
+proc gen_sub_list(list l) {
+    int i, j;
+    list res_list;
+
+    if (size(l) != 0 && size(l) != 1) {
+        for (i = 1; i <= size(l); i++) {
+	    list k;
+	    for (j = 1; j <= size(l); j++) {
+		if (i != j) {
+		    k = insert(k, l[j], size(k));
+	        }
+	    }
+	    res_list[i] = k;
+	}
+    }
+
+    return (res_list);
+}
+
+	
+proc check_minimality(list mccgb, list modcgs) {
+    int i, j;
+
+    def mccgb_list = gen_sub_list(mccgb);
+
+    for (i = 1; i <= size(mccgb_list); i++) {
+	// For each sub-list of MCCGB.
+	list cur_cgb = mccgb_list[i];
+	
+	for (j = 1; j <= size(modcgs); j++) {
+	    // For each non-empty branch of CGS.
+
+	    if (size(modcgs[j][3]) != 0) {
+	        // Get sigma(G).
+	        // TODO
+	        def g = get_nonzero_part(modcgs[j][3]);
+
+	        // Get sigma(MCCGB).
+	        list null_conds = modcgs[j][1];
+	        // TODO
+	        def sigma_cgb = gen_sigma_cgb(cur_cgb, null_conds);
+
+	        // If cgb == g, then mccgb is not minimal.
+	        // TODO
+	        if (check_ideal_equality(sigma_cgb, g)) {
+	            return (0);
+	        }
+	    }
+	}
+    }
+
+    return (1);
+
+}
 	
 proc listToVec(list l) {
     vector v;

@@ -1,4 +1,4 @@
-LIB "mccgb.s";
+LIB "mccgb.lib";
 
 link out = "weispfenning_1.mp";
 open(out);
@@ -22,15 +22,26 @@ list Auxiliary = aux;
 	
 ideal G;
 list Modcgs;
-list my_res;
+list mccgb;
 
-(my_res, G, Modcgs) = genMCCGB(polys, ideal(), list(), vars, params, aux, RingVar, out);
+(mccgb, G, Modcgs) = genMCCGB(polys, ideal(), list(), vars, params, aux, RingVar, out);
 
-showMCCGB(my_res, out);
+showMCCGB(mccgb, out);
 fprintf(out, "%s" + newline, StringCGB(G));
 fprintf(out, "%s" + newline, StringModCGS_mod(Modcgs));
 fprintf(out, "The size of CGB is: %s"+newline, string(size(G)));
-fprintf(out, "The size of MCCGB is: %s"+newline, string(size(my_res)));
+fprintf(out, "The size of MCCGB is: %s"+newline, string(size(mccgb)));
+
+// Check the validity of my_res;
+string err_msg;
+int flag;
+(err_msg, flag) = check_validity(mccgb, Modcgs);
+if (flag) {
+    printf("It is MCCGB indeed!");
+} else {
+    printf("It is not MCCGB, since %s.", err_msg);
+}
+
 	
 close(out);
 

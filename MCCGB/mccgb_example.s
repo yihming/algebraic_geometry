@@ -3,8 +3,7 @@ LIB "mccgb.s";
 link out = "mccgb_example.mp";
 open(out);
 
-ring RingVar = (0, a, b, c), (u, v, x, y), lp;
-ring RingAll = 0, (u, v, x, y, a, b, c), lp  ;
+ring RingVar = (0, a, b, c), (auxU, auxV, x, y), lp;
 
 ideal polys = ax2y+a+3b2, abxy-acxy+abx+5c ;
 

@@ -1,14 +1,13 @@
-// Example 5.1 in D. Kapur, Y. Sun and D. Wang, "An Efficient Method for Computing Comprehensive Groebner Bases", ISSAC 2011.
 LIB "mccgb.lib";
 
-link out = "example51.mp";
-link out2 = "example51_mccgb.mp";
+link out = "montes_1.mp";
+link out2 = "montes_1_mccgb.mp";
 open(out);
 open(out2);
 
-ring RingVar = (0, a, b, c), (auxU, auxV, x, y), dp;
+ring RingVar = (0, u), (auxU, auxV, x), lp;
 
-ideal polys = a*x-b, b*y-a, c*x^2-y, c*y^2-x;
+ideal polys = u^2*x+u, u*x^2+x;
 	
 fprintf(out, "F = {");
 int i;
@@ -18,9 +17,9 @@ for (i = 1; i < size(polys); i++) {
 fprintf(out, "%s" + newline + "}." + newline, polys[size(polys)]);
 
 list aux = auxU, auxV;
-list vars = x, y;
-list params = a, b, c;
-
+list vars = x;
+list params = u;
+	
 list Auxiliary = aux;
 	
 ideal G;

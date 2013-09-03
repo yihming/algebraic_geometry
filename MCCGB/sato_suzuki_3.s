@@ -1,7 +1,9 @@
-LIB "mccgb.s";
+LIB "mccgb.lib";
 
 link out = "sato_suzuki_3.mp";
+link out2 = "sato_suzuki_3_mccgb.mp";
 open(out);
+open(out2);
 
 ring RingVar = (0, a, b, c, d), (auxU, auxV, x(1), x(2), y(1), y(2), s), lp;
 
@@ -24,15 +26,27 @@ fprintf(out, "%s" + newline + "}." + newline, polys[size(polys)]);
 	
 ideal G;
 list Modcgs;
-list my_res;
+list mccgb;
 
-(my_res, G, Modcgs) = genMCCGB(polys, ideal(), list(), vars, params, aux, RingVar, out);
+(mccgb, G, Modcgs) = genMCCGB(polys, ideal(), list(), vars, params, aux, RingVar, out2);
 
-showMCCGB(my_res, out);
+showMCCGB(mccgb, out);
+fprintf(out, "The size of CGB is: %s"+newline, string(size(G)));
+fprintf(out, "The size of MCCGB is: %s"+newline, string(size(mccgb)));
 fprintf(out, "%s" + newline, StringCGB(G));
 fprintf(out, "%s" + newline, StringModCGS_mod(Modcgs));
-fprintf(out, "The size of CGB is: %s"+newline, string(size(G)));
-fprintf(out, "The size of MCCGB is: %s"+newline, string(size(my_res)));
+
+// Check the validity of my_res;
+string err_msg;
+int flag;
+(err_msg, flag) = check_validity(mccgb, Modcgs, out);
+if (flag) {
+    fprintf(out, newline + "================================") ;
+    fprintf(out, "It is MCCGB indeed!");
+} else {
+    fprintf(out, newline + "================================") ;
+    fprintf(out, "It is not MCCGB, since %s.", err_msg);
+}
 	
 close(out);
-
+close(out2);

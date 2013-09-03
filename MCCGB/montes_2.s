@@ -6,7 +6,7 @@ link out2 = "example51_mccgb.mp";
 open(out);
 open(out2);
 
-ring RingVar = (0, a, b, c), (auxU, auxV, x, y), dp;
+ring RingVar = (0, a, b, c), (auxU, auxV, x, y), lp;
 
 ideal polys = a*x-b, b*y-a, c*x^2-y, c*y^2-x;
 	
@@ -30,9 +30,9 @@ list mccgb;
 (mccgb, G, Modcgs) = genMCCGB(polys, ideal(), list(), vars, params, aux, RingVar, out2);
 
 showMCCGB(mccgb, out);
-fprintf(out, "%s" + newline, StringCGB(G));
 fprintf(out, "The size of CGB is: %s"+newline, string(size(G)));
 fprintf(out, "The size of MCCGB is: %s"+newline, string(size(mccgb)));
+fprintf(out, "%s" + newline, StringCGB(G));
 fprintf(out, "%s" + newline, StringModCGS_mod(Modcgs));
 
 // Check the validity of my_res;

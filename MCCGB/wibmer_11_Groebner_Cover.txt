@@ -1,0 +1,15 @@
+1. Segment with lpp = {x}            Generic Segment
+    Basis: {x}.
+    P-representation of the segment:
+           ( <0>, ( <u(1)> ) ).
+
+2. Segment with lpp = {x^2}
+    Basis: { (u(2)^2 - 1)*x^2 + x }.
+    P-representation of the segment:
+           ( <u(1)>, ( <u(2) - 1, u(1)>, <u(2) + 1, u(1)> ) ).
+
+3. Segment with lpp = {x}
+    Basis: {x}
+    P-representation of the segment:
+           ( <u(2) - 1, u(1)>, ( <1> ) );
+	   ( <u(2) + 1, u(1)>, ( <1> ) ).

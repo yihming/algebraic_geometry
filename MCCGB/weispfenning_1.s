@@ -35,11 +35,13 @@ fprintf(out, "The size of MCCGB is: %s"+newline, string(size(mccgb)));
 // Check the validity of my_res;
 string err_msg;
 int flag;
-(err_msg, flag) = check_validity(mccgb, Modcgs);
+(err_msg, flag) = check_validity(mccgb, Modcgs, out);
 if (flag) {
-    printf("It is MCCGB indeed!");
+    fprintf(out, newline + "================================") ;
+    fprintf(out, "It is MCCGB indeed!");
 } else {
-    printf("It is not MCCGB, since %s.", err_msg);
+    fprintf(out, newline + "================================") ;
+    fprintf(out, "It is not MCCGB, since %s.", err_msg);
 }
 
 	

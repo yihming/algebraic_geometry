@@ -3,7 +3,7 @@ LIB "mccgb.lib";
 link out = "weispfenning_1.mp";
 open(out);
 
-ring RingVar = (0, v, u), (auxU, auxV, x), lp;
+ring r = (0, v, u), x, lp;
 
 ideal polys = u*x, v*x;
 
@@ -14,17 +14,11 @@ for (i = 1; i < size(polys); i++) {
 }
 fprintf(out, "%s" + newline + "}." + newline, polys[size(polys)]);
 	
-list aux = auxU, auxV;
-list vars = x;
-list params = v, u;
-
-list Auxiliary = aux;
-	
 ideal G;
 list Modcgs;
 list mccgb;
 
-(mccgb, G, Modcgs) = genMCCGB(polys, ideal(), list(), vars, params, aux, RingVar, out);
+(mccgb, G, Modcgs) = genMCCGB(polys, ideal(), list(), out);
 
 showMCCGB(mccgb, out);
 fprintf(out, "%s" + newline, StringCGB(G));

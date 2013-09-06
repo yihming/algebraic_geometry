@@ -3,24 +3,18 @@
 system("--ticks-per-sec",1000);
 
 //the address of the file "cgb_mod.s"
-LIB "cgb_mod.s";
+LIB "cgb_mod.lib";
 
 // File link for output.
-link out = "MPfile:w example83.mp" ;
+link out = "example83.mp" ;
 open(out)			   ;
 
 //the rings, where "x, y" are variables, "a, b, c" are parameters, and "u,v" are 
 //auxillary variables. By using "u,v", the algorithm can perform module operators in polynomial rings.
-ring RingVar=(0, v, u),(a, b, z, y, x), lp;
-ring RingAll=0,(a, b, z, y, x, v, u), lp;
+ring r=(0, v, u),(z, y, x), lp;
 
 //ideal
 ideal polys=(u^2+1)*y+x^3-1, (u^2+1)*z+x^2-1;
-
-//variables
-list aux=a, b;
-list vars=z, y, x;
-list paras=v, u;
 
 //timer
 rtimer=0; 
@@ -35,7 +29,7 @@ list Modcgs;
 //if you need "a=0" at the beginning, then use "ideal(a)" instead of "ideal()".
 //"list()" in the following input: the initial disequality constraints,
 //if you need "b<>0" at the beginning, then use "list(b)" instead of "list()".
-G, Modcgs = cgb_mod(polys, ideal(), list(), vars, paras, aux, RingAll, RingVar, out);
+(G, Modcgs) = cgb_mod(polys, ideal(), list(), out);
 
 //time
 //print("time: "+string(rtimer-aaa));
@@ -53,4 +47,4 @@ fprintf(out, "%s", StringModCGS_mod(Modcgs)) ;
 fprintf(out, "Branch: %s", string(size(Modcgs))) ;
 fprintf(out, "Total number of polynomials in the CGB: %s", string(size(G))) ;
 
-close(out)			;
+close(out);

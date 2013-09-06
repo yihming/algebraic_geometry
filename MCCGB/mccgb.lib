@@ -3,7 +3,7 @@ LIB "primdec.lib";
 LIB "qhmoduli.lib";
 LIB "teachstd.lib";
 
-LIB "../CGB/cgb_mod.s";
+LIB "../CGB/cgb_mod.lib";
 
 proc set_global_rings() {
   def BR = basering;
@@ -178,25 +178,25 @@ proc Check_Essential(poly p, poly p1, list basis, list null_conds, link out) {
     return (1);
 }
 
-proc genMCCGB(Polys, Equ, DisEqu, vars, params, aux, RingVar, link out) {
+proc genMCCGB(Polys, Equ, DisEqu, link out) {
 	set_global_rings();
 
 	// This part needs to be removed when using cgb_mod_new.
-	def BR = basering;
-	setring(@RP);
-	def Polys = imap(RingVar, Polys);
-	def Equ = imap(RingVar, Equ);
-	def DisEqu = list()	    ;
-	def vars = imap(RingVar, vars);
-	def params = imap(RingVar, params);
-	def aux = imap(BR, aux);
-	def RingAll = @RP;
+	//def BR = basering;
+	//setring(@RP);
+	//def Polys = imap(RingVar, Polys);
+	//def Equ = imap(RingVar, Equ);
+	//def DisEqu = list()	    ;
+	//def vars = imap(RingVar, vars);
+	//def params = imap(RingVar, params);
+	//def aux = imap(BR, aux);
+	//def RingAll = @RP;
 	// End Comment.
 
         ideal G;
 	list modcgs;
 	
-	(G, modcgs) = cgb_mod(Polys, Equ, DisEqu, vars, params, aux, RingAll, RingVar, out);
+	(G, modcgs) = cgb_mod(Polys, Equ, DisEqu, out);
 
 
 	fprintf(out, newline + "============================");
@@ -204,12 +204,10 @@ proc genMCCGB(Polys, Equ, DisEqu, vars, params, aux, RingVar, link out) {
 
 	list mccgb;
 	int i, j;
-	ideal U = groebner(ideal(Auxiliary[1] - 1, Auxiliary[2]));
-	ideal V = groebner(ideal(Auxiliary[1], Auxiliary[2] - 1));
 
 	// Add the first branch.
 	for (j = 1; j <= size(modcgs[1][3]); j++) {
-	    mccgb[j] = reduce(modcgs[1][3][j], U) + reduce(modcgs[1][3][j], V);
+	    mccgb[j] = modcgs[1][3][j][1] + modcgs[1][3][j][2];
 	}
 	fprintf(out, newline + "-------------------------");
 	fprintf(out, "After adding the first branch:");
@@ -232,8 +230,8 @@ proc genMCCGB(Polys, Equ, DisEqu, vars, params, aux, RingVar, link out) {
 
 	            // For each polynomial in the Groebner Basis.
 	            for (j = 1; j <= size(modcgs[i][3]); j++) {
-			poly p1 = reduce(modcgs[i][3][j], U);
-	                poly p0 = reduce(modcgs[i][3][j], V);
+			poly p1 = modcgs[i][3][j][1];
+	                poly p0 = modcgs[i][3][j][2];
 	                poly p = p1 + p0;
 
 	                fprintf(out, newline+"Currently consider polynomial P = %s.", string(p));
@@ -276,12 +274,11 @@ proc showMCCGB(list mccgb, link out) {
 }
 
 proc get_nonzero_part(list l) {
-    ideal U = groebner(ideal(Auxiliary[1] - 1, Auxiliary[2]));
     int i;
     list res_list;
 
     for (i = 1; i <= size(l); i++) {
-	res_list[i] = reduce(l[i], U);
+	res_list[i] = l[i][1];
     }
 
     return (res_list);
@@ -295,12 +292,9 @@ RETURN:    Basis under the given specialization."
 {
   int i;
   if (flag) {
-    // Eliminate auxiliary variables from basis.
-    ideal U = groebner(ideal(Auxiliary[1] - 1, Auxiliary[2]));
-    ideal V = groebner(ideal(Auxiliary[1], Auxiliary[2] - 1));
 
     for (i = 1; i <= size(basis); i++) {
-      basis[i] = reduce(basis[i], U) + reduce(basis[i], V);
+      basis[i] = basis[i][1] + basis[i][2];
     }
   }
 

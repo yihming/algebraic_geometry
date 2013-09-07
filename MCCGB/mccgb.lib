@@ -69,8 +69,8 @@ proc lm_X(poly P) {
 	
 proc calculateLPPList(list basis, list null_conds) {
     printf("Now Compute LPP of basis under specialization:");
-
     def BR = basering;
+
     setring(@R);
     def basis = imap(BR, basis);
     def null_conds = imap(BR, null_conds);
@@ -179,25 +179,21 @@ proc Check_Essential(poly p, poly p1, list basis, list null_conds, link out) {
 }
 
 proc genMCCGB(Polys, Equ, DisEqu, link out) {
+
 	set_global_rings();
 
-	// This part needs to be removed when using cgb_mod_new.
-	//def BR = basering;
-	//setring(@RP);
-	//def Polys = imap(RingVar, Polys);
-	//def Equ = imap(RingVar, Equ);
-	//def DisEqu = list()	    ;
-	//def vars = imap(RingVar, vars);
-	//def params = imap(RingVar, params);
-	//def aux = imap(BR, aux);
-	//def RingAll = @RP;
-	// End Comment.
+	// Base ring is @R.
+	def BR = basering;
 
         ideal G;
 	list modcgs;
 	
 	(G, modcgs) = cgb_mod(Polys, Equ, DisEqu, out);
-
+	
+	// Switch to @RP.
+	setring(@RP);
+	def G = imap(@R, G);
+	def modcgs = imap(@R, modcgs);
 
 	fprintf(out, newline + "============================");
 	fprintf(out, "Now construct MCCGB:");
@@ -256,6 +252,8 @@ proc genMCCGB(Polys, Equ, DisEqu, link out) {
 	def modcgs = imap(@RP, modcgs);
 
 	fprintf(out, newline + "================================");
+	
+
 	return(mccgb, G, modcgs);
 }
 

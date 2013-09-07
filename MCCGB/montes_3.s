@@ -5,7 +5,7 @@ link out2 = "montes_3_mccgb.mp";
 open(out);
 open(out2);
 
-ring RingVar = (0, a, b, c), (auxU, auxV, x, y), lp;
+ring r = (0, a, b, c), (x, y), lp;
 
 ideal polys = a*x^2*y + a + 3*b^2, a*b*x*y - a*c*x*y + a*b*x + 5*c;
 
@@ -16,17 +16,11 @@ for (i = 1; i < size(polys); i++) {
 }
 fprintf(out, "%s" + newline + "}." + newline, polys[size(polys)]);
 
-list aux = auxU, auxV;
-list vars = x, y;
-list params = a, b, c;
-
-list Auxiliary = aux;
-	
 ideal G;
 list Modcgs;
 list mccgb;
 
-(mccgb, G, Modcgs) = genMCCGB(polys, ideal(), list(), vars, params, aux, RingVar, out2);
+(mccgb, G, Modcgs) = genMCCGB(polys, ideal(), list(), out2);
 
 showMCCGB(mccgb, out);
 fprintf(out, "The size of CGB is: %s"+newline, string(size(G)));

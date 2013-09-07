@@ -6,7 +6,7 @@ link out2 = "montes_wibmer_5_mccgb.mp";
 open(out);
 open(out2);
 
-ring RingVar = (0, a, b), (auxU, auxV, x(2), x(3), y(2), y(3)), lp;
+ring r = (0, a, b), (x(2), x(3), y(2), y(3)), lp;
 
 ideal polys = (a-1)*y(2) - b*(x(2)-1), (a-1)*(x(2)+1)+b*y(2),
 	      (a+1)*y(3) - b*(x(3)+1), (a+1)*(x(3)-1)+b*y(3),
@@ -19,17 +19,11 @@ for (i = 1; i < size(polys); i++) {
 }
 fprintf(out, "%s" + newline + "}." + newline, polys[size(polys)]);
 
-list aux = auxU, auxV;
-list vars = x(2), x(3), y(2), y(3);
-list params = a, b;
-
-list Auxiliary = aux;
-	
 ideal G;
 list Modcgs;
 list mccgb;
 
-(mccgb, G, Modcgs) = genMCCGB(polys, ideal(), list(), vars, params, aux, RingVar, out2);
+(mccgb, G, Modcgs) = genMCCGB(polys, ideal(), list(), out2);
 
 showMCCGB(mccgb, out);
 fprintf(out, "%s" + newline, StringCGB(G));

@@ -5,7 +5,7 @@ link out2 = "sato_suzuki_1_mccgb.mp" ;
 open(out);
 open(out2);
 
-ring RingVar = (0, a, b), (auxU, auxV, x, y, z), lp;
+ring r = (0, a, b), (x, y, z), lp;
 
 ideal polys = x^3 - a, y^4 - b, x + y - z;
 
@@ -16,19 +16,11 @@ for (i = 1; i < size(polys); i++) {
 }
 fprintf(out, "%s" + newline + "}." + newline, polys[size(polys)]);
 
-	
-list aux = auxU, auxV;
-list vars = x, y, z;
-list params = a, b;
-
-list Auxiliary = aux;
-list Paras = params ;
-	
 ideal G;
 list Modcgs;
 list mccgb;
 
-(mccgb, G, Modcgs) = genMCCGB(polys, ideal(), list(), vars, params, aux, RingVar, out2);
+(mccgb, G, Modcgs) = genMCCGB(polys, ideal(), list(), out2);
 
 showMCCGB(mccgb, out);
 fprintf(out, "%s" + newline, StringCGB(G));

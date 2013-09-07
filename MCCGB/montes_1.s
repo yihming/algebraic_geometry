@@ -5,9 +5,9 @@ link out2 = "montes_1_mccgb.mp";
 open(out);
 open(out2);
 
-ring RingVar = (0, u), (auxU, auxV, x), lp;
+ring r = (0, a, b, c, d), (x, y), lp;
 
-ideal polys = u^2*x+u, u*x^2+x;
+ideal polys = ax + b, cx + d;
 	
 fprintf(out, "F = {");
 int i;
@@ -16,17 +16,11 @@ for (i = 1; i < size(polys); i++) {
 }
 fprintf(out, "%s" + newline + "}." + newline, polys[size(polys)]);
 
-list aux = auxU, auxV;
-list vars = x;
-list params = u;
-	
-list Auxiliary = aux;
-	
 ideal G;
 list Modcgs;
 list mccgb;
 
-(mccgb, G, Modcgs) = genMCCGB(polys, ideal(), list(), vars, params, aux, RingVar, out2);
+(mccgb, G, Modcgs) = genMCCGB(polys, ideal(), list(), out2);
 
 showMCCGB(mccgb, out);
 fprintf(out, "%s" + newline, StringCGB(G));

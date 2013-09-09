@@ -344,31 +344,64 @@ RETURN:    Basis under the given specialization."
   return (sigma_basis);
 }
 
-proc check_ideal_equality(list g1, list g2) 
+proc check_ideal_equality(list g1, list g2, ideal E) 
 "USAGE:    Check whether ideals <g1> and <g2> are equivalent.
 RETURN:    1 if they are equivalent; 0 otherwise."
 {
   // Basering is Q[A][X].
-  def I = groebner(ideal(listToVec(g1)));
-  def J = groebner(ideal(listToVec(g2)));
+  def I_ideal_equality = groebner(ideal(listToVec(g1)));
+  def J_ideal_equality = groebner(ideal(listToVec(g2)));
   int i;
   int flag = 1;
+  poly rem_ideal_equality;
 
   for (i = 1; i <= size(g1); i++) {
-    if (reduce(g1[i], J) != 0) {
-      flag = 0;
-      break;
+    rem_ideal_equality = reduce(g1[i], J_ideal_equality);
+    if (rem_ideal_equality != 0) {
+      // If remainder is not 0,
+      // then switch to Q[X, A].
+      rem_ideal_equality = rem_ideal_equality * denominator(number(rem_ideal_equality));
+      setring(@RP);
+      def J_ideal_equality = imap(@R, J_ideal_equality);
+      def rem_ideal_equality = imap(@R, rem_ideal_equality);
+      def E = imap(@R, E);
+
+      // Check whether rem can be reduced to 0 under radical of E.
+      if (!rad_con(rem_ideal_equality, E)) {
+      	 flag = 0;
+	 setring(@R);
+	 break;
+      } else {
+         setring(@R);
+      }
+
     }
   }
+
 
   if (flag != 0) {
     for (i = 1; i <= size(g2); i++) {
-      if (reduce(g2[i], I) != 0) {
-	flag = 0;
-	break;
+      rem_ideal_equality = reduce(g2[i], I_ideal_equality);
+      if (rem_ideal_equality != 0) {
+        // If rem is not 0, switch to Q[X, A].
+	rem_ideal_equality = rem_ideal_equality * denominator(number(rem_ideal_equality));
+	setring(@RP);
+	def I_ideal_equality = imap(@R, I_ideal_equality);
+	def rem_ideal_equality = imap(@R, rem_ideal_equality);
+	def E = imap(@R, E);
+
+	// Check whether rem can be reduced to 0 under radical of E.
+	if (!rad_con(rem_ideal_equality, E)) {
+	  flag = 0;
+	  setring(@R);
+	  break;
+	} else {
+	  setring(@R);
+	}
       }
     }
   }
+
 
   return (flag);
 }
@@ -383,12 +416,16 @@ RETURN:    1 if mccgb is CGB; 0 otherwise."
   // For each branch ((E_i, N_i), G_i).
   for (i = 1; i <= num_branches; i++) {
     fprintf(out, newline + "  Branch %s: ({%s}, {%s}):", string(i), string(modcgs[i][1]), string(modcgs[i][2]));
-
     // Get list of null conditions.
     int j;
     list null_conds;
-    for (j = 1; j <= size(modcgs[i][1]); j++) {
-      null_conds = insert(null_conds, modcgs[i][1][j], size(null_conds));
+
+    if (size(modcgs[i][1]) == 0) {
+      null_conds = list();
+    } else {
+      for (j = 1; j <= size(modcgs[i][1]); j++) {
+        null_conds = insert(null_conds, modcgs[i][1][j], size(null_conds));
+      }
     }
 
     if (size(modcgs[i][3]) != 0) {
@@ -408,9 +445,9 @@ RETURN:    1 if mccgb is CGB; 0 otherwise."
       fprintf(out, "    sigma(basis) = {%s}.", string(sigma_basis));
     
       // Check whether sigma(basis) is a Groebner basis.
-      if (check_groebner(sigma_basis)) {
+      if (check_groebner(sigma_basis, modcgs[i][1])) {
 	// Check whether <sigma(basis)> = <sigma(g)>.
-	if (check_ideal_equality(sigma_g, sigma_basis)) {
+	if (check_ideal_equality(sigma_g, sigma_basis, modcgs[i][1])) {
 	  fprintf(out, "  sigma(basis) is GB for Branch %s.", string(i));
 	} else {
 	  fprintf(out, "  sigma(basis) is not GB for Branch %s.", string(i));
@@ -465,20 +502,36 @@ RETURN:    A list of lists."
   return (res_list);
 }
 
-proc check_groebner(list basis) {
+proc check_groebner(list basis, ideal E) {
   // Basering is Q[A][X].
   if (size(basis) <= 1) {
     return(1);
   }
 
   int i, j;
-  ideal I = ideal(listToVec(basis));
+  poly rem_check_groebner;
+  ideal G_check_groebner = ideal(listToVec(basis));
+
   for (i = 1; i <= size(basis); i++) {
     for (j = 1; j <= size(basis); j++) {
       if (i != j) {
 	poly f = spoly(basis[i], basis[j]);
-	if (reduce(f, I) != 0) {
-	  return (0);
+	rem_check_groebner = reduce(f, G_check_groebner);
+	if (rem_check_groebner != 0) {
+	  // If the remainder is not 0, then switch to Q[X, A].
+	  rem_check_groebner = rem_check_groebner * denominator(number(rem_check_groebner));
+	  setring(@RP);
+	  def G_check_groebner = imap(@R, G_check_groebner);
+	  def rem_check_groebner = imap(@R, rem_check_groebner);
+	  def E = imap(@R, E);
+	  
+	  // Check whether the remainder can be reduced to 0 under radical of E.
+	  if (!rad_con(rem_check_groebner, E)) {
+	    setring(@R);
+	    return(0);
+	  } else {
+	    setring(@R);
+	  }
 	}
       }
     }

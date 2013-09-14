@@ -6,7 +6,7 @@ link out2 = "example51_mccgb.mp";
 open(out);
 open(out2);
 
-ring r = (0, a, b, c), (x, y), dp;
+ring r = (0, a, b, c), (x, y), lp;
 
 ideal polys = a*x-b, b*y-a, c*x^2-y, c*y^2-x;
 	

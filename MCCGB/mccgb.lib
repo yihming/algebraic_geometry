@@ -369,7 +369,7 @@ RETURN:    Basis under the given specialization."
       def rem = reduce(leadcoef_X(p), GE);
       if (rem != 0) {
         // Yiming Begin: test whether rem  != 0 wrt ideal N.
-	rem = verify_with_nonnull(rem, nonnull_conds);
+	//rem = verify_with_nonnull(rem, nonnull_conds);
 	// Yiming End.
 	p1 = p1 + rem * lpp_X(p);
       }
@@ -466,6 +466,7 @@ RETURN:    1 if mccgb is CGB; 0 otherwise."
   // For each branch ((E_i, N_i), G_i).
   for (i = 1; i <= num_branches; i++) {
     fprintf(out, newline + "  Branch %s: ({%s}, {%s}):", string(i), string(modcgs[i][1]), string(modcgs[i][2]));
+
     // Get list of null conditions.
     int j;
     list null_conds;
@@ -478,13 +479,15 @@ RETURN:    1 if mccgb is CGB; 0 otherwise."
       }
     }
 
+    // Consider G_i.
     if (size(modcgs[i][3]) != 0) {
       // G_i is not empty.
 
       // Get sigma(G_i) and sigma(basis).
-      if (size(modcgs[i][1]) == 0) {
+      if (size(null_conds) == 0) {
 	// The null condition set is empty.
 	def sigma_g = get_nonzero_part(modcgs[i][3]);
+	//def sigma_g = get_sigma_basis(modcgs[i][3], null_conds, modcgs[i][2], 1);
 	//def sigma_basis = basis;
       } else {
 	// The null condition set is not empty.	
@@ -497,7 +500,7 @@ RETURN:    1 if mccgb is CGB; 0 otherwise."
       fprintf(out, "    sigma(basis) = {%s}.", string(sigma_basis));
     
       // Check whether sigma(basis) is a Groebner basis.
-      if (check_groebner(sigma_basis, modcgs[i][1])) {
+      if (check_groebner(sigma_basis, modcgs[i][1], modcgs[i][2])) {
 	// Check whether <sigma(basis)> = <sigma(g)>.
 	if (check_ideal_equality(sigma_g, sigma_basis, modcgs[i][1])) {
 	  fprintf(out, "  sigma(basis) is GB for Branch %s.", string(i));
@@ -554,7 +557,53 @@ RETURN:    A list of lists."
   return (res_list);
 }
 
-proc check_groebner(list basis, ideal E) {
+proc get_coef_list(poly f) 
+"USAGE:    Given parametric polynomial f in Q[A][X], 
+           get the coefficients (only numerators) of all its monomials as list."
+{
+  // Base ring is Q[A][X].
+  list res_list;
+
+  while (f != 0) {
+    poly lc = leadcoef(f);
+    lc = lc * denominator(number(lc));
+    res_list = insert(res_list, lc, size(res_list));
+
+    f = f - lead(f);
+  }
+
+  return (res_list);
+}
+
+proc check_coef_list_null(list coef_list, ideal E, list nonnull_conds) {
+  // Base ring is Q[X, A].
+
+  if (size(coef_list) == 0) {
+    return (1);
+  }
+
+  // General Case.
+  int i;
+  int flag = 1;
+  poly cur_coef;
+
+  for (i = 1; i <= size(coef_list); i++) {
+    cur_coef = coef_list[i];
+
+    if (!rad_con(cur_coef, E)) {
+      // cur_coef is not reduced to 0 under E.
+      // Further check: whether cur_coef is determined to be non-zero under nonnull_conds.
+      if (verify_with_nonnull(cur_coef, nonnull_conds) != 0) {
+        flag = 0;
+	break;
+      }
+    }
+  }
+
+  return (flag);
+}
+
+proc check_groebner(list basis, ideal E, list nonnull_conds) {
   // Basering is Q[A][X].
   if (size(basis) <= 1) {
     return(1);
@@ -571,19 +620,29 @@ proc check_groebner(list basis, ideal E) {
 	rem_check_groebner = reduce(f, G_check_groebner);
 	if (rem_check_groebner != 0) {
 	  // If the remainder is not 0, then switch to Q[X, A].
-	  rem_check_groebner = rem_check_groebner * denominator(number(rem_check_groebner));
+	  def coef_list = get_coef_list(rem_check_groebner);
 	  setring(@RP);
 	  def G_check_groebner = imap(@R, G_check_groebner);
-	  def rem_check_groebner = imap(@R, rem_check_groebner);
+	  def coef_list = imap(@R, coef_list);
 	  def E = imap(@R, E);
 	  
-	  // Check whether the remainder can be reduced to 0 under radical of E.
-	  if (!rad_con(rem_check_groebner, E)) {
-	    setring(@R);
-	    return(0);
+	  if (!defined(nonnull_conds)) {
+	    def nonnull_conds = imap(@R, nonnull_conds);
 	  } else {
-	    setring(@R);
+	    if (size(nonnull_conds) > 0) {
+	      def nonnull_conds = imap(@R, nonnull_conds);
+	    }
 	  }
+	  
+	  // Check whether the remainder can be reduced to 0 under radical of E.
+	  if (check_coef_list_null(coef_list, E, nonnull_conds)) {
+	    setring(@R);
+	  } else {
+	    printf("S-Poly(f_%s, f_%s) mod G != 0.", string(i), string(j));
+	    setring(@R);
+	    return (0);
+	  }
+
 	}
       }
     }

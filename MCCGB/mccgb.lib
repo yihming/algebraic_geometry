@@ -335,6 +335,11 @@ RETURN:    0 if not determined to be non-zero; p itself otherwise."
     return (p);
   }
 
+  if (leadmonom(p) == 1) {
+    // p is a constant, i.e. p is enforced to be non-zero.
+    return (p);
+  }
+
   // Multiply each poly in nonnull_conds.
   poly n_poly = 1;
   int i;
@@ -342,11 +347,9 @@ RETURN:    0 if not determined to be non-zero; p itself otherwise."
     n_poly = n_poly * nonnull_conds[i];
   }
 
-  // Factorize the product.
-  list FL = factorize(n_poly);
-
-  // Factorize p.
-  list LCFL = factorize(p);
+  // Factorize the product n_poly and p. We only care about non-constant factors with no multiplicity.
+  list FL = factorize(n_poly, 1);
+  list LCFL = factorize(p, 1);
 
   if (is_sublist(LCFL, FL)) {
     // LCFL is a subset of FL.
@@ -354,6 +357,41 @@ RETURN:    0 if not determined to be non-zero; p itself otherwise."
   }
 
   return (0);
+}
+
+proc is_poly_nonnull(poly f, list nonnull_conds) 
+"RETURN:    1 if some of the coefficients of f is enforced to be non-zero under nonnull_conds;
+            0 otherwise."
+{
+  // Base ring is Q[X, A].
+
+  if (size(nonnull_conds) == 0) {
+    // Everything is enforced to be non-zero.
+    return (1);
+  }
+ 
+  
+  list coef_list = get_coef_list(f);
+  if (size(coef_list) == 0) {
+    return (0);
+  } else {
+    int i;
+    int null_cnt = 0;
+    for (i = 1; i <= size(coef_list); i++) {
+      poly cur_coef = coef_list[i];
+      if (verify_with_nonnull(cur_coef, nonnull_conds) == 0) {
+	// cur_coef is not enforced to be non-zero.
+	null_cnt = null_cnt + 1;
+      }
+    }
+    if (null_cnt == size(coef_list)) {
+      // Each coefficient is not enforced to be non-zero. Thus, we can regard f -> 0.
+      return (0);
+    } else {
+      return (1);
+    }
+  }
+
 }
 
 proc get_sigma_basis(list basis, list null_conds, list nonnull_conds, int flag) 
@@ -416,15 +454,17 @@ RETURN:    Basis under the given specialization."
     while (p != 0) {
       def rem = reduce(leadcoef_X(p), GE);
       if (rem != 0) {
-        // Yiming Begin: test whether rem  != 0 wrt ideal N.
-	//rem = verify_with_nonnull(rem, nonnull_conds);
-	// Yiming End.
 	p1 = p1 + rem * lpp_X(p);
       }
       p = p - lm_X(p);
     } // End of while.
     if (p1 != 0) {
-      sigma_basis = insert(sigma_basis, p1, size(sigma_basis));
+      // Yiming
+      // Further check: whether p1 is enforced to be non-zero w.r.t. N.
+      if (is_poly_nonnull(p1, nonnull_conds)) {
+	// Some of its coefficients is enforced to be non-zero.
+	sigma_basis = insert(sigma_basis, p1, size(sigma_basis));
+      }
     }
   } // End of for.
 
@@ -539,7 +579,8 @@ RETURN:    1 if mccgb is CGB; 0 otherwise."
 	//def sigma_basis = basis;
       } else {
 	// The null condition set is not empty.	
-	def sigma_g = get_sigma_basis(modcgs[i][3], null_conds, modcgs[i][2], 1);
+	//def sigma_g = get_sigma_basis(modcgs[i][3], null_conds, modcgs[i][2], 1);
+	def sigma_g = get_nonzero_part(modcgs[i][3]);
 	//def sigma_basis = get_sigma_basis(basis, null_conds, modcgs[i][2], 0);
       }
       def sigma_basis = get_sigma_basis(basis, null_conds, modcgs[i][2], 0);
@@ -548,7 +589,7 @@ RETURN:    1 if mccgb is CGB; 0 otherwise."
       fprintf(out, "    sigma(basis) = {%s}.", string(sigma_basis));
     
       // Check whether sigma(basis) is a Groebner basis.
-      if (check_groebner(sigma_basis, modcgs[i][1], modcgs[i][2])) {
+      if (check_groebner(sigma_basis, modcgs[i][1])) {
 	// Check whether <sigma(basis)> = <sigma(g)>.
 	if (check_ideal_equality(sigma_g, sigma_basis, modcgs[i][1])) {
 	  fprintf(out, "  sigma(basis) is GB for Branch %s.", string(i));
@@ -624,12 +665,19 @@ proc gen_indices_sub(int T, int Len) {
   return (res_list);
 }
 
-proc gen_sub_list(list l) 
+proc gen_sub_list(list l, int save_time) 
 "USAGE:    Generate all the non-empty proper subsets of l.
 RETURN:    A list of lists."
 {
   int i, j;
-  list index_list = gen_indices(size(l), size(l) - 1);
+  
+  if (save_time) {
+    // Only generate the largest proper subsets.
+    list index_list = gen_indices_sub(size(l), size(l) - 1);
+  } else {
+    // Generate all the non-empty proper subsets.
+    list index_list = gen_indices(size(l), size(l) - 1);
+  }
 
   if (size(index_list) == 0) {
     return (list());
@@ -653,7 +701,14 @@ proc get_coef_list(poly f)
 "USAGE:    Given parametric polynomial f in Q[A][X], 
            get the coefficients (only numerators) of all its monomials as list."
 {
-  // Base ring is Q[A][X].
+  int flag = 0;
+  if (nameof(basering) != "@R") {
+    def BR = basering;
+    setring(@R);
+    flag = 1;
+    def f = imap(BR, f);
+  }
+
   list res_list;
 
   while (f != 0) {
@@ -664,38 +719,37 @@ proc get_coef_list(poly f)
     f = f - lead(f);
   }
 
+  if (flag == 1) {
+    setring(BR);
+    def res_list = imap(@R, res_list);
+  }
+
   return (res_list);
 }
 
-proc check_coef_list_null(list coef_list, ideal E, list nonnull_conds) {
+proc check_coef_list_null(list coef_list, ideal E) 
+"RETURN:    1 if all entries in coef_list can be reduced to 0 w.r.t. E.
+            0 otherwise."
+{
   // Base ring is Q[X, A].
 
   if (size(coef_list) == 0) {
     return (1);
   }
 
-  // General Case.
   int i;
-  int flag = 1;
-  poly cur_coef;
-
   for (i = 1; i <= size(coef_list); i++) {
-    cur_coef = coef_list[i];
-
+    poly cur_coef = coef_list[i];
     if (!rad_con(cur_coef, E)) {
-      // cur_coef is not reduced to 0 under E.
-      // Further check: whether cur_coef is determined to be non-zero under nonnull_conds.
-      if (verify_with_nonnull(cur_coef, nonnull_conds) != 0) {
-        flag = 0;
-	break;
-      }
+      // cur_coef cannot be reduced to 0 under radical(E).
+      return (0);
     }
   }
 
-  return (flag);
+  return (1);
 }
 
-proc check_groebner(list basis, ideal E, list nonnull_conds) {
+proc check_groebner(list basis, ideal E) {
   // Basering is Q[A][X].
   if (size(basis) <= 1) {
     return(1);
@@ -714,25 +768,17 @@ proc check_groebner(list basis, ideal E, list nonnull_conds) {
 	  // If the remainder is not 0, then switch to Q[X, A].
 	  def coef_list = get_coef_list(rem_check_groebner);
 	  setring(@RP);
-	  def G_check_groebner = imap(@R, G_check_groebner);
 	  def coef_list = imap(@R, coef_list);
 	  def E = imap(@R, E);
 	  
-	  if (!defined(nonnull_conds)) {
-	    def nonnull_conds = imap(@R, nonnull_conds);
-	  } else {
-	    if (size(nonnull_conds) > 0) {
-	      def nonnull_conds = imap(@R, nonnull_conds);
-	    }
-	  }
 	  
 	  // Check whether the remainder can be reduced to 0 under radical of E.
-	  if (check_coef_list_null(coef_list, E, nonnull_conds)) {
+	  if (!check_coef_list_null(coef_list, E)) {
 	    setring(@R);
-	  } else {
-	    printf("S-Poly(f_%s, f_%s) mod G != 0.", string(i), string(j));
-	    setring(@R);
+	    printf("S-Poly(f_%s, f_%s) mod basis != 0.", string(i), string(j));
 	    return (0);
+	  } else {
+	    setring(@R);
 	  }
 
 	}
@@ -743,7 +789,9 @@ proc check_groebner(list basis, ideal E, list nonnull_conds) {
   return (1);
 }
 
-proc check_minimality(list cgb, list modcgs, link out) 
+
+
+proc check_minimality(list cgb, list modcgs, int save_time, link out) 
 "USAGE:    Check whether cgb is minimal, given that it is already comprehensive.
 RETURN:    1 if cgb is minimal; 0 otherwise."
 {
@@ -752,8 +800,14 @@ RETURN:    1 if cgb is minimal; 0 otherwise."
     return (1);
   }
 
-  list sub_sets = gen_sub_list(cgb);
-  list idx_lists = gen_indices(size(cgb), size(cgb) - 1);
+  list sub_sets = gen_sub_list(cgb, save_time);
+
+  if (save_time) {
+    list idx_lists = gen_indices_sub(size(cgb), size(cgb) - 1);
+  } else {
+    list idx_lists = gen_indices(size(cgb), size(cgb) - 1);
+  }
+
   int i, j;
 
   // For each largest proper subset of cgb.
@@ -783,7 +837,7 @@ RETURN:    1 if cgb is minimal; 0 otherwise."
   return (1);
 }
 
-proc check_validity(list mccgb, list modcgs, link out) 
+proc check_validity(list mccgb, list modcgs, int save_time, link out) 
 "USAGE:    Check whether mccgb is minimal and comprehensive for the given CGS modcgs.
 RETURN:    A string denoting why mccgb is not MCCGB;
            An integer flag denoting whether mccgb is valid (return (1)) or not (return (0)).
@@ -800,7 +854,7 @@ EXAMPLE:   (err_msg, flag) = check_validity(mccgb, Modcgs);"
     fprintf(out, newline + "MCCGB is comprehensive.");
     fprintf(out, newline + "------------------------");
     fprintf(out, "Second, check the minimality of MCCGB:");
-    if (check_minimality(mccgb, modcgs, out)) {
+    if (check_minimality(mccgb, modcgs, save_time, out)) {
       // mccgb is also minimal.
       fprintf(out, newline + "MCCGB is minimal.");
       return ("", 1);

@@ -41,6 +41,12 @@ if (flag) {
     fprintf(out, "It is not MCCGB, since %s.", err_msg);
 }
 
-	
+printf("Alternative")		;
+
+list alterMCCGB;
+ideal alterG;
+list alterModcgs;
+(alterMCCGB, alterG, alterModcgs) = alternativeMCCGB(polys, ideal(), list(), out);
+show(alterMCCGB);
 close(out);
 close(out2);

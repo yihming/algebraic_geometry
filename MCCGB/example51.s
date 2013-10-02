@@ -6,7 +6,7 @@ link out2 = "example51_mccgb.mp";
 open(out);
 open(out2);
 
-ring r = (0, a, b, c), (x, y), dp;
+ring r = (0, a, b, c), (x, y), lp;
 
 ideal polys = a*x-b, b*y-a, c*x^2-y, c*y^2-x;
 	
@@ -32,7 +32,7 @@ fprintf(out, "%s" + newline, StringModCGS_mod(Modcgs));
 // Check the validity of my_res;
 string err_msg;
 int flag;
-int save_time = 0;
+int save_time = 1;
 (err_msg, flag) = check_validity(mccgb, Modcgs, save_time, out);
 if (flag) {
     fprintf(out, newline + "================================") ;
@@ -42,6 +42,13 @@ if (flag) {
     fprintf(out, "It is not MCCGB, since %s.", err_msg);
 }
 
+printf("Alternative")		;
+
+list alterMCCGB			;
+ideal alterG			;
+list alterModcgs		;
+(alterMCCGB, alterG, alterModcgs) = alternativeMCCGB(polys, ideal(), list(), out) ;
+show(alterMCCGB)		;
 	
 close(out);
 close(out2);

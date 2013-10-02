@@ -31,7 +31,7 @@ fprintf(out, "%s" + newline, StringModCGS_mod(Modcgs));
 // Check the validity of my_res;
 string err_msg;
 int flag;
-int save_time = 0;
+int save_time = 1;
 (err_msg, flag) = check_validity(mccgb, Modcgs, save_time, out);
 if (flag) {
     fprintf(out, newline + "================================") ;

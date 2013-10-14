@@ -1,14 +1,14 @@
 LIB "mccgb.lib";
 
-link out = "weispfenning_4.mp";
-link out2 = "weispfenning_4_mccgb.mp";
+link out = "example52.mp";
+link out2 = "example52_mccgb.mp";
 open(out);
 open(out2);
 
-ring r = (0, v, u), (z, y, x), lp;
+ring r = (0, a, b, c), x, lp;
 
-ideal polys = y + u*x + v, u*y + x + v;
-
+ideal polys = (bc2 - b)*x, (ac2 - a)*x, (a3 - b3c)*x;
+	
 fprintf(out, "F = {");
 int i;
 for (i = 1; i < size(polys); i++) {
@@ -24,9 +24,9 @@ list mccgb;
 
 showMCCGB(mccgb, out);
 fprintf(out, "%s" + newline, StringCGB(G));
-fprintf(out, "%s" + newline, StringModCGS_mod(Modcgs));
 fprintf(out, "The size of CGB is: %s"+newline, string(size(G)));
 fprintf(out, "The size of MCCGB is: %s"+newline, string(size(mccgb)));
+fprintf(out, "%s" + newline, StringModCGS_mod(Modcgs));
 
 // Check the validity of my_res;
 string err_msg;
@@ -43,9 +43,12 @@ if (flag) {
 
 printf("Alternative")		;
 
-list alterMCCGB;
-ideal alterG;
-list alterModcgs;
-(alterMCCGB, alterG, alterModcgs) = alternativeMCCGB(polys, ideal(), list(), out);
+list alterMCCGB			;
+ideal alterG			;
+list alterModcgs		;
+(alterMCCGB, alterG, alterModcgs) = alternativeMCCGB(polys, ideal(), list(), out) ;
+show(alterMCCGB)		;
+	
 close(out);
 close(out2);
+

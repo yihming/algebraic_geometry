@@ -28,10 +28,29 @@ proc listToVec(list l) {
     vector v;
     int i;
 
+    if (size(l) == 0) {
+      return (vector(0));
+    }
+
     for (i = 1; i <= size(l); i++) {
 	v = v + gen(i) * l[i];
     }
     return (v);
+}
+
+proc vecToList(vector v) {
+  list l;
+  int i;
+  
+  if (size(v) == 0) {
+    return list();
+  }
+
+  for (i = 1; i <= size(v); i++) {
+    l[i] = v[i];
+  }
+
+  return (l);
 }
 
 proc leadcoef_X(poly P) {
@@ -162,6 +181,344 @@ proc Check_Essential(poly p, poly p1, list basis, ideal E, list N, link out) {
     
     // Otherwise, p is essential.
     return (1);
+}
+
+proc listDeleteByPoly(list l, poly f) {
+  int i;
+  if (size(l) == 0) {
+    return (list());
+  } else {
+    for (i = 1; i <= size(l); i++) {
+      if (l[i] == f || l[i] == -f) {
+	return (delete(l, i));
+      }
+    }
+    return (l);
+  }
+}
+
+proc appearInBranch(poly f, list branch) {
+  // Basering is @RP.
+  if (size(branch[3]) == 0) {
+    return (0);
+  } else {
+    int i;
+    for (i = 1; i <= size(branch[3]); i++) {
+      poly g = branch[3][i][1] + branch[3][i][2];
+      if (g == f) {
+	return (1);
+      }
+    }
+    return (0);
+  }
+}
+
+proc genPPs(poly f) {
+  // Basering is @RP.
+  if (f == 0) {
+    return (list(0));
+  } else {
+    list res_list;
+    while(f != 0) {
+      res_list = insert(res_list, lpp_X(f), size(res_list));
+      f = f - lm_X(f);
+    }
+    return (res_list);
+  }
+}
+
+proc checkCoefZero(poly c, ideal E) {
+  // Basering is @RP.
+  ideal GE = radical(E);
+  
+  poly rem = reduce(c, GE);
+  if (rem == 0) {
+    return (1);
+  } else {
+    return (0);
+  }
+
+  
+}
+
+proc getCoefOfPP(poly pp, poly f) {
+  // Basering is @RP.
+  poly c;
+  while (f != 0) {
+    if (lpp_X(f) == pp) {
+      c = leadcoef_X(f);
+      break;
+    } else {
+      f = f - lm_X(f);
+    }
+  }
+
+  return (c);
+}
+
+proc listContains(poly f, list l) {
+  if (size(l) == 0) {
+    return (0);
+  } else {
+    int i;
+    for (i = 1; i <= size(l); i++) {
+      if (f == l[i] || -f == l[i]) {
+	return (1);
+      }
+    }
+    return (0);
+  }
+}
+
+proc genCandidatePolys(poly lpp_f, list G, ideal E) {
+  // Basering is @RP.
+  if (size(G) == 0) {
+    return (list());
+  } else {
+    int i;
+    list res_list;
+    for (i = 1; i <= size(G); i++) {
+      poly g = G[i];
+      if (listContains(lpp_f, genPPs(g))) {
+	poly c = getCoefOfPP(lpp_f, g);
+	if (!checkCoefZero(c, E)) {
+	  res_list = insert(res_list, g, size(res_list));
+	}
+      } // Endif.
+    } // Endfor.
+    return (res_list);
+  } // Endif.
+}
+
+proc genConfigByPoly(poly pp, poly g) {
+  // Basering is @RP.
+  
+  // Construct E.
+  list null_conds;
+  poly f = g;
+  while (lpp_X(f) != pp) {
+    poly c = leadcoef_X(f);
+    null_conds = insert(null_conds, c, size(null_conds));
+    f = f - lm_X(f);
+  }
+  def E = ideal(listToVec(null_conds));
+
+  // Construct N.
+  poly nonnull_cond = getCoefOfPP(pp, g);
+  
+  return (E, list(nonnull_cond));
+}
+
+proc checkConfigConsistency(ideal E, list N) {
+  // Switch to @AXU.
+  vector N_vec = listToVec(N);
+  def BR = basering;
+  setring(@AXU);
+
+  def E = imap(@RP, E);
+
+  def N_vec = imap(@RP, N_vec);
+  list N_raw = vecToList(N_vec);
+
+  // Remove 0's from N.
+  list N;
+  for (i = 1; i<= size(N_raw); i++) {
+    if (N_raw[i] != 0) {
+      N = insert(N, N_raw[i], size(N));
+    }
+  }
+  
+  if (Check_Consistence_CGB(E, N)) {
+    setring(BR);
+    return (1);
+  } else {
+    setring(BR);
+    return (0);
+  }
+}
+
+// Warning: the correctness of the method used here is not proved.
+proc checkConfigUnionWithBranch(list config_list, ideal E, list N) {
+  // Basering is @RP.
+  if (size(config_list) == 0) {
+    return (0);
+  }
+
+  int i, j;
+  poly null_prod = 1;
+  poly nonnull_prod = 1;
+  for (i = 1; i <= size(config_list); i++) {
+    if (size(config_list[i][1]) != 0) {
+      for (j = 1; j <= size(config_list[i][1]); j++) {
+	null_prod = null_prod * config_list[i][1][j];
+      }
+    }
+    
+    for (j = 1; j <= size(config_list[i][2]); j++) {
+      nonnull_prod = nonnull_prod * config_list[i][2][j];
+    }
+  }
+
+  // Factorize both of the products.
+  ideal null_FL = factorize(null_prod, 1);
+  ideal nonnull_FL = factorize(nonnull_prod, 1);
+
+  // One direction: for each poly in null_FL but not in E,
+  // check whether its corresponding poly is in nonnull_FL. 
+  ideal GE = radical(E);
+  for (i = 1; i <= size(null_FL); i++) {
+    poly cur_factor = null_FL[i];
+    if (reduce(cur_factor, GE) != 0) {
+      if (reduce(cur_factor, nonnull_FL) != 0) {
+	return (0);
+      }
+    }
+  }
+
+  // Backward: for each poly in nonnull_FL but not in N,
+  // check whether its corresponding poly is in null_FL.
+  for (i = 1; i <= size(nonnull_FL); i++) {
+    poly cur_factor = nonnull_FL[i];
+    if (!listContains(cur_factor, N)) {
+      if (reduce(cur_factor, null_FL) != 0) {
+	return (0);
+      }
+    }
+  }
+
+  return (1);
+}
+
+// Used for top-down algorithm.
+proc checkEssential(poly g, list G, list modcgs, link out) {
+  // Basering is @RP.
+  int i, j;
+  
+  if (size(modcgs) == 0) {
+    return (1);
+  }
+
+  for (i = 1; i <= size(modcgs); i++) {
+    // For each branch in which g appears.
+    if (appearInBranch(g, modcgs[i])) {
+      // G_i is guaranteed to be non-empty.
+      // Compute LPP_X(sigma(g)).
+      poly lpp_g;
+      for (j = 1; j <= size(modcgs[i][3]); j++) {
+	if (g == modcgs[i][3][j][1] + modcgs[i][3][j][2]) {
+	  lpp_g = lpp_X(modcgs[i][3][j][1]);
+	}
+      }
+      list candidates = genCandidatePolys(lpp_g, G, modcgs[i][1]);
+      if (size(candidates) == 0) {
+	// There is no other poly covering g's LPP_X.
+	// So g is essential.
+	fprintf(out, "%s is essential in Branch %s.", string(g), string(i));
+	return (1);
+      } 
+      
+      list config_list;
+      for (j = 1; j <= size(candidates); j++) {
+	// For each poly in candidates.
+	ideal subE;
+	list subN;
+	(subE, subN) = genConfigByPoly(lpp_g, candidates[j]);
+	ideal newE = modcgs[i][1] + subE;
+	list newN = modcgs[i][2] + subN;
+	// If this configuration is consistent with both itself and branch config.
+	// Then add it to config_list.
+	if (checkConfigConsistency(newE, newN)) {
+	  list config = subE, subN;
+	  config_list = insert(config_list, config, size(config_list));
+	}
+
+	
+      } // Endfor.
+
+      // Check whether union of config_list is exactly (E_i, N_i).
+      if (checkConfigUnionWithBranch(config_list, modcgs[i][1], modcgs[i][2])) {
+	// If so, then g is covered by other polys in any sigma of Branch i.
+	// Then g is non-essential here.
+	fprintf(out, "%s is not essential in Branch %s.", string(g), string(i));
+      } else {
+	// Otherwise, g is essential for Branch i, thus essential globally.
+	fprintf(out, "%s is essential in Branch %s.", string(g), string(i));
+	return (1);
+      } // Endif.
+
+    } // Endif.
+  } // Endfor.
+  
+  // Now g is non-essential for all branches in which it appears.
+  // Thus g is non-essential globally.
+  return (0);
+}
+
+proc printListToFile(list l, link out) {
+  if (size(l) == 0) {
+    fprintf(out, newline);
+  } else {
+    int i;
+
+    for (i = 1; i<= size(l); i++) {
+      fprintf(out, "%s,", l[i]);
+    }
+  }
+}
+
+proc genMCCGB_topdown(ideal Polys, ideal Equ, list DisEqu, link out) {
+  // Basering is @R.
+  ideal G;
+  list modcgs;
+
+  (G, modcgs) = cgb_mod(Polys, Equ, DisEqu, out);
+  set_global_rings_mccgb();
+
+  // Switch to @RP.
+  setring(@RP);
+  def G = imap(@R, G);
+  def modcgs = imap(@R, modcgs);
+
+  fprintf(out, newline + "======================");
+  fprintf(out, "Now remove non-essential poly:");
+
+  list mccgb;
+  int i, j;
+
+  // Initially, set G to be mccgb.
+  for (i = 1; i <= size(G); i++) {
+    mccgb[i] = G[i];
+  }
+  fprintf(out, "Initially, M = {%s}", string(mccgb));
+
+  // For each poly in mccgb.
+  for (i = 1; i <= size(G); i++) {
+    poly cur_g = G[i];
+    fprintf(out, "-------------------------------------");
+    fprintf(out, "Now consider %s:", string(cur_g));
+    mccgb = listDeleteByPoly(mccgb, cur_g);
+    fprintf(out, "M' = {");
+    printListToFile(mccgb, out);
+    fprintf(out, "}.");
+    
+    if (checkEssential(cur_g, mccgb, modcgs, out)) {
+      fprintf(out, "%s is essential.", string(cur_g));
+      mccgb = insert(mccgb, cur_g, size(mccgb)); 
+    } else {
+      fprintf(out, "%s is not essential.", string(cur_g));
+    }
+  }
+
+  // Switch back to @R.
+  setring(@R);
+  def mccgb = imap(@RP, mccgb);
+  def G = imap(@RP, G);
+  def modcgs = imap(@RP, modcgs);
+
+  fprintf(out ,newline + "=================================");
+
+  return (mccgb, G, modcgs);
+     
 }
 
 proc genMCCGB(ideal Polys, ideal Equ, list DisEqu, link out) {

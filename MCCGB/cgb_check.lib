@@ -32,135 +32,88 @@ proc check_correctness(list mccgb, ideal F, list modcgs, link out)
   }
 }
 
-proc check_comprehensive(list basis, ideal F, list modcgs, link out) {
+proc check_comprehensive(list basis, list modcgs, link out) {
   // basering is @R.
-
   int i;
-  int num_branches = size(modcgs);
+  
+  // For each branch.
+  for (i = 1; i <= size(modcgs); i++) {
+    list sigma_basis = get_sigma_basis(basis, modcgs[i][1], modcgs[i][2], 0);
+    list sigma_g = get_nonzero_part(modcgs[i][3]);
 
-  // For each branch ((E_i, N_i), G_i).
-  for (i = 1; i <= num_branches; i++) {
-    fprintf(out, newline + "  Branch %s: ({%s}, {%s}):", string(i), string(modcgs[i][1]), string(modcgs[i][2]));
-
-    // Get list of null conditions.
-    int j;
-    list null_conds;
-    
-    if (size(modcgs[i][1]) == 0) {
-      null_conds = list();
-    } else {
-      for (j = 1; j <= size(modcgs[i][1]); j++) {
-	null_conds = insert(null_conds, modcgs[i][1][j], size(null_conds));
+    // The case when G_i is empty.
+    if (size(sigma_g) == 0) {
+      if (size(sigma_basis) > 0) {
+	return (0);
       }
     }
 
-    // Consider G_i.
-    if (size(modcgs[i][3]) != 0) {
-      // G_i is not empty.
-
-      // Get sigma(F), sigma(mccgb), and sigma(G_i).
-      def sigma_F = get_sigma_basis(basis, null_conds, modcgs[i][2], 0);
-      def sigma_basis = get_sigma_basis(basis, null_conds, modcgs[i][2], 0);
-      def sigma_g = get_nonzero_part(modcgs[i][3]);
-
-      fprintf(out, "    sigma(F) = {%s};", string(sigma_F));
-      fprintf(out, "    sigma(G_%s) = {%s};", string(i), string(sigma_g));
-      fprintf(out, "    sigma(basis) = {%s}.", string(sigma_basis));
-
-      // Check whether sigma(basis) generates sigma(F).
-      if (size(sigma_F) == 0) {
-	// sigma(F) is empty.
-	if (sigma(basis) > 0) {
-	  fprintf(out, "  sigma(basis) is not GB for Branch %s.", string(i));
-	  return (0);
-	}
-      } else {
-	// sigma(F) is not empty.
-	ideal I_sigma_basis = ideal(listToVec(sigma_basis));
-	for (j = 1; j <= size(sigma_F); j++) {
-	  poly rem = reduce(sigma_F[j], I_sigma_basis);
-	  if (rem != 0) {
-	    // The remainder is not 0, then switch to Q[X, A].
-	    def coef_list = get_coef_list(rem);
-	    setring(@RP);
-	    def coef_list = imap(@R, coef_list);
-	    def modcgs = imap(@R, modcgs);
-	    def E = modcgs[i][1];
-
-	    // Check whether the remainder can be reduced to 0 under radical of E.
-	    if (!check_coef_list_null(coef_list, E)) {
-	      setring(@R);
-	      fprintf(out, "  sigma(basis) is not GB of branch %s.", string(i));
-	      return (0);
-	    } else {
-	      setring(@R);
-	    } // End if.
-	  } // End if.
-	} // End for j.
-
-	// Check whether <LPP_X(sigma_basis)> == <LPP_X(sigma_g)>.
-	if (size(sigma_g) == 0) {
-	  if (size(sigma_basis) > 0) {
-	    fprintf(out, "  sigma(basis) is not GB of branch %s.", string(i));
-	    return (0);
-	  }
-	} else {
-	  if (size(sigma_basis) == 0) {
-	    fprintf(out, "  sigma(basis) is not GB of branch %s.", string(i));
-	    return (0);
-	  } else {
-	    setring(@RP);
-	    def sigma_basis = imap(@R, sigma_basis);
-	    def sigma_g = imap(@R, sigma_g);
-	    def modcgs = imap(@R, modcgs);
-	    
-	    // Calculate the LPP_X of sigma(basis) and sigma(G_i).
-	    list lpp_sigma_basis = calculateLPPList(sigma_basis, modcgs[i][1], modcgs[i][2]);
-	    list lpp_sigma_g = calculateLPPList(sigma_g, modcgs[i][1], modcgs[i][2]);
-
-	    ideal I1 = groebner(ideal(listToVec(lpp_sigma_basis)));
-	    ideal I2 = groebner(ideal(listToVec(lpp_sigma_g)));
-	    if (!ideal_equal(I1, I2)) {
-	      fprintf(out, "  sigma(basis) is not GB of branch %s.", string(i));
-	      setring(@R);
-	      return (0);
-	    } // End if.
-	    setring(@R);
-	  } // End if.
-	} // End if.
-      } // End if.
-    } else {
-      // G_i is empty.
-      fprintf(out, "    G_%s is empty;", string(i));
-
-      // Get sigma_basis.
-      def sigma_basis = get_sigma_basis(basis, null_conds, modcgs[i][2], 0);
-      fprintf(out, "    sigma(basis) = {%s}.", string(sigma_basis));
-
-      if (size(sigma_basis) > 0) {
-	fprintf(out, "  sigma(basis) is not GB of branch %s.", string(i));
+    // Otherwise.
+    // Calculate the LPP list of Basis_M.
+    list lpp_list_basis;
+    int j;
+    for (j = 1; j <= size(basis); j++) {
+      poly curP = specialize(basis[j], modcgs[i][1], modcgs[i][2]);
+      if (curP != 0) {
+	lpp_list_basis = insert(lpp_list_basis, lpp_X(curP), size(lpp_list_basis));
       }
-    } // End if.
-    fprintf(out, "  sigma(basis) is GB for branch %s.", string(i));
-  } // End for i.
+    }
+
+    // For each poly in G \ G_0.
+    list G_nonzero = get_G_nonzero(modcgs[i][3]);
+    for (j = 1; j <= size(G_nonzero); j++) {
+      if (divides(lpp_X(G_nonzero[j]), lpp_list_basis) == 0) {
+	return (0);
+      }
+    }
+
+  } // End for each branch.
 
   return (1);
 }
 
-proc ideal_equal(ideal I, ideal J) {
-  // basering is Q[X, A].
-  int i;
-  for (i = 1; i <= size(I); i++) {
-    if (reduce(I[i], J) != 0) {
-      return (0);
+proc get_G_nonzero(list l) {
+  if (size(l) == 0) {
+    return (list());
+  } else {
+    int i;
+    list G_nonzero_list;
+    for (i = 1; i <= size(l); i++) {
+      if (l[i][1] != 0) {
+	G_nonzero_list = insert(G_nonzero_list, l[i][1] + l[i][2], size(G_nonzero_list));
+      }
     }
+    return (G_nonzero_list);
+  }
+}
+
+proc divides(poly p, list basis) {
+  if (size(basis) == 0) {
+    return (0);
+  } else {
+    int i;
+    for (i = 1; i <= size(basis); i++) {
+      if (p / basis[i] != 0) {
+	return (1);
+      }
+    }
+
+    return (0);
+  }
+}
+
+proc specialize(poly p, ideal E, list N) {
+  ideal GE = radical(E);
+  ideal G = groebner(GE);
+  poly p1;
+
+  while (p != 0) {
+    poly lcxP = leadcoef_X(p);
+    if (reduce(lcxP, G) != 0) {
+      p1 = p1 + lm_X(p);
+    }
+    p = p - lm_X(p);
   }
 
-  for (i = 1; i <= size(J); i++) {
-    if (reduce(J[i], I) != 0) {
-      return (0);
-    }
-  }
-
-  return (1);
+  return (p1);
 }

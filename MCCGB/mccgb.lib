@@ -291,7 +291,27 @@ proc listContains(poly f, list l) {
   }
 }
 
-proc genCandidatePolys(poly lpp_f, list G, ideal E) {
+proc checkCoefNonnull(poly c, list N) {
+  // Basering is @RP.
+  if (size(N) == 1) {
+    N[1] = 1;
+  }
+
+  poly nonnull_cond = 1;
+  int i;
+  for (i = 1; i <= size(N); i++) {
+    nonnull_cond = nonnull_cond * N[i];
+  }
+
+  if (verify_with_nonnull(c, nonnull_cond) != 0) {
+    // c is determined to be non-zero.
+    return (1);
+  } else {
+    return (0);
+  }
+}
+
+proc genCandidatePolys(poly lpp_f, list G, ideal E, list N) {
   // Basering is @RP.
   if (size(G) == 0) {
     return (list());
@@ -300,34 +320,59 @@ proc genCandidatePolys(poly lpp_f, list G, ideal E) {
     list res_list;
     for (i = 1; i <= size(G); i++) {
       poly g = G[i];
+      int candidate_flag = 1;
       if (listContains(lpp_f, genPPs(g))) {
-	poly c = getCoefOfPP(lpp_f, g);
-	if (!checkCoefZero(c, E)) {
-	  res_list = insert(res_list, g, size(res_list));
+	// Check coefficents of higher power-product.
+	while (lpp_X(g) != lpp_f) {
+	  poly c_higher = leadcoef_X(g);
+	  if (checkCoefNonnull(c_higher, N)) {
+	    // If any of them is determined to be non-zero,
+	    // then g is not a candidate.
+	    candidate_flag = 0;
+	    break;
+	  }
+	  g = g - lm_X(g);
 	}
+
+	// Now check the coefficient of lpp_f in g.
+	// If it's not determined to be zero,
+	// then g is a candidate.
+	if (candidate_flag) {
+	  poly c = getCoefOfPP(lpp_f, g);
+	  if (!checkCoefZero(c, E)) {
+	    res_list = insert(res_list, g, size(res_list));
+	  }
+	}
+
       } // Endif.
     } // Endfor.
     return (res_list);
   } // Endif.
 }
 
-proc genConfigByPoly(poly pp, poly g) {
+proc genConfigByPoly(poly pp, poly g, ideal E_branch) {
   // Basering is @RP.
-  
+
+  ideal GE_branch = radical(E_branch);
+
   // Construct E.
   list null_conds;
   poly f = g;
   while (lpp_X(f) != pp) {
     poly c = leadcoef_X(f);
-    null_conds = insert(null_conds, c, size(null_conds));
+    def rem_c = reduce(c, GE_branch);
+    if (rem_c != 0) {
+      null_conds = insert(null_conds, rem_c, size(null_conds));
+    }
     f = f - lm_X(f);
   }
   def E = ideal(listToVec(null_conds));
 
   // Construct N.
   poly nonnull_cond = getCoefOfPP(pp, g);
+  def rem_nonnull_cond = reduce(nonnull_cond, GE_branch);
   
-  return (E, list(nonnull_cond));
+  return (E, list(rem_nonnull_cond));
 }
 
 proc checkConfigConsistency(ideal E, list N) {
@@ -365,6 +410,19 @@ proc checkConfigUnionWithBranch(list config_list, ideal E, list N) {
     return (0);
   }
 
+  ideal GE = radical(E);
+
+  if (size(N) == 0) {
+    N[1] = 1;
+  }
+
+  poly N_prod = 1;
+  for (i = 1; i <= size(N); i++) {
+    N_prod = N_prod * N[i];
+  }
+  list N_fact = factorize(N_prod, 1);
+
+
   int i, j;
   poly null_prod = 1;
   poly nonnull_prod = 1;
@@ -373,6 +431,8 @@ proc checkConfigUnionWithBranch(list config_list, ideal E, list N) {
       for (j = 1; j <= size(config_list[i][1]); j++) {
 	null_prod = null_prod * config_list[i][1][j];
       }
+    } else {
+      null_prod = 0;
     }
     
     for (j = 1; j <= size(config_list[i][2]); j++) {
@@ -386,7 +446,6 @@ proc checkConfigUnionWithBranch(list config_list, ideal E, list N) {
 
   // One direction: for each poly in null_FL but not in E,
   // check whether its corresponding poly is in nonnull_FL. 
-  ideal GE = radical(E);
   for (i = 1; i <= size(null_FL); i++) {
     poly cur_factor = null_FL[i];
     if (reduce(cur_factor, GE) != 0) {
@@ -400,7 +459,7 @@ proc checkConfigUnionWithBranch(list config_list, ideal E, list N) {
   // check whether its corresponding poly is in null_FL.
   for (i = 1; i <= size(nonnull_FL); i++) {
     poly cur_factor = nonnull_FL[i];
-    if (!listContains(cur_factor, N)) {
+    if (!listContains(cur_factor, N_fact[1])) {
       if (reduce(cur_factor, null_FL) != 0) {
 	return (0);
       }
@@ -424,45 +483,81 @@ proc checkEssential(poly g, list G, list modcgs, link out) {
     if (appearInBranch(g, modcgs[i])) {
       // G_i is guaranteed to be non-empty.
       // Compute LPP_X(sigma(g)).
+
+      // Compute nonnull_cond.
+      poly nonnull_cond = 1;
+      if (size(modcgs[i][2]) != 0) {
+	for (j = 1; j <= size(modcgs[i][2]); j++) {
+	  nonnull_cond = nonnull_cond * modcgs[i][2][j];
+	}
+      }
+
+      fprintf(out, "Come to Branch %s:", string(i));
+      fprintf(out, "[%s],    [%s].", string(modcgs[i][1]), string(modcgs[i][2]));
+
+      fprintf(out, "original sigma(G_%s) = [", string(i));
+      show_list_to_file(get_nonzero_part(modcgs[i][3]), out);
+      fprintf(out, "].");
+      fprintf(out, "sigma(M') = [");
+      show_list_to_file(get_sigma_basis_with_single_nonnull(G, modcgs[i][1], nonnull_cond, 0), out);
+      fprintf(out, "].");
+
       poly lpp_g;
       for (j = 1; j <= size(modcgs[i][3]); j++) {
 	if (g == modcgs[i][3][j][1] + modcgs[i][3][j][2]) {
 	  lpp_g = lpp_X(modcgs[i][3][j][1]);
 	}
       }
-      list candidates = genCandidatePolys(lpp_g, G, modcgs[i][1]);
+      fprintf(out, "LPP_X(sigma(g)) = %s.", string(lpp_g));
+      list candidates = genCandidatePolys(lpp_g, G, modcgs[i][1], modcgs[i][2]);
       if (size(candidates) == 0) {
 	// There is no other poly covering g's LPP_X.
 	// So g is essential.
+	fprintf(out, "There is no candidate polynomial.");
 	fprintf(out, "%s is essential in Branch %s.", string(g), string(i));
 	return (1);
       } 
+      fprintf(out, "Candidate polynomials are {");
+      show_list_to_file(candidates, out);
+      fprintf(out, "}.");
       
       list config_list;
       for (j = 1; j <= size(candidates); j++) {
 	// For each poly in candidates.
 	ideal subE;
 	list subN;
-	(subE, subN) = genConfigByPoly(lpp_g, candidates[j]);
-	ideal newE = modcgs[i][1] + subE;
+	(subE, subN) = genConfigByPoly(lpp_g, candidates[j], modcgs[i][1]);
+	ideal newE = groebner(modcgs[i][1] + subE);
 	list newN = modcgs[i][2] + subN;
 	// If this configuration is consistent with both itself and branch config.
 	// Then add it to config_list.
 	if (checkConfigConsistency(newE, newN)) {
-	  list config = subE, subN;
+	  list config = newE, newN;
 	  config_list = insert(config_list, config, size(config_list));
+	  fprintf(out, "Specification ([%s], [%s]) is consistent.", string(newE), string(newN));
+	} else {
+	  fprintf(out, "Specification ([%s], [%s]) is not consistent.", string(newE), string(newN));
 	}
-
-	
+		
       } // Endfor.
+
+      fprintf(out, "The specifications are: {");
+      if (size(config_list) != 0) {
+	for (j = 1; j <= size(config_list); j++) {
+	  fprintf(out, "[%s],  [%s]", string(config_list[j][1]), string(config_list[j][2]));
+	}
+      }
+      fprintf(out, "}.");
 
       // Check whether union of config_list is exactly (E_i, N_i).
       if (checkConfigUnionWithBranch(config_list, modcgs[i][1], modcgs[i][2])) {
 	// If so, then g is covered by other polys in any sigma of Branch i.
 	// Then g is non-essential here.
+	fprintf(out, "The union of them is the whole branch.");
 	fprintf(out, "%s is not essential in Branch %s.", string(g), string(i));
       } else {
 	// Otherwise, g is essential for Branch i, thus essential globally.
+	fprintf(out, "The union of them is not the whole branch.");
 	fprintf(out, "%s is essential in Branch %s.", string(g), string(i));
 	return (1);
       } // Endif.
@@ -473,18 +568,6 @@ proc checkEssential(poly g, list G, list modcgs, link out) {
   // Now g is non-essential for all branches in which it appears.
   // Thus g is non-essential globally.
   return (0);
-}
-
-proc printListToFile(list l, link out) {
-  if (size(l) == 0) {
-    fprintf(out, newline);
-  } else {
-    int i;
-
-    for (i = 1; i<= size(l); i++) {
-      fprintf(out, "%s,", l[i]);
-    }
-  }
 }
 
 proc genMCCGB_topdown(ideal Polys, ideal Equ, list DisEqu, link out) {
@@ -519,7 +602,7 @@ proc genMCCGB_topdown(ideal Polys, ideal Equ, list DisEqu, link out) {
     fprintf(out, "Now consider %s:", string(cur_g));
     mccgb = listDeleteByPoly(mccgb, cur_g);
     fprintf(out, "M' = {");
-    printListToFile(mccgb, out);
+    show_list_to_file(mccgb, out);
     fprintf(out, "}.");
     
     if (checkEssential(cur_g, mccgb, modcgs, out)) {

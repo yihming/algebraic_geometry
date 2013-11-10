@@ -311,6 +311,24 @@ proc checkCoefNonnull(poly c, list N) {
   }
 }
 
+proc genCandidateFaithfulPolys(poly lpp_f, list G, ideal E, list N) {
+  // Basering is @RP.
+  if (size(G) == 0) {
+    return (list());
+  }
+
+  int i;
+  list res_list;
+  for (i = 1; i <= size(G); i++) {
+    poly c = getCoefOfPP(lpp_f, G[i]);
+    if (!checkCoefZero(c, E)) {
+      res_list = insert(res_list, G[i], size(res_list));
+    }
+  }
+
+  return (res_list);
+}
+
 proc genCandidatePolys(poly lpp_f, list G, ideal E, list N) {
   // Basering is @RP.
   if (size(G) == 0) {
@@ -403,7 +421,168 @@ proc checkConfigConsistency(ideal E, list N) {
   }
 }
 
-// Warning: the correctness of the method used here is not proved.
+proc ideal_exclude(ideal I, ideal J) {
+  // Basering is @RP.
+  if (size(I) == 0) {
+    return (ideal());
+  }
+
+  if (size(J) == 0) {
+    return (I);
+  }
+  
+  int i, j;
+  ideal res_I;
+  ideal GJ = groebner(J);
+  for (i = 1; i <= size(I); i++) {
+    ideal FL = factorize(I[i], 1);
+
+    list factor_list;
+    for (j = 1; j <= size(FL); j++) {
+      poly rem = reduce(FL[j], GJ);
+      if (rem != 0) {
+	factor_list = insert(factor_list, rem, size(factor_list));
+      }
+    }
+    
+    if (size(factor_list) > 0) {
+      poly prod_factor = 1;
+      for (j = 1; j <= size(factor_list); j++) {
+	prod_factor = prod_factor * factor_list[j];
+      }
+      res_I = res_I + prod_factor;
+    }
+
+  }
+
+  return (groebner(radical(res_I)));
+}
+
+proc getNSquareFreeFromProd(poly h) {
+  // Basering is @RP.
+  ideal FL = factorize(h, 1);
+  int i;
+  list res_list;
+  for (i = 1; i <= size(FL); i++) {
+    res_list = insert(res_list, FL[i], size(res_list));
+  }
+
+  return (res_list);
+}
+
+proc redRepN(ideal E, list N, poly f) 
+"
+E, N are in red-representation.
+If (E, N) is inconsistent, then E == ideal(1).
+"
+{
+  // Basering is @RP.
+  //ideal E1 = radical(E + ideal(f));
+  ideal E1 = E + ideal(f);
+
+  poly h = 1;
+  if (size(N) > 0) {
+    int i;
+    for (i = 1; i <= size(N); i++) {
+      h = h * N[i];
+    }
+  }
+  ideal res_E = radical(ideal_exclude(E1, ideal(h)));
+
+  return (res_E, N);
+}
+
+proc redRepNN(ideal E, list N, poly f) 
+"
+E, N are in red-representation.
+If (E, N) is inconsistent, then N == list().
+"
+{
+  // Basering is @RP.
+  int i;
+  
+  poly N_prod = 1;
+  if (size(N) > 0) {
+    for (i = 1; i <= size(N); i++) {
+      N_prod = N_prod * N[i];
+    }
+  }
+  poly h1 = reduce(N_prod * f, E);
+  ideal newE = ideal_exclude(E, groebner(ideal(h1)));
+  list newN = getNSquareFreeFromProd(h1);
+
+  return (newE, newN);
+}
+
+proc split(ideal E, list N, poly f) 
+"
+E, N are in red-representation.
+"
+{
+  // Basering is @RP.
+  list res_list;
+
+  ideal E0;
+  list N0;
+  (E0, N0) = redRepN(E, N, f);
+  list sub1 = E0, N0;
+  res_list = insert(res_list, sub1, size(res_list));
+  if (groebner(E0)[1] == 1) {
+    // (E0, N0) is inconsistent.
+    list sub2 = E, N;
+    res_list = insert(res_list, sub2, size(res_list));
+  } else {
+    ideal E1;
+    list N1;
+    (E1, N1) = redRepNN(E, N, f);
+    list sub2 = E1, N1;
+    res_list = insert(res_list, sub2, size(res_list));
+  }
+
+  return (res_list);
+}
+
+proc makeRedRepresentation(ideal E, list N) {
+  // Basering is @RP.
+  int i;
+
+
+  if (size(E) == 0) {
+    if (size(N) == 0) {
+      return (ideal(), list(1));
+    } else {
+      ideal newE = ideal();
+    }
+  }
+
+  if (size(N) == 0) {
+    list newN = 1;
+  }
+
+  if (size(E) > 0) {
+    ideal newE = radical(E);
+  }
+
+  if (size(N) > 0) {
+    poly prod_N = 1;
+    for (i = 1; i <= size(i); i++) {
+      prod_N = prod_N * N[i];
+    }
+
+    poly prod_N_rem = reduce(prod_N, newE);
+
+    ideal FL_N = factorize(prod_N_rem, 1);
+
+    list newN;
+    for (i = 1; i <= size(FL_N); i++) {
+      newN = insert(newN, FL_N[i], size(newN));
+    }
+  }
+
+  return (newE, newN);
+}
+
+// Yiming: Will be obsolete once checkEssentialInBranch is done.
 proc checkConfigUnionWithBranch(list config_list, ideal E, list N) {
   // Basering is @RP.
   if (size(config_list) == 0) {
@@ -469,6 +648,141 @@ proc checkConfigUnionWithBranch(list config_list, ideal E, list N) {
   return (1);
 }
 
+proc checkNullRedRep(ideal E, list N, poly f) 
+"
+E, N are in red-representation.
+"
+{
+  // Basering is @RP.
+  if (reduce(f, groebner(E)) == 0) {
+    return (1);
+  }
+
+  return (0);
+}
+
+proc checkNonNullRedRep(ideal E, list N, poly f)
+"
+E, N are in red-representation.
+"
+{
+  // Basering is @RP.
+  ideal newE;
+  list newN;
+  (newE, newN) = redRepN(E, N, f);
+  if (groebner(newE)[1] == 1) {
+    return (1);
+  }
+
+  return (0);
+}
+
+proc getHigherCoefs(poly f, poly t) {
+  // Basering is @RP.
+  list res_list;
+  while (lpp_X(f) > t) {
+    res_list = insert(res_list, leadcoef_X(f), size(res_list));
+    f = f - lm_X(f);
+  }
+
+  return (res_list);
+}
+
+// TODO
+proc checkEssentialInBranch(poly t, list G, ideal E, list N, link out) {
+  // Basering is @RP.
+  int i;
+
+  // t is the LPP_X(g) currently used.
+  list candidates = genCandidateFaithfulPolys(t, G, E, N);
+  
+  if (size(candidates) == 0) {
+    return (1);
+  }
+
+  // Transform E and N into red-representation.
+  ideal E_red;
+  list N_red;
+  show(E);
+  show(N);
+  (E_red, N_red) = makeRedRepresentation(E, N);
+
+  poly f = candidates[1];
+  list raw_higher_coefs = getHigherCoefs(f, t);
+  
+  // reduce each poly in subE by E_red.
+  list higher_coefs;
+  if (size(raw_higher_coefs) > 0) {
+    ideal GE_red = groebner(E_red);
+    for (i = 1; i <= size(raw_higher_coefs); i++) {
+      poly rem = reduce(raw_higher_coefs[i], GE_red);
+      if (rem != 0) {
+	higher_coefs = insert(higher_coefs, rem, size(higher_coefs));
+      }
+    }
+  }
+
+  // Get coefficient of LPP t.
+  poly ct = getCoefOfPP(t, f);
+  
+  list sub_branches = split(E_red, N_red, ct);
+  ideal E0 = sub_branches[1][1];
+  list N0 = sub_branches[1][2];
+  ideal E1 = sub_branches[2][1];
+  list N1 = sub_branches[2][2];
+
+  // Case I: ct is enforced to be 0.
+  if (size(N1) == 0) {
+    // Consider the rest candidates.
+    fprintf(out, "coef(%s) = %s is enforced to be 0.", string(f), string(ct));
+    return (checkEssentialInBranch(t, delete(G, 1), E0, N0, out));
+  }
+
+  // Case II: ct is enforced to be non-zero.
+  if (groebner(E0)[1] == 1) {
+    if (size(higher_coefs) == 0) {
+      fprintf(out, "coef(%s) = %s is enforced to be non-zero.", string(f), string(ct));
+      return (0);
+    } else {
+      list G_rem = delete(G, 1);
+      for (i = 1; i <= size(higher_coefs); i++) {
+	ideal newE;
+	list newN;
+	(newE, newN) = redRepNN(E1, N1, higher_coefs[i]);
+	if (!checkEssentialInBranch(t, G_rem, newE, newN, out)) {
+	  fprintf(out, "Essential sub-branch: <%s>, <%s>.", string(newE), string(newN));
+	  return (0);
+	} else {
+	  fprintf(out, "Branch <%s>, <%s> is non-essential.", string(newE), string(newN));
+	}
+      }
+      return (1);
+    }
+  }
+
+  // Case III: both sub-branches are consistent.
+  if (size(higher_coefs) == 0) {
+    // There is no higher monomial under specialization.
+    fprintf("There is no higher monomial in %s under <%s>, <%s>.", string(f), string(E_red), string(N_red));
+    return (checkEssentialInBranch(t, delete(G, 1), E0, N0, out));
+  } else {
+    // Consider (E1, N1).
+    list G_rem = delete(G, 1);
+    for (i = 1; i <= size(higher_coefs); i++) {
+      ideal newE;
+      list newN;
+      (newE, newN) = redRepNN(E1, N1, higher_coefs[i]);
+      if (!checkEssentialInBranch(t, G_rem, newE, newN, out)) {
+	return (0);
+      }
+    }
+
+    // Now consider (E0, N0).
+    return (checkEssentialInBranch(t, G_rem, E0, N0, out));
+  }
+
+}
+
 // Used for top-down algorithm.
 proc checkEssential(poly g, list G, list modcgs, link out) {
   // Basering is @RP.
@@ -482,7 +796,6 @@ proc checkEssential(poly g, list G, list modcgs, link out) {
     // For each branch in which g appears.
     if (appearInBranch(g, modcgs[i])) {
       // G_i is guaranteed to be non-empty.
-      // Compute LPP_X(sigma(g)).
 
       // Compute nonnull_cond.
       poly nonnull_cond = 1;
@@ -502,6 +815,7 @@ proc checkEssential(poly g, list G, list modcgs, link out) {
       show_list_to_file(get_sigma_basis_with_single_nonnull(G, modcgs[i][1], nonnull_cond, 0), out);
       fprintf(out, "].");
 
+      // Compute LPP_X(sigma(g)).
       poly lpp_g;
       for (j = 1; j <= size(modcgs[i][3]); j++) {
 	if (g == modcgs[i][3][j][1] + modcgs[i][3][j][2]) {
@@ -509,58 +823,62 @@ proc checkEssential(poly g, list G, list modcgs, link out) {
 	}
       }
       fprintf(out, "LPP_X(sigma(g)) = %s.", string(lpp_g));
-      list candidates = genCandidatePolys(lpp_g, G, modcgs[i][1], modcgs[i][2]);
-      if (size(candidates) == 0) {
+
+      if (checkEssentialInBranch(lpp_g, listDeleteByPoly(G, g), modcgs[i][1], modcgs[i][2], out)) {
+	return (1);
+      }
+      //list candidates = genCandidatePolys(lpp_g, G, modcgs[i][1], modcgs[i][2]);
+      //if (size(candidates) == 0) {
 	// There is no other poly covering g's LPP_X.
 	// So g is essential.
-	fprintf(out, "There is no candidate polynomial.");
-	fprintf(out, "%s is essential in Branch %s.", string(g), string(i));
-	return (1);
-      } 
-      fprintf(out, "Candidate polynomials are {");
-      show_list_to_file(candidates, out);
-      fprintf(out, "}.");
+	//fprintf(out, "There is no candidate polynomial.");
+	//fprintf(out, "%s is essential in Branch %s.", string(g), string(i));
+	//return (1);
+      //} 
+      //fprintf(out, "Candidate polynomials are {");
+      //show_list_to_file(candidates, out);
+      //fprintf(out, "}.");
       
-      list config_list;
-      for (j = 1; j <= size(candidates); j++) {
+      //list config_list;
+      //for (j = 1; j <= size(candidates); j++) {
 	// For each poly in candidates.
-	ideal subE;
-	list subN;
-	(subE, subN) = genConfigByPoly(lpp_g, candidates[j], modcgs[i][1]);
-	ideal newE = groebner(modcgs[i][1] + subE);
-	list newN = modcgs[i][2] + subN;
+	//ideal subE;
+	//list subN;
+	//(subE, subN) = genConfigByPoly(lpp_g, candidates[j], modcgs[i][1]);
+	//ideal newE = groebner(modcgs[i][1] + subE);
+	//list newN = modcgs[i][2] + subN;
 	// If this configuration is consistent with both itself and branch config.
 	// Then add it to config_list.
-	if (checkConfigConsistency(newE, newN)) {
-	  list config = newE, newN;
-	  config_list = insert(config_list, config, size(config_list));
-	  fprintf(out, "Specification ([%s], [%s]) is consistent.", string(newE), string(newN));
-	} else {
-	  fprintf(out, "Specification ([%s], [%s]) is not consistent.", string(newE), string(newN));
-	}
+	//if (checkConfigConsistency(newE, newN)) {
+      //list config = newE, newN;
+      //config_list = insert(config_list, config, size(config_list));
+      //fprintf(out, "Specification ([%s], [%s]) is consistent.", string(newE), string(newN));
+      //} else {
+      //  fprintf(out, "Specification ([%s], [%s]) is not consistent.", string(newE), string(newN));
+      //}
 		
-      } // Endfor.
+      //} // Endfor.
 
-      fprintf(out, "The specifications are: {");
-      if (size(config_list) != 0) {
-	for (j = 1; j <= size(config_list); j++) {
-	  fprintf(out, "[%s],  [%s]", string(config_list[j][1]), string(config_list[j][2]));
-	}
-      }
-      fprintf(out, "}.");
+      //fprintf(out, "The specifications are: {");
+      //if (size(config_list) != 0) {
+      //for (j = 1; j <= size(config_list); j++) {
+      //  fprintf(out, "[%s],  [%s]", string(config_list[j][1]), string(config_list[j][2]));
+      //}
+      //}
+      //fprintf(out, "}.");
 
       // Check whether union of config_list is exactly (E_i, N_i).
-      if (checkConfigUnionWithBranch(config_list, modcgs[i][1], modcgs[i][2])) {
+      //if (checkConfigUnionWithBranch(config_list, modcgs[i][1], modcgs[i][2])) {
 	// If so, then g is covered by other polys in any sigma of Branch i.
 	// Then g is non-essential here.
-	fprintf(out, "The union of them is the whole branch.");
-	fprintf(out, "%s is not essential in Branch %s.", string(g), string(i));
-      } else {
+	//fprintf(out, "The union of them is the whole branch.");
+	//fprintf(out, "%s is not essential in Branch %s.", string(g), string(i));
+      //} else {
 	// Otherwise, g is essential for Branch i, thus essential globally.
-	fprintf(out, "The union of them is not the whole branch.");
-	fprintf(out, "%s is essential in Branch %s.", string(g), string(i));
-	return (1);
-      } // Endif.
+	//fprintf(out, "The union of them is not the whole branch.");
+	//fprintf(out, "%s is essential in Branch %s.", string(g), string(i));
+	//return (1);
+      //} // Endif.
 
     } // Endif.
   } // Endfor.

@@ -435,10 +435,12 @@ proc ideal_exclude(ideal I, ideal J) {
   ideal res_I;
   ideal GJ = groebner(J);
   for (i = 1; i <= size(I); i++) {
+    // For each generator.
     ideal FL = factorize(I[i], 1);
 
     list factor_list;
     for (j = 1; j <= size(FL); j++) {
+      // For each factor.
       poly rem = reduce(FL[j], GJ);
       if (rem != 0) {
 	factor_list = insert(factor_list, rem, size(factor_list));
@@ -451,6 +453,9 @@ proc ideal_exclude(ideal I, ideal J) {
 	prod_factor = prod_factor * factor_list[j];
       }
       res_I = res_I + prod_factor;
+    } else {
+      // No factor left, which means that only 1 is left.
+      res_I = res_I + 1;
     }
 
   }
@@ -478,7 +483,7 @@ If (E, N) is inconsistent, then E == ideal(1).
 {
   // Basering is @RP.
   //ideal E1 = radical(E + ideal(f));
-  ideal E1 = E + ideal(f);
+  ideal E1 = radical(E + ideal(f));
 
   poly h = 1;
   if (size(N) > 0) {
@@ -487,7 +492,7 @@ If (E, N) is inconsistent, then E == ideal(1).
       h = h * N[i];
     }
   }
-  ideal res_E = radical(ideal_exclude(E1, ideal(h)));
+  ideal res_E = ideal_exclude(E1, ideal(h));
 
   return (res_E, N);
 }
@@ -692,6 +697,8 @@ proc getHigherCoefs(poly f, poly t) {
 proc checkEssentialInBranch(poly t, list G, ideal E, list N, link out) {
   // Basering is @RP.
   int i;
+  fprintf(out, "Now come to Branch (<%s>, <%s>):", string(E), string(N));
+
 
   // t is the LPP_X(g) currently used.
   list candidates = genCandidateFaithfulPolys(t, G, E, N);
@@ -706,11 +713,16 @@ proc checkEssentialInBranch(poly t, list G, ideal E, list N, link out) {
   show(E);
   show(N);
   (E_red, N_red) = makeRedRepresentation(E, N);
+  fprintf(out, "Red-presentation of (E, N) is:");
+  fprintf(out, "<%s>, {%s}.", string(E_red), string(N_red));
+  fprintf(out, "Candidate list is [");
+  show_list_to_file(candidates, out);
+  fprintf(out, "]".);
 
   poly f = candidates[1];
   list raw_higher_coefs = getHigherCoefs(f, t);
   
-  // reduce each poly in subE by E_red.
+  // reduce each poly in raw_higher_coefs by E_red.
   list higher_coefs;
   if (size(raw_higher_coefs) > 0) {
     ideal GE_red = groebner(E_red);
@@ -731,51 +743,62 @@ proc checkEssentialInBranch(poly t, list G, ideal E, list N, link out) {
   ideal E1 = sub_branches[2][1];
   list N1 = sub_branches[2][2];
 
+  fprintf(out, "Split (E, N) into two sub-branches wrt %s:", string(ct));
+  fprintf(out, "Sub-branch 1: (<%s>, {%s});", string(E0), string(N0));
+  fprintf(out, "Sub-branch 2: (<%s>, {%s}).", string(E1), string(N1));
+
   // Case I: ct is enforced to be 0.
   if (size(N1) == 0) {
     // Consider the rest candidates.
-    fprintf(out, "coef(%s) = %s is enforced to be 0.", string(f), string(ct));
-    return (checkEssentialInBranch(t, delete(G, 1), E0, N0, out));
+    fprintf(out, "coef(%s) = %s is enforced to be 0", string(f), string(ct));
+    return (checkEssentialInBranch(t, delete(G, 1), E0, N0, out))
   }
 
   // Case II: ct is enforced to be non-zero.
   if (groebner(E0)[1] == 1) {
     if (size(higher_coefs) == 0) {
       fprintf(out, "coef(%s) = %s is enforced to be non-zero.", string(f), string(ct));
+      fprintf(out, "And there is no higher term. g is covered here.");
       return (0);
     } else {
       list G_rem = delete(G, 1);
-      for (i = 1; i <= size(higher_coefs); i++) {
-	ideal newE;
-	list newN;
-	(newE, newN) = redRepNN(E1, N1, higher_coefs[i]);
-	if (!checkEssentialInBranch(t, G_rem, newE, newN, out)) {
-	  fprintf(out, "Essential sub-branch: <%s>, <%s>.", string(newE), string(newN));
-	  return (0);
-	} else {
-	  fprintf(out, "Branch <%s>, <%s> is non-essential.", string(newE), string(newN));
-	}
+      // Pick one coefficent of the higher power products.
+      fprintf(out, "Now pick one coef of higher term: %s.", string(higher_coefs[1]));
+      ideal newE;
+      list newN;
+      (newE, newN) = redRepNN(E1, N1, higher_coefs[1]);
+      if (!checkEssentialInBranch(t, G_rem, newE, newN, out)) {
+	fprintf(out, "Non-essential sub-branch: <%s>, <%s>.", string(newE), string(newN));
+	return (0);
+      } else {
+	fprintf(out, "Essential sub-branch <%s>, <%s>.", string(newE), string(newN));
+	return (1);
       }
-      return (1);
     }
   }
 
   // Case III: both sub-branches are consistent.
   if (size(higher_coefs) == 0) {
     // There is no higher monomial under specialization.
-    fprintf("There is no higher monomial in %s under <%s>, <%s>.", string(f), string(E_red), string(N_red));
+    fprintf(out, "There is no higher term in %s under <%s>, <%s>.", string(f), string(E_red), string(N_red));
+    fprintf(out, "g is covered in Sub-Branch 2.");
     return (checkEssentialInBranch(t, delete(G, 1), E0, N0, out));
   } else {
     // Consider (E1, N1).
     list G_rem = delete(G, 1);
-    for (i = 1; i <= size(higher_coefs); i++) {
-      ideal newE;
-      list newN;
-      (newE, newN) = redRepNN(E1, N1, higher_coefs[i]);
-      if (!checkEssentialInBranch(t, G_rem, newE, newN, out)) {
-	return (0);
-      }
+    // PIck one coefficient of higher power products.
+    fprintf(out, "Pick one coef of higher term: %s.", string(higher_coefs[1]));
+    ideal newE;
+    list newN;
+    (newE, newN) = redRepNN(E1, N1, higher_coefs[1]);
+    if (!checkEssentialInBranch(t, G_rem, newE, newN, out)) {
+      fprintf(out, "g is non-essential in <%s>, <%s>.", string(newE), string(newN));
+      fprintf(out, "Thus g is non-essential in Sub-branch 2.");
+      return (0);
     }
+
+    fprintf(out, "g is essential in Sub-branch 2.");
+    fprintf(out, "Now consider Sub-branch 1.");
 
     // Now consider (E0, N0).
     return (checkEssentialInBranch(t, G_rem, E0, N0, out));
@@ -789,6 +812,7 @@ proc checkEssential(poly g, list G, list modcgs, link out) {
   int i, j;
   
   if (size(modcgs) == 0) {
+    fprintf(out, "CGS is empty!");
     return (1);
   }
 
@@ -808,11 +832,8 @@ proc checkEssential(poly g, list G, list modcgs, link out) {
       fprintf(out, "Come to Branch %s:", string(i));
       fprintf(out, "[%s],    [%s].", string(modcgs[i][1]), string(modcgs[i][2]));
 
-      fprintf(out, "original sigma(G_%s) = [", string(i));
+      fprintf(out, "Faithful sigma(G_%s) = [", string(i));
       show_list_to_file(get_nonzero_part(modcgs[i][3]), out);
-      fprintf(out, "].");
-      fprintf(out, "sigma(M') = [");
-      show_list_to_file(get_sigma_basis_with_single_nonnull(G, modcgs[i][1], nonnull_cond, 0), out);
       fprintf(out, "].");
 
       // Compute LPP_X(sigma(g)).
@@ -825,60 +846,11 @@ proc checkEssential(poly g, list G, list modcgs, link out) {
       fprintf(out, "LPP_X(sigma(g)) = %s.", string(lpp_g));
 
       if (checkEssentialInBranch(lpp_g, listDeleteByPoly(G, g), modcgs[i][1], modcgs[i][2], out)) {
+	fprintf(out, "g is essential in Branch %s.", string(i));
 	return (1);
-      }
-      //list candidates = genCandidatePolys(lpp_g, G, modcgs[i][1], modcgs[i][2]);
-      //if (size(candidates) == 0) {
-	// There is no other poly covering g's LPP_X.
-	// So g is essential.
-	//fprintf(out, "There is no candidate polynomial.");
-	//fprintf(out, "%s is essential in Branch %s.", string(g), string(i));
-	//return (1);
-      //} 
-      //fprintf(out, "Candidate polynomials are {");
-      //show_list_to_file(candidates, out);
-      //fprintf(out, "}.");
-      
-      //list config_list;
-      //for (j = 1; j <= size(candidates); j++) {
-	// For each poly in candidates.
-	//ideal subE;
-	//list subN;
-	//(subE, subN) = genConfigByPoly(lpp_g, candidates[j], modcgs[i][1]);
-	//ideal newE = groebner(modcgs[i][1] + subE);
-	//list newN = modcgs[i][2] + subN;
-	// If this configuration is consistent with both itself and branch config.
-	// Then add it to config_list.
-	//if (checkConfigConsistency(newE, newN)) {
-      //list config = newE, newN;
-      //config_list = insert(config_list, config, size(config_list));
-      //fprintf(out, "Specification ([%s], [%s]) is consistent.", string(newE), string(newN));
-      //} else {
-      //  fprintf(out, "Specification ([%s], [%s]) is not consistent.", string(newE), string(newN));
-      //}
-		
-      //} // Endfor.
-
-      //fprintf(out, "The specifications are: {");
-      //if (size(config_list) != 0) {
-      //for (j = 1; j <= size(config_list); j++) {
-      //  fprintf(out, "[%s],  [%s]", string(config_list[j][1]), string(config_list[j][2]));
-      //}
-      //}
-      //fprintf(out, "}.");
-
-      // Check whether union of config_list is exactly (E_i, N_i).
-      //if (checkConfigUnionWithBranch(config_list, modcgs[i][1], modcgs[i][2])) {
-	// If so, then g is covered by other polys in any sigma of Branch i.
-	// Then g is non-essential here.
-	//fprintf(out, "The union of them is the whole branch.");
-	//fprintf(out, "%s is not essential in Branch %s.", string(g), string(i));
-      //} else {
-	// Otherwise, g is essential for Branch i, thus essential globally.
-	//fprintf(out, "The union of them is not the whole branch.");
-	//fprintf(out, "%s is essential in Branch %s.", string(g), string(i));
-	//return (1);
-      //} // Endif.
+      } else {
+	fprintf(out, "g is non-essential in Branch %s.", string(i));
+      } // Endif.
 
     } // Endif.
   } // Endfor.
@@ -911,7 +883,9 @@ proc genMCCGB_topdown(ideal Polys, ideal Equ, list DisEqu, link out) {
   for (i = 1; i <= size(G); i++) {
     mccgb[i] = G[i];
   }
-  fprintf(out, "Initially, M = {%s}", string(mccgb));
+  fprintf(out, "Initially, M = {");
+  show_list_to_file(mccgb, out);
+  fprintf(out, "}.");
 
   // For each poly in mccgb.
   for (i = 1; i <= size(G); i++) {
@@ -1226,76 +1200,6 @@ proc is_poly_nonnull(poly f, list nonnull_conds)
 }
 
 
-// YIMING: Unfinished.
-proc get_sigma_basis_with_single_nonnull_new(list basis, ideal E, poly nonnull_cond, int flag) {
-  int i;
-  if (flag) {
-    for (i = 1; i <= size(basis); i++) {
-      basis[i] = basis[i][1] + basis[i][2];
-    }
-  }
-
-  int trivial_E = 0;
-  if (size(E) == 0) {
-    trivial_E = 1;
-  }
-
-  int trivial_nonnull = 0;
-  if (nonnull_cond == 1) {
-    trivial_nonnull = 1;
-  }
-
-  // Switch to Q[X, U].
-  int switch_flag = 0;
-  if (nameof(basering) != "@RP") {
-    def BR = basering;
-    setring(@RP);
-    switch_flag = 1;
-    def basis = imap(BR, basis);
-
-    if (trivial_E) {
-      def E = ideal();
-    } else {
-      def E = imap(BR, E);
-    }
-
-    if (trivial_nonnull) {
-      def nonnull_cond = 1;
-    } else {
-      def nonnull_cond = imap(BR, nonnull_cond);
-    }
-  }
-
-  vector v;
-  list sigma_basis;
-
-  ideal GE = groebner(radical(E));
-  def rem_nonnull_cond = reduce(nonnull_cond, GE);
-
-  list lpp_lists;
-  int list_cnt = 1;
-
-  for (i = 1; i <= size(basis); i++) {
-    poly p = basis[i];
-    list p1_list;
-    p1_list = insert(p1_list, 0, size(p1_list));
-    while (p != 0) {
-      def rem = reduce(leadcoef_X(p), GE);
-      if (rem != 0) {
-	// Coefficient is not enforced to be 0.
-	// Further Check: whether it's nonnull.
-	// We shall use the remainder of nonnull_cond divided by GE.
-	if (verify_with_nonnull(rem, rem_nonnull_cond) != 0) {
-	  // rem is enforced to be non-zero.
-	  p1 = p1 + lm_X(p);
-	} else {
-	  // rem can be either 0 or not.
-	}
-      }
-    }
-  }
-}
-
 proc get_sigma_basis_with_single_nonnull(list basis, ideal E, poly nonnull_cond, int flag) {
   int i;
   if (flag) {
@@ -1345,6 +1249,9 @@ proc get_sigma_basis_with_single_nonnull(list basis, ideal E, poly nonnull_cond,
 	    // We get the lpp(sigma(p)).
 	    p1 = p1 + rem * lpp_X(p);
 	    lpp_set = 1;
+	  } else {
+	    // rem is either 0 or not.
+	    p1 = p1 + rem * lpp_X(p);
 	  }
 	} else {
 	  // lpp(sigma(p)) is alreay set.

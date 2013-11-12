@@ -20,6 +20,7 @@ ideal G;
 list Modcgs;
 list mccgb;
 
+//(mccgb, G, Modcgs) = genMCCGB(polys, ideal(), list(), out2);
 (mccgb, G, Modcgs) = genMCCGB(polys, ideal(), list(), out2);
 
 showMCCGB(mccgb, out);

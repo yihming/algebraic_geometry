@@ -519,7 +519,7 @@ If (E, N) is inconsistent, then N == list().
   return (newE, newN);
 }
 
-proc split(ideal E, list N, poly f) 
+proc splitBranch(ideal E, list N, poly f) 
 "
 E, N are in red-representation.
 "
@@ -717,7 +717,7 @@ proc checkEssentialInBranch(poly t, list G, ideal E, list N, link out) {
   fprintf(out, "<%s>, {%s}.", string(E_red), string(N_red));
   fprintf(out, "Candidate list is [");
   show_list_to_file(candidates, out);
-  fprintf(out, "]".);
+  fprintf(out, "].");
 
   poly f = candidates[1];
   list raw_higher_coefs = getHigherCoefs(f, t);
@@ -737,7 +737,7 @@ proc checkEssentialInBranch(poly t, list G, ideal E, list N, link out) {
   // Get coefficient of LPP t.
   poly ct = getCoefOfPP(t, f);
   
-  list sub_branches = split(E_red, N_red, ct);
+  list sub_branches = splitBranch(E_red, N_red, ct);
   ideal E0 = sub_branches[1][1];
   list N0 = sub_branches[1][2];
   ideal E1 = sub_branches[2][1];

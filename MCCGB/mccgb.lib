@@ -431,36 +431,22 @@ proc ideal_exclude(ideal I, ideal J) {
     return (I);
   }
   
+  poly prod_J = 1;
   int i, j;
-  ideal res_I;
-  ideal GJ = groebner(J);
+  for (i = 1; i <= size(J); i++) {
+    prod_J = prod_J * J[i];
+  }
+  ideal FL_J = factorize(prod_J, 1);
+
   for (i = 1; i <= size(I); i++) {
-    // For each generator.
-    ideal FL = factorize(I[i], 1);
-
-    list factor_list;
-    for (j = 1; j <= size(FL); j++) {
-      // For each factor.
-      poly rem = reduce(FL[j], GJ);
-      if (rem != 0) {
-	factor_list = insert(factor_list, rem, size(factor_list));
+    for (j = 1; j <= size(FL_J); j++) {
+      if (reduce(I[i], groebner(ideal(FL_J[j]))) == 0) {
+	I[i] = I[i] / FL_J[j];
       }
     }
-    
-    if (size(factor_list) > 0) {
-      poly prod_factor = 1;
-      for (j = 1; j <= size(factor_list); j++) {
-	prod_factor = prod_factor * factor_list[j];
-      }
-      res_I = res_I + prod_factor;
-    } else {
-      // No factor left, which means that only 1 is left.
-      res_I = res_I + 1;
-    }
-
   }
 
-  return (groebner(radical(res_I)));
+  return (radical(I));
 }
 
 proc getNSquareFreeFromProd(poly h) {
@@ -550,27 +536,34 @@ E, N are in red-representation.
 proc makeRedRepresentation(ideal E, list N) {
   // Basering is @RP.
   int i;
+  ideal newE;
+  list newN;
 
-
+  // E is trivial.
   if (size(E) == 0) {
     if (size(N) == 0) {
+      // N is also trivial.
       return (ideal(), list(1));
     } else {
-      ideal newE = ideal();
+      // N is not trivial.
+      newE = ideal();
     }
   }
-
+  
+  // N is trivial.
   if (size(N) == 0) {
-    list newN = 1;
+    newN = 1;
   }
 
+  // E is not trivial.
   if (size(E) > 0) {
-    ideal newE = radical(E);
+    newE = radical(E);
   }
 
+  // N is not trivial.
   if (size(N) > 0) {
     poly prod_N = 1;
-    for (i = 1; i <= size(i); i++) {
+    for (i = 1; i <= size(N); i++) {
       prod_N = prod_N * N[i];
     }
 
@@ -697,6 +690,7 @@ proc getHigherCoefs(poly f, poly t) {
 proc checkEssentialInBranch(poly t, list G, ideal E, list N, link out) {
   // Basering is @RP.
   int i;
+  fprintf(out, "++++++++++++++++++++++++++");
   fprintf(out, "Now come to Branch (<%s>, <%s>):", string(E), string(N));
 
 
@@ -710,8 +704,6 @@ proc checkEssentialInBranch(poly t, list G, ideal E, list N, link out) {
   // Transform E and N into red-representation.
   ideal E_red;
   list N_red;
-  show(E);
-  show(N);
   (E_red, N_red) = makeRedRepresentation(E, N);
   fprintf(out, "Red-presentation of (E, N) is:");
   fprintf(out, "<%s>, {%s}.", string(E_red), string(N_red));
@@ -756,53 +748,94 @@ proc checkEssentialInBranch(poly t, list G, ideal E, list N, link out) {
 
   // Case II: ct is enforced to be non-zero.
   if (groebner(E0)[1] == 1) {
+    fprintf(out, "coef(%s) = %s is enforced to be non-zero.", string(f), string(ct));
+
     if (size(higher_coefs) == 0) {
-      fprintf(out, "coef(%s) = %s is enforced to be non-zero.", string(f), string(ct));
-      fprintf(out, "And there is no higher term. g is covered here.");
+      fprintf(out, "And there is no higher term. g is covered in Branch <%s>, {%s}.", string(E1), string(N1));
       return (0);
     } else {
+      fprintf(out, "But there are some non-zero higher terms in f.");
       list G_rem = delete(G, 1);
-      // Pick one coefficent of the higher power products.
-      fprintf(out, "Now pick one coef of higher term: %s.", string(higher_coefs[1]));
-      ideal newE;
-      list newN;
-      (newE, newN) = redRepNN(E1, N1, higher_coefs[1]);
-      if (!checkEssentialInBranch(t, G_rem, newE, newN, out)) {
-	fprintf(out, "Non-essential sub-branch: <%s>, <%s>.", string(newE), string(newN));
-	return (0);
-      } else {
-	fprintf(out, "Essential sub-branch <%s>, <%s>.", string(newE), string(newN));
-	return (1);
-      }
+      ideal E_rem = E1;
+      list N_rem = N1;
+      ideal E_cur;
+      list N_cur;
+      // Consider each coefficient of higher terms.
+      for (i = 1; i <= size(higher_coefs); i++) {
+	sub_branches = splitBranch(E_rem, N_rem, higher_coefs[i]);
+	fprintf(out, "Split (<%s>, {%s}) wrt %s:", string(E_rem), string(N_rem), string(higher_coefs[i]));
+	E_rem = sub_branches[1][1];
+	N_rem = sub_branches[1][2];
+	E_cur = sub_branches[2][1];
+	N_cur = sub_branches[2][2];
+	fprintf(out, "Sub-branch 1: (<%s>, {%s});", string(E_rem), string(N_rem));
+	fprintf(out, "Sub-branch 2: (<%s>, {%s}).", string(E_cur), string(N_cur));
+
+	// For sub-branch in which higher_coefs[i] is non-zero.
+	if (checkEssentialInBranch(t, G_rem, E_cur, N_cur, out)) {
+	  fprintf(out, "g is essential in Sub-Branch <%s>, {%s}.", string(E_cur), string(N_cur));
+	  fprintf(out, "Thus, g is essential in Branch <%s>, {%s}.", string(E1), string(N1));
+	  return (1);
+	} else {
+	  fprintf(out, "g is covered in Sub-Branch <%s>, {%s}.", string(E_cur), string(N_cur));
+	  // Consider the remaining sub-branch where higher_coefs[i] is zero.
+	  continue;
+	} // Endif.
+      } // Endfor.
+      
+      fprintf(out, "Thus, g is non-essential in Branch <%s>, {%s}.", string(E1), string(N1));
+      return (0);
     }
   }
 
+  fprintf(out, "coef(%s) = %s is either zero or not.", string(f), string(ct));
   // Case III: both sub-branches are consistent.
   if (size(higher_coefs) == 0) {
     // There is no higher monomial under specialization.
     fprintf(out, "There is no higher term in %s under <%s>, <%s>.", string(f), string(E_red), string(N_red));
-    fprintf(out, "g is covered in Sub-Branch 2.");
+    fprintf(out, "g is covered in Sub-Branch 2: <%s>, {%s}.", string(E1), string(N1));
+    fprintf(out, "We still need to check Sub-Branch 1.");
     return (checkEssentialInBranch(t, delete(G, 1), E0, N0, out));
   } else {
     // Consider (E1, N1).
     list G_rem = delete(G, 1);
-    // PIck one coefficient of higher power products.
-    fprintf(out, "Pick one coef of higher term: %s.", string(higher_coefs[1]));
-    ideal newE;
-    list newN;
-    (newE, newN) = redRepNN(E1, N1, higher_coefs[1]);
-    if (!checkEssentialInBranch(t, G_rem, newE, newN, out)) {
-      fprintf(out, "g is non-essential in <%s>, <%s>.", string(newE), string(newN));
-      fprintf(out, "Thus g is non-essential in Sub-branch 2.");
+    ideal E_rem = E1;
+    list N_rem = N1;
+    ideal E_cur;
+    list N_cur;
+    // Consider each coefficient of higher terms.
+    for (i = 1; i <= size(higher_coefs); i++) {
+      sub_branches = splitBranch(E_rem, N_rem, higher_coefs[i]);
+      E_rem = sub_branches[1][1];
+      N_rem = sub_branches[1][2];
+      E_cur = sub_branches[2][1];
+      N_cur = sub_branches[2][2];
+
+      // For sub-branch in which higher_coefs[i] is non-zero.
+      if (checkEssentialInBranch(t, G_rem, E_cur, N_cur, out)) {
+	fprintf(out, "g is essential in Sub-Branch <%s>, {%s}.", string(E_cur), string(N_cur));
+	fprintf(out, "Thus, g is essential in Branch <%s>, {%s}.", string(E1), string(N1));
+	return (1);
+      } else {
+	fprintf(out, "g is covered in Sub-Branch <%s>, {%s}.", string(E_cur), string(N_cur));
+	// Consider the remaining sub-branch where higher_coefs[i] is zero.
+	continue;
+      } // Endif.
+    } // Endfor.
+
+    fprintf(out, "Thus, g is non-essential in Branch <%s>, {%s}.", string(E1), string(N1));
+
+    // Now consider (E0, N0).
+    if (checkEssential(t, G_rem, E0, N0, out)) {
+      fprintf(out, "g is essential in Sub-Branch <%s>, {%s}.", string(E0), string(N0));
+      fprintf(out, "Thus, g is essential in Branch <%s>, {%s}.", string(E_red), string(N_red));
+      return (1);
+    } else {
+      fprintf(out, "Thus, g is non-essential in Branch <%s>, {%s}.", string(E_red), string(N_red));
       return (0);
     }
 
-    fprintf(out, "g is essential in Sub-branch 2.");
-    fprintf(out, "Now consider Sub-branch 1.");
-
-    // Now consider (E0, N0).
-    return (checkEssentialInBranch(t, G_rem, E0, N0, out));
-  }
+  } // End of Case III.
 
 }
 

@@ -690,7 +690,7 @@ proc getHigherCoefs(poly f, poly t) {
 proc checkEssentialInBranch(poly t, list G, ideal E, list N, link out) {
   // Basering is @RP.
   int i;
-  fprintf(out, "++++++++++++++++++++++++++");
+  fprintf(out, "-----------------------------------");
   fprintf(out, "Now come to Branch (<%s>, <%s>):", string(E), string(N));
 
 
@@ -698,6 +698,7 @@ proc checkEssentialInBranch(poly t, list G, ideal E, list N, link out) {
   list candidates = genCandidateFaithfulPolys(t, G, E, N);
   
   if (size(candidates) == 0) {
+    fprintf(out, "There is no candidate poly.");
     return (1);
   }
 
@@ -751,17 +752,37 @@ proc checkEssentialInBranch(poly t, list G, ideal E, list N, link out) {
     fprintf(out, "coef(%s) = %s is enforced to be non-zero.", string(f), string(ct));
 
     if (size(higher_coefs) == 0) {
-      fprintf(out, "And there is no higher term. g is covered in Branch <%s>, {%s}.", string(E1), string(N1));
+      fprintf(out, "And there is no non-zero higher term. g is covered in Branch <%s>, {%s}.", string(E1), string(N1));
       return (0);
     } else {
       fprintf(out, "But there are some non-zero higher terms in f.");
-      list G_rem = delete(G, 1);
+      list G_rem = listDeleteByPoly(G, f);
       ideal E_rem = E1;
       list N_rem = N1;
       ideal E_cur;
       list N_cur;
       // Consider each coefficient of higher terms.
       for (i = 1; i <= size(higher_coefs); i++) {
+	// Split further only if the coef is not enforced.
+	poly nonnull = 1;
+	int j;
+	if (size(N_rem) > 0) {
+	  for (j = 1; j <= size(N_rem); j++) {
+	    nonnull = nonnull * N_rem[j];
+	  }
+	}
+	if (verify_with_nonnull(higher_coefs[i], nonnull) != 0) {
+	  // higher_coefs[i] is enforced to be non-zero.
+	  fprintf(out, "%s is enforced to be non-zero.", string(higher_coefs[i]));
+	  if (checkEssentialInBranch(t, G_rem, E_rem, N_rem, out)) {
+	    fprintf(out, "Thus, g is essential in Branch <%s>, {%s}.", string(E_rem), string(N_rem));
+	    return (1);
+	  } else {
+	    fprintf(out, "g is covered in Branch <%s>, {%s}.", string(E_rem), string(N_rem));
+	    return (0);
+	  }
+	}
+	
 	sub_branches = splitBranch(E_rem, N_rem, higher_coefs[i]);
 	fprintf(out, "Split (<%s>, {%s}) wrt %s:", string(E_rem), string(N_rem), string(higher_coefs[i]));
 	E_rem = sub_branches[1][1];
@@ -792,7 +813,7 @@ proc checkEssentialInBranch(poly t, list G, ideal E, list N, link out) {
   // Case III: both sub-branches are consistent.
   if (size(higher_coefs) == 0) {
     // There is no higher monomial under specialization.
-    fprintf(out, "There is no higher term in %s under <%s>, <%s>.", string(f), string(E_red), string(N_red));
+    fprintf(out, "There is no non-zero higher term in %s under <%s>, <%s>.", string(f), string(E_red), string(N_red));
     fprintf(out, "g is covered in Sub-Branch 2: <%s>, {%s}.", string(E1), string(N1));
     fprintf(out, "We still need to check Sub-Branch 1.");
     return (checkEssentialInBranch(t, delete(G, 1), E0, N0, out));
@@ -805,6 +826,26 @@ proc checkEssentialInBranch(poly t, list G, ideal E, list N, link out) {
     list N_cur;
     // Consider each coefficient of higher terms.
     for (i = 1; i <= size(higher_coefs); i++) {
+      // Split further only if the coef is not enforced.
+      poly nonnull = 1;
+      int j;
+      if (size(N_rem) > 0) {
+	for (j = 1; j <= size(N_rem); j++) {
+	  nonnull = nonnull * N_rem[j];
+	}
+      }
+      if (verify_with_nonnull(higher_coefs[i], nonnull) != 0) {
+	// higher_coefs[i] is enforced to be non-zero.
+	fprintf(out, "%s is enforced to be non-zero.", string(higher_coefs[i]));
+	if (checkEssentialInBranch(t, G_rem, E_rem, N_rem, out)) {
+	  fprintf(out, "Thus, g is essential in Branch <%s>, {%s}.", string(E_rem), string(N_rem));
+	  return (1);
+	} else {
+	  fprintf(out, "g is covered in Branch <%s>, {%s}.", string(E_rem), string(N_rem));
+	  break;
+	}
+      }
+
       sub_branches = splitBranch(E_rem, N_rem, higher_coefs[i]);
       E_rem = sub_branches[1][1];
       N_rem = sub_branches[1][2];
@@ -862,6 +903,7 @@ proc checkEssential(poly g, list G, list modcgs, link out) {
 	}
       }
 
+      fprintf(out, "**********************************");
       fprintf(out, "Come to Branch %s:", string(i));
       fprintf(out, "[%s],    [%s].", string(modcgs[i][1]), string(modcgs[i][2]));
 
@@ -906,8 +948,9 @@ proc genMCCGB_topdown(ideal Polys, ideal Equ, list DisEqu, link out) {
   def G = imap(@R, G);
   def modcgs = imap(@R, modcgs);
 
-  fprintf(out, newline + "======================");
+  fprintf(out, newline + "==========================");
   fprintf(out, "Now remove non-essential poly:");
+  fprintf(out, "==========================");
 
   list mccgb;
   int i, j;
@@ -923,7 +966,7 @@ proc genMCCGB_topdown(ideal Polys, ideal Equ, list DisEqu, link out) {
   // For each poly in mccgb.
   for (i = 1; i <= size(G); i++) {
     poly cur_g = G[i];
-    fprintf(out, "-------------------------------------");
+    fprintf(out, "++++++++++++++++++++++++++++++++++");
     fprintf(out, "Now consider %s:", string(cur_g));
     mccgb = listDeleteByPoly(mccgb, cur_g);
     fprintf(out, "M' = {");

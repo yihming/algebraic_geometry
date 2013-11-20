@@ -32,8 +32,7 @@ fprintf(out, "%s" + newline, StringModCGS_mod(Modcgs));
 // Check the validity of my_res;
 string err_msg;
 int flag;
-int save_time = 1;
-(err_msg, flag) = check_validity(mccgb, Modcgs, save_time, out);
+(err_msg, flag) = check_validity(G, mccgb, Modcgs, out);
 if (flag) {
     fprintf(out, newline + "================================") ;
     fprintf(out, "It is MCCGB indeed!");
@@ -42,14 +41,6 @@ if (flag) {
     fprintf(out, "It is not MCCGB, since %s.", err_msg);
 }
 
-printf("Alternative")		;
-
-list alterMCCGB			;
-ideal alterG			;
-list alterModcgs		;
-(alterMCCGB, alterG, alterModcgs) = alternativeMCCGB(polys, ideal(), list(), out) ;
-show(alterMCCGB)		;
-	
 close(out);
 close(out2);
 

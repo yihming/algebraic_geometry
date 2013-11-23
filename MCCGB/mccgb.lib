@@ -729,7 +729,7 @@ proc checkEssentialInBranch(poly t, list G, ideal E, list N, link out) {
   list N_red;
   (E_red, N_red) = makeRedRepresentation(E, N);
   fprintf(out, "Red-presentation of (E, N) is:");
-  fprintf(out, "<%s>, {%s}.", string(E_red), string(N_red));
+  fprintf(out, "<%s>, Pi{%s}.", string(E_red), string(N_red));
   fprintf(out, "Candidate list is [");
   show_list_to_file(candidates, out);
   fprintf(out, "].");
@@ -759,22 +759,22 @@ proc checkEssentialInBranch(poly t, list G, ideal E, list N, link out) {
   list N1 = sub_branches[2][2];
 
   fprintf(out, "Split (E, N) into two sub-branches wrt %s:", string(ct));
-  fprintf(out, "Sub-branch 1: (<%s>, {%s});", string(E0), string(N0));
-  fprintf(out, "Sub-branch 2: (<%s>, {%s}).", string(E1), string(N1));
+  fprintf(out, "Sub-branch 1: (<%s>, Pi{%s});", string(E0), string(N0));
+  fprintf(out, "Sub-branch 2: (<%s>, Pi{%s}).", string(E1), string(N1));
 
   // Case I: ct is enforced to be 0.
   if (size(N1) == 0) {
     // Consider the rest candidates.
-    fprintf(out, "coef(%s) = %s is enforced to be 0", string(f), string(ct));
+    fprintf(out, "coef_%s(%s) = %s is enforced to be 0", string(t), string(f), string(ct));
     return (checkEssentialInBranch(t, delete(G, 1), E0, N0, out))
   }
 
   // Case II: ct is enforced to be non-zero.
   if (groebner(E0)[1] == 1) {
-    fprintf(out, "coef(%s) = %s is enforced to be non-zero.", string(f), string(ct));
+    fprintf(out, "coef_%s(%s) = %s is enforced to be non-zero.", string(t), string(f), string(ct));
 
     if (size(higher_coefs) == 0) {
-      fprintf(out, "And there is no non-zero higher term. g is covered by %s in Branch <%s>, {%s}.", string(f), string(E1), string(N1));
+      fprintf(out, "And there is no non-zero higher term. g is covered by %s in Branch (<%s>, {%s}).", string(f), string(E1), string(N1));
       return (0);
     } else {
       fprintf(out, "But there are some non-zero higher terms in f.");
@@ -790,10 +790,10 @@ proc checkEssentialInBranch(poly t, list G, ideal E, list N, link out) {
 	  // higher_coefs[i] is enforced to be non-zero.
 	  fprintf(out, "%s is enforced to be non-zero.", string(higher_coefs[i]));
 	  if (checkEssentialInBranch(t, G_rem, E_rem, N_rem, out)) {
-	    fprintf(out, "Thus, g is essential in Branch <%s>, {%s}.", string(E_rem), string(N_rem));
+	    fprintf(out, "Thus, g is essential in Branch (<%s>, Pi{%s}).", string(E_rem), string(N_rem));
 	    return (1);
 	  } else {
-	    fprintf(out, "g is covered in Branch <%s>, {%s}.", string(E_rem), string(N_rem));
+	    fprintf(out, "g is covered in Branch (<%s>, Pi{%s}).", string(E_rem), string(N_rem));
 	    return (0);
 	  }
 	} else {
@@ -801,37 +801,37 @@ proc checkEssentialInBranch(poly t, list G, ideal E, list N, link out) {
 	}
 	
 	sub_branches = splitBranch(E_rem, N_rem, higher_coefs[i]);
-	fprintf(out, "Split (<%s>, {%s}) wrt %s:", string(E_rem), string(N_rem), string(higher_coefs[i]));
+	fprintf(out, "Split (<%s>, Pi{%s}) wrt %s:", string(E_rem), string(N_rem), string(higher_coefs[i]));
 	E_rem = sub_branches[1][1];
 	N_rem = sub_branches[1][2];
 	E_cur = sub_branches[2][1];
 	N_cur = sub_branches[2][2];
-	fprintf(out, "Sub-branch 1: (<%s>, {%s});", string(E_rem), string(N_rem));
-	fprintf(out, "Sub-branch 2: (<%s>, {%s}).", string(E_cur), string(N_cur));
+	fprintf(out, "Sub-branch 1: (<%s>, Pi{%s});", string(E_rem), string(N_rem));
+	fprintf(out, "Sub-branch 2: (<%s>, Pi{%s}).", string(E_cur), string(N_cur));
 
 	// For sub-branch in which higher_coefs[i] is non-zero.
 	if (checkEssentialInBranch(t, G_rem, E_cur, N_cur, out)) {
-	  fprintf(out, "g is essential in Sub-Branch <%s>, {%s}.", string(E_cur), string(N_cur));
-	  fprintf(out, "Thus, g is essential in Branch <%s>, {%s}.", string(E1), string(N1));
+	  fprintf(out, "g is essential in Sub-Branch (<%s>, Pi{%s}).", string(E_cur), string(N_cur));
+	  fprintf(out, "Thus, g is essential in Branch (<%s>, Pi{%s}).", string(E1), string(N1));
 	  return (1);
 	} else {
-	  fprintf(out, "g is covered in Sub-Branch <%s>, {%s}.", string(E_cur), string(N_cur));
+	  fprintf(out, "g is covered in Sub-Branch (<%s>, Pi{%s}).", string(E_cur), string(N_cur));
 	  // Consider the remaining sub-branch where higher_coefs[i] is zero.
 	  continue;
 	} // Endif.
       } // Endfor.
       
-      fprintf(out, "Thus, g is non-essential in Branch <%s>, {%s}.", string(E1), string(N1));
+      fprintf(out, "Thus, g is non-essential in Branch (<%s>, Pi{%s}).", string(E1), string(N1));
       return (0);
     }
   }
 
-  fprintf(out, "coef(%s) = %s is either zero or not.", string(f), string(ct));
+  fprintf(out, "coef_%s(%s) = %s is either zero or not.", string(t), string(f), string(ct));
   // Case III: both sub-branches are consistent.
   if (size(higher_coefs) == 0) {
     // There is no higher monomial under specialization.
-    fprintf(out, "There is no non-zero higher term in %s under <%s>, <%s>.", string(f), string(E_red), string(N_red));
-    fprintf(out, "g is covered by %s in Sub-Branch 2: <%s>, {%s}.", string(f), string(E1), string(N1));
+    fprintf(out, "There is no non-zero higher term in %s under (<%s>, Pi{%s}).", string(f), string(E_red), string(N_red));
+    fprintf(out, "g is covered by %s in Sub-Branch 2: (<%s>, Pi{%s}).", string(f), string(E1), string(N1));
     fprintf(out, "We still need to check Sub-Branch 1.");
     return (checkEssentialInBranch(t, delete(G, 1), E0, N0, out));
   } else {
@@ -856,48 +856,48 @@ proc checkEssentialInBranch(poly t, list G, ideal E, list N, link out) {
 	// higher_coefs[i] is enforced to be non-zero.
 	fprintf(out, "%s is enforced to be non-zero.", string(higher_coefs[i]));
 	if (checkEssentialInBranch(t, G_rem, E_rem, N_rem, out)) {
-	  fprintf(out, "Thus, g is essential in Branch <%s>, {%s}.", string(E_rem), string(N_rem));
+	  fprintf(out, "Thus, g is essential in Branch (<%s>, Pi{%s}).", string(E_rem), string(N_rem));
 	  return (1);
 	} else {
-	  fprintf(out, "g is covered in Branch <%s>, {%s}.", string(E_rem), string(N_rem));
+	  fprintf(out, "g is covered in Branch (<%s>, Pi{%s}).", string(E_rem), string(N_rem));
 	  break;
 	}
       } else {
 	fprintf(out, "%s is either zero or not.", string(higher_coefs[i]));
       }
 
-      fprintf(out, "Split (<%s>, {%s}) wrt %s:", string(E_rem), string(N_rem), string(higher_coefs[i]));
+      fprintf(out, "Split (<%s>, Pi{%s}) wrt %s:", string(E_rem), string(N_rem), string(higher_coefs[i]));
       sub_branches = splitBranch(E_rem, N_rem, higher_coefs[i]);
       E_rem = sub_branches[1][1];
       N_rem = sub_branches[1][2];
       E_cur = sub_branches[2][1];
       N_cur = sub_branches[2][2];
-      fprintf(out, "Sub-branch 1: (<%s>, {%s});", string(E_rem), string(N_rem));
-      fprintf(out, "Sub-branch 2: (<%s>, {%s}).", string(E_cur), string(N_cur));
+      fprintf(out, "Sub-branch 1: (<%s>, Pi{%s});", string(E_rem), string(N_rem));
+      fprintf(out, "Sub-branch 2: (<%s>, Pi{%s}).", string(E_cur), string(N_cur));
       
 
       // For sub-branch in which higher_coefs[i] is non-zero.
       if (checkEssentialInBranch(t, G_rem, E_cur, N_cur, out)) {
-	fprintf(out, "g is essential in Sub-Branch <%s>, {%s}.", string(E_cur), string(N_cur));
-	fprintf(out, "Thus, g is essential in Branch <%s>, {%s}.", string(E1), string(N1));
+	fprintf(out, "g is essential in Sub-Branch (<%s>, Pi{%s}).", string(E_cur), string(N_cur));
+	fprintf(out, "Thus, g is essential in Branch (<%s>, Pi{%s}).", string(E1), string(N1));
 	return (1);
       } else {
-	fprintf(out, "g is covered in Sub-Branch <%s>, {%s}.", string(E_cur), string(N_cur));
+	fprintf(out, "g is covered in Sub-Branch (<%s>, Pi{%s}).", string(E_cur), string(N_cur));
 	// Consider the remaining sub-branch where higher_coefs[i] is zero.
 	continue;
       } // Endif.
     } // Endfor.
 
-    fprintf(out, "Thus, g is non-essential in Branch <%s>, {%s}.", string(E1), string(N1));
+    fprintf(out, "Thus, g is non-essential in Branch (<%s>, Pi{%s}).", string(E1), string(N1));
 
     // Now consider (E0, N0).
-    fprintf(out, "But we still need to check Branch <%s>, {%s}.", string(E0), string(N0));
+    fprintf(out, "But we still need to check Branch (<%s>, Pi{%s}).", string(E0), string(N0));
     if (checkEssentialInBranch(t, G_rem, E0, N0, out)) {
-      fprintf(out, "g is essential in Sub-Branch <%s>, {%s}.", string(E0), string(N0));
-      fprintf(out, "Thus, g is essential in Branch <%s>, {%s}.", string(E_red), string(N_red));
+      fprintf(out, "g is essential in Sub-Branch (<%s>, Pi{%s}).", string(E0), string(N0));
+      fprintf(out, "Thus, g is essential in Branch (<%s>, Pi{%s}).", string(E_red), string(N_red));
       return (1);
     } else {
-      fprintf(out, "Thus, g is non-essential in Branch <%s>, {%s}.", string(E_red), string(N_red));
+      fprintf(out, "Thus, g is non-essential in Branch (<%s>, Pi{%s}).", string(E_red), string(N_red));
       return (0);
     }
 
@@ -929,10 +929,10 @@ proc checkEssential(poly g, list G, list modcgs, link out) {
       }
 
       fprintf(out, "**********************************");
-      fprintf(out, "Come to Branch %s:", string(i));
-      fprintf(out, "[%s],    [%s].", string(modcgs[i][1]), string(modcgs[i][2]));
+      fprintf(out, "Come to Branch %s, in which g appears:", string(i));
+      fprintf(out, "([%s],    [%s]).", string(modcgs[i][1]), string(modcgs[i][2]));
 
-      fprintf(out, "Faithful sigma(G_%s) = [", string(i));
+      fprintf(out, "sigma(G_%s) = [", string(i));
       show_list_to_file(get_nonzero_part(modcgs[i][3]), out);
       fprintf(out, "].");
 
@@ -960,12 +960,10 @@ proc checkEssential(poly g, list G, list modcgs, link out) {
   return (0);
 }
 
-proc genMCCGB_topdown(ideal Polys, ideal Equ, list DisEqu, link out) {
+proc genMCCGB_topdown(ideal G, list modcgs, link out) {
   // Basering is @R.
-  ideal G;
-  list modcgs;
 
-  (G, modcgs) = cgb_mod(Polys, Equ, DisEqu, out);
+  //(G, modcgs) = cgb_mod(Polys, Equ, DisEqu, out);
   set_global_rings_mccgb();
 
   // Switch to @RP.
@@ -991,7 +989,7 @@ proc genMCCGB_topdown(ideal Polys, ideal Equ, list DisEqu, link out) {
   // For each poly in mccgb.
   for (i = 1; i <= size(G); i++) {
     poly cur_g = G[i];
-    fprintf(out, "++++++++++++++++++++++++++++++++++");
+    fprintf(out, newline + newline + "++++++++++++++++++++++++++++++++++");
     fprintf(out, "Now consider g = %s:", string(cur_g));
     mccgb = listDeleteByPoly(mccgb, cur_g);
     fprintf(out, "M' = {");
@@ -1014,7 +1012,8 @@ proc genMCCGB_topdown(ideal Polys, ideal Equ, list DisEqu, link out) {
 
   fprintf(out ,newline + "=================================");
 
-  return (mccgb, G, modcgs);
+  //return (mccgb, G, modcgs);
+  return (mccgb);
      
 }
 
@@ -1812,7 +1811,7 @@ proc list_diff(list L1, list L2) {
 }
 
 // TODO: unfinished.
-proc check_comprehensive(list G, list M, list modcgs, link out) {
+proc check_comprehensive(list G, list M, list modcgs, string diff_basis, link out) {
   // Basering is @R.
   if (size(G) == 0) {
     fprintf(out, "G is empty.");
@@ -1840,8 +1839,13 @@ proc check_comprehensive(list G, list M, list modcgs, link out) {
     def modcgs = imap(@R, modcgs);
     def check_list = imap(@R, check_list);
     poly g_tobechecked;
+
+    fprintf(out, diff_basis);
+    show_list_to_file(check_list, out);
+    fprintf(out, "].");
     
     for (i = 1; i <= size(check_list); i++) {
+      fprintf(out, newline + "++++++++++++++++++++++++++++");
       fprintf(out, "Now consider g = %s:", string(check_list[i]));
       g_tobechecked = check_list[i];
       if (checkEssential(g_tobechecked, M, modcgs, out)) {
@@ -1850,7 +1854,12 @@ proc check_comprehensive(list G, list M, list modcgs, link out) {
 	setring(@R);
 	//return (0);
 	// For dumping.
-	if (dump_res == 1) {dump_res = 0;}
+	if (dump_res == 1) {
+	  dump_res = 0;
+	  fprintf(out, "Thus, g is essential for some branch it appears in.");
+	} 
+      } else {
+	fprintf(out, "Thus, g is covered by some poly in M in all branches it appears in.");
       }
     } // Endfor.
 
@@ -1881,11 +1890,14 @@ Assume that M is already a CGB.
   int i, j;
   for (i = 1; i <= size(M_subs); i++) {
     // For each maximal proper subset of M.
-    fprintf(out, newline + "%s. Now check M_sub[%s] = [", string(i), string(i));
+    fprintf(out, newline + "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+    fprintf(out, "%s. Now check M_sub[%s] = [", string(i), string(i));
     show_list_to_file(M_subs[i], out);
     fprintf(out, "    ]:");
-    
-    if (check_comprehensive(M, M_subs[i], modcgs, out)) {
+
+    string diff_basis = "M - M_sub[" + string(i) + "] = [";
+
+    if (check_comprehensive(M, M_subs[i], modcgs, diff_basis, out)) {
       // M_sub[i] is also a CGB, then M is not minimal.
       fprintf(out, "The subset M_sub[%s] is also a CGB of <F>.", string(i));
       //return (0);
@@ -1915,10 +1927,12 @@ proc check_validity(ideal cgb, list mccgb, list modcgs, link out) {
     }
   }
 
-  if (check_comprehensive(G, mccgb, modcgs, out)) {
+  string diff_basis = "G - M = [";
+
+  if (check_comprehensive(G, mccgb, modcgs, diff_basis, out)) {
     // mccgb is comprehensive, then check the minimality.
     fprintf(out, newline + "M is comprehensive.");
-    fprintf(out, newline + "-----------------------------");
+    fprintf(out, newline + newline + "================================");
     fprintf(out, "Second, check the minimality of M:");
     if (check_minimal(mccgb, modcgs, out)) {
       // mccgb is also minimal.

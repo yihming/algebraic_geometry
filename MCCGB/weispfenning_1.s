@@ -1,9 +1,7 @@
 LIB "mccgb.lib";
 
 link out = "weispfenning_1.mp";
-link out2 = "weispfenning_1_mccgb.mp" ;
 open(out);
-open(out2);
 	
 ring r = (0, v, u), x, lp;
 
@@ -20,10 +18,15 @@ ideal G;
 list Modcgs;
 list mccgb;
 	
-//(mccgb, G, Modcgs) = genMCCGB(polys, ideal(), list(), out2);
-(mccgb, G, Modcgs) = genMCCGB_topdown(polys, ideal(), list(), out2);
-showMCCGB(mccgb, out);
+(G, Modcgs) = cgb_mod(polys, ideal(), list(), out);
+
 fprintf(out, "%s" + newline, StringCGB(G));
+fprintf(out, "%s" + newline, StringModCGS_mod(Modcgs));
+
+mccgb = genMCCGB_topdown(G, Modcgs, out);
+	
+fprintf(out, "%s" + newline, StringCGB(G));
+showMCCGB(mccgb, out);
 fprintf(out, "The size of CGB is: %s"+newline, string(size(G)));
 fprintf(out, "The size of M is: %s"+newline, string(size(mccgb)));
 fprintf(out, "%s" + newline, StringModCGS_mod(Modcgs));
@@ -35,12 +38,11 @@ int flag;
 (err_msg, flag) = check_validity(G, mccgb, Modcgs, out);
 if (flag) {
     fprintf(out, newline + "================================") ;
-    fprintf(out, "It is MCCGB indeed!");
+    fprintf(out, "It is Comprehensive and Minimal indeed!");
 } else {
     fprintf(out, newline + "================================") ;
-    fprintf(out, "It is not MCCGB, since %s.", err_msg);
+    fprintf(out, "It is not valid, since %s.", err_msg);
 }
 
 	
 close(out);
-close(out2);

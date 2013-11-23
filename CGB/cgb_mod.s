@@ -44,8 +44,6 @@ PROCEDURES:
 KEYWORDS: comprehensive Gr\"obner system, comprehensive Gr\"obner basis
 ";
 
-LIB "ring.lib";
-	
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -130,7 +128,7 @@ static proc Radical_Equ(ideal Equ)
 }
 
 
-proc Simplify_DisEqu(list DisEqu, ideal Equ)
+static proc Simplify_DisEqu(list DisEqu, ideal Equ)
 {
   list newDisEqu;
   ideal DisFactors;
@@ -220,7 +218,7 @@ static proc Simplify_Equ(ideal Equ, list DisEqu)
 
 
 //Checks=[total, tri-check, 0dim-check, c-check, i-check, gen-check];
-proc Check_Consistence_CGB(ideal Equ, list DisEqu)
+static proc Check_Consistence_CGB(ideal Equ, list DisEqu)
 {
 
   Checks[1] = Checks[1] + 1;
@@ -442,10 +440,10 @@ static proc Bigger(list c1 , list c2)
 
 
 
- proc Get_MDBasis(ideal GB)
+static proc Get_MDBasis(ideal GB)
 {
-  setring(@RUA);
-  ideal newGB = imap(@AXU, GB);
+  setring(RingVar);
+  ideal newGB = imap(RingAll, GB);
   list MDBasis, MList, LCoefs;
   poly P, mon;
   int i, j;
@@ -492,19 +490,19 @@ static proc Bigger(list c1 , list c2)
   int MListLength = size(MList);
   int LCoefsLength = size(LCoefs);
 
-  setring(@AXU);
+  setring(RingAll);
   if (MDBasisLength)
   {
-    list MDBasis =  imap(@RUA, MDBasis);
+    list MDBasis =  imap(RingVar, MDBasis);
   }
   if (MListLength)
   {
-    list MList =  imap(@RUA, MList);
+    list MList =  imap(RingVar, MList);
   }
 
   if (LCoefsLength)
   {
-    list LCoefs = imap(@RUA, LCoefs);
+    list LCoefs = imap(RingVar, LCoefs);
   }
 
 
@@ -604,7 +602,6 @@ static proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
   list newDisEqu = Simplify_DisEqu(DisEqu, newEqu);
   newEqu = Simplify_Equ(newEqu, newDisEqu);
 
-
   //check consistence of (Equ, DisEqu)
   if (!Check_Consistence_CGB(newEqu, newDisEqu))
   {
@@ -666,172 +663,48 @@ static proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
     tempDisEqu = tempDisEqu + list(LeadCoeffFactors[i]);
   }
 
-
   return(CGB);
 }
 
 
-
-proc extend_ring_with_aux(list ring_list) {
-  string aux1 = "auxU";
-  string aux2 = "auxV";
-  list ring_var_config = ring_list;
-  list tmp_config = ring_var_config;
-  int i;
-
-  ring_var_config[2][1] = aux1;
-  ring_var_config[2][2] = aux2;
-  for (i = 1; i <= size(tmp_config[2]); i++) {
-    ring_var_config[2][2 + i] = tmp_config[2][i];
-  }
-
-  return (ring_var_config);
-}
-	
-proc set_global_rings() {
-  // Base ring is R[U][X].
-  def BR = basering;
-
-  // Extend R[U][X] to R[U][A, X] where A is the set of auxiliary variables.
-  def @RUA = ring(extend_ring_with_aux(ringlist(BR)));
-
-  // Get R[U].
-  def Rax = ringlist(@RUA);
-  def @U = ring(Rax[1]);
-
-  // Get R[A, X, U] with auxiliary variables.
-  Rax[1] = 0;
-  def D = ring(Rax);
-  def @AXU = D + @U;
-
-  // Set as global.
-  exportto(Top, @RUA);
-  exportto(Top, @U);
-  exportto(Top, @AXU);
-
-  // Set ring to R[A, X, U].
-  setring(@AXU);
-}
-
-// This is the top-level function.
-proc cgb_mod(ideal Polys, ideal Equ, list DisEqu, link out)
+proc cgb_mod(ideal Polys, ideal Equ, list DisEqu, list Vars, list Paras, list Aux, RingAll, RingVar)
 {
-  // BR is R[U][X].
-  def BR = basering;
-
-  set_global_rings();
-
-  // Base ring is R[A, X, U] now.
-
-  // Set Variable List.
-  // Switch to R[U][X].
-  setring(BR);
-  list Variables;
-  int i;
-  for (i = 1; i <= nvars(BR); i++) {
-    Variables[i] = var(i);
-  }
-  // Switch back to R[A, X, U] and copy Variables.
-  setring(@AXU);
-  def Variables = imap(BR, Variables);
-
-  // Set Parameter List.
-  // Switch to R[U].
-  setring(@U);
-  list Parameters;
-  for (i = 1; i <= nvars(@U); i++) {
-    Parameters[i] = var(i);
-  }
-  // Swtich back to R[U][A, X] and copy Parameters.
-  setring(@AXU);
-  def Parameters = imap(@U, Parameters);
-
-  // Set Auxiliary Variable List.
-  list Auxiliary;
-  Auxiliary[1] = var(1);
-  Auxiliary[2] = var(2);
-
-  poly VMinDPoly = Variables[size(Variables)];
+  list Variables = Vars;
+  list Parameters = Paras;
+  list Auxiliary = Aux;
+  poly VMinDPoly = Vars[size(Vars)];
   list Checks = 0, 0, 0, 0, 0, 0;
   list Modcgs;
   export(Variables, Parameters, Auxiliary, VMinDPoly, Checks, Modcgs);
 
-  // copy Polys, Equ and DisEqu to R[A, X, U].
-  def Polys = imap(BR, Polys);	
+  export(RingAll, RingVar);
+  setring(RingAll);
+
   ideal MPolys = Add_Aux_Polys(Polys);
 
-  setring(BR);
+  ideal G = cgb_mod_main(MPolys, Equ, DisEqu);
 
-  if (size(Equ) == 0) {
-    if (size(DisEqu) == 0) {
-      setring(@AXU);
-      ideal G = cgb_mod_main(MPolys, ideal(), list());
-    } else {
-      setring(@AXU);
-      def DisEqu = imap(BR, DisEqu);
-      ideal G = cgb_mod_main(MPolys, ideal(), DisEqu);
-    }
-  } else {
-    if (size(DisEqu) == 0) {
-      setring(@AXU);
-      def Equ = imap(BR, Equ);
-      ideal G = cgb_mod_main(MPolys, Equ, list());
-    } else {
-      setring(@AXU);
-      def Equ = imap(BR, Equ);
-      def DisEqu = imap(BR, DisEqu);
-      ideal G = cgb_mod_main(MPolys, Equ, DisEqu);
-    }
-  }
+  print(newline+"number of checks: "+newline);
+  print("trivial checks: "+string(Checks[2]));
+  print("0-dim checks: "+string(Checks[3]));
+  print("c-checks: "+string(Checks[4]));
+  print("i-checks: "+string(Checks[5]));
+  print("general checks: "+string(Checks[6]));
+  print("total checks: "+string(Checks[1])+newline);
 
-  // Remove auxiliary variables from Modcgs.
-  Modcgs = remove_aux_from_modcgs(Modcgs);
-
-  fprintf(out, "%snumber of checkes: %s", newline, newline) ;
-  fprintf(out, "trivial checks: %s", string(Checks[2]))	    ;
-  fprintf(out, "0-dim checks: %s", string(Checks[3]))	    ;
-  fprintf(out, "c-checks: %s", string(Checks[4]))	    ;
-  fprintf(out, "i-checks: %s", string(Checks[5]))	    ;
-  fprintf(out, "general checks: %s", string(Checks[6]))	    ;
-  fprintf(out, "total checks: %s%s", string(Checks[1]), newline) ;
-	
-
-  // Switch to R[U][X], and copy G and Modcgs.
-  setring(BR);
-  def G = imap(@AXU, G);
-  def Modcgs = imap(@AXU, Modcgs);
-
+  keepring(RingAll);
   return(G, Modcgs);
 }
 
-proc remove_aux_from_modcgs(list modcgs) {
-  // Base ring is R[U][A, X].
-  ideal U = groebner(ideal(Auxiliary[1] - 1, Auxiliary[2]));
-  ideal V = groebner(ideal(Auxiliary[1], Auxiliary[2] - 1));
-  int i, j;
-  poly p1, p0;
-  list l;
 
-  // Traverse each branch.
-  for (i = 1; i <= size(modcgs); i++) {
-    if (size(modcgs[i][3]) > 0) {
-      for (j = 1; j <= size(modcgs[i][3]); j++) {
-        // For each poly in GB of branch i.
-	p1 = reduce(modcgs[i][3][j], U);
-	p0 = reduce(modcgs[i][3][j], V);
-        l = p1, p0;
-	modcgs[i][3][j] = l;
-      }
-    }
-  }
 
-  return(modcgs);
-}
+
+
 
 proc StringCGB(ideal cgb)
 {
   string Str = newline + "Comprehensive Groebner Basis: " + newline + newline;
-  //ideal Factors;
+  ideal Factors;
   int i, j;
 
   for (i = 1; i < size(cgb); i++)
@@ -846,26 +719,15 @@ proc StringCGB(ideal cgb)
 
 proc StringModCGS_mod(list modcgs)
 {
-  // BR is R[U][X].
-  def BR = basering;
-  // Copy modcgs to R[U][A, X];
-  setring(@RUA);
-  def modcgs = imap(BR, modcgs);
-  // Switch to R[A, X, U].
-  setring(@AXU);
-  def modcgs = imap(BR, modcgs);
-
   string Str = newline + "Module Comprehensive Groebner Systems: " + newline + newline;
-  //ideal U = groebner(ideal(Auxiliary[1] - 1, Auxiliary[2]));
-  //ideal V = groebner(ideal(Auxiliary[1], Auxiliary[2] - 1));
+  ideal Factors;
+  ideal U = groebner(ideal(Auxiliary[1] - 1, Auxiliary[2]));
+  ideal V = groebner(ideal(Auxiliary[1], Auxiliary[2] - 1));
   int i, j;
 
-  // Show by branch.
   for (i = 1; i <= size(modcgs); i++)
   {
     Str = Str + "Branch " + string(i) + ":" + newline + "constraints: ";
-
-    // Show branch specifications.
     for (j = 1; j <= size(modcgs[i][1]); j++)
     {
       if (modcgs[i][1][j] != 0)
@@ -882,25 +744,15 @@ proc StringModCGS_mod(list modcgs)
     }
     Str = Str + newline + "Module Groebner basis: " + newline;
 
-   // Show Groebner Bases.
-   setring(@RUA);
-   if (size(modcgs[i][3]) == 0) {
-     Str = Str + "[  ]." + newline + newline;
-   } else {
-     for (j = 1; j < size(modcgs[i][3]); j++) {
-       Str = Str + "[" + string(modcgs[i][3][j][1])
-	  + ", " + string(modcgs[i][3][j][2]) + "], " + newline ;
-     }
-     Str = Str + "[" + string(modcgs[i][3][size(modcgs[i][3])][1])
-	  + " , " + string(modcgs[i][3][size(modcgs[i][3])][2]) + "]."
-	  + newline + newline;
-   }
-   setring(@AXU);
-	
+    for (j = 1; j < size(modcgs[i][3]); j++)
+    {
+      Str = Str + "[" + string(reduce(modcgs[i][3][j], U)) 
+        + " , " + string(reduce(modcgs[i][3][j], V)) + "]," + newline;
+    }
+    Str = Str + "[" + string(reduce(modcgs[i][3][size(modcgs[i][3])], U)) 
+      + " , " + string(reduce(modcgs[i][3][size(modcgs[i][3])], V)) + "]." + newline + newline;
   }
-
-  // Switch back to R[U][X].
-  setring(BR);
+  
   return(Str);
 }
 

@@ -681,9 +681,18 @@ proc extend_ring_with_aux(list ring_list) {
 
   ring_var_config[2][1] = aux1;
   ring_var_config[2][2] = aux2;
-  for (i = 1; i <= size(tmp_config[2]); i++) {
+  int nVar = size(tmp_config[2]);
+
+  // Add auxiliary variable names.
+  for (i = 1; i <= nVar; i++) {
     ring_var_config[2][2 + i] = tmp_config[2][i];
   }
+
+  // Add the ordering for auxiliary variables.
+  for (i = size(ring_var_config[3]); i >= 1; i--) {
+    ring_var_config[3][i+1] = ring_var_config[3][i];
+  }
+  ring_var_config[3][1] = list("lp", intvec(1, 1));
 
   return (ring_var_config);
 }
@@ -691,9 +700,14 @@ proc extend_ring_with_aux(list ring_list) {
 proc set_global_rings() {
   // Base ring is R[U][X].
   def BR = basering;
+  def br_list = ringlist(BR);
+  
+  // Make the ordering of parameters consistent with variables.
+  string ord_var = br_list[3][1][1];
+  br_list[1][3][1][1] = ord_var;
 
   // Extend R[U][X] to R[U][A, X] where A is the set of auxiliary variables.
-  def @RUA = ring(extend_ring_with_aux(ringlist(BR)));
+  def @RUA = ring(extend_ring_with_aux(br_list));
 
   // Get R[U].
   def Rax = ringlist(@RUA);
@@ -719,7 +733,7 @@ proc cgb_mod(ideal Polys, ideal Equ, list DisEqu, link out)
   // BR is R[U][X].
   def BR = basering;
 
-  set_global_rings();
+  set_global_rings(ordering);
 
   // Base ring is R[A, X, U] now.
 

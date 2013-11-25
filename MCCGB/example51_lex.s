@@ -1,14 +1,13 @@
 // Example 5.1 in D. Kapur, Y. Sun and D. Wang, "An Efficient Method for Computing Comprehensive Groebner Bases", ISSAC 2011.
-//LIB "mccgb.lib";
 LIB "mccgb.lib";
-	
-link out = "example51.mp";
+
+link out = "example51_lex.mp";
 open(out);
 
-ring r = (0, a, b, c), (x, y), dp;
+ring r = (0, a, b, c), (x, y), lp;
 
 ideal polys = ax-b, by-a, cx2-y, cy2-x;
-
+	
 fprintf(out, "F = {");
 int i;
 for (i = 1; i < size(polys); i++) {

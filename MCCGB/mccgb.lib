@@ -6,6 +6,7 @@ LIB "teachstd.lib";
 LIB "../CGB/cgb_mod.lib";
 
 proc set_global_rings_mccgb() {
+  // Basering is R[U][X].
   def BR = basering;
   def @R = basering;
 

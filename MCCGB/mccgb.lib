@@ -714,7 +714,7 @@ proc checkEssentialInBranch(poly t, list G, ideal E, list N, link out) {
   // Basering is @RP.
   int i;
   fprintf(out, "-----------------------------------");
-  fprintf(out, "Now come to Branch (<%s>, <%s>):", string(E), string(N));
+  fprintf(out, "Now come to Branch (<%s>, Pi{%s}):", string(E), string(N));
 
 
   // t is the LPP_X(g) currently used.

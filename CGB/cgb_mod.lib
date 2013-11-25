@@ -130,7 +130,7 @@ static proc Radical_Equ(ideal Equ)
 }
 
 
-proc Simplify_DisEqu(list DisEqu, ideal Equ)
+static proc Simplify_DisEqu(list DisEqu, ideal Equ)
 {
   list newDisEqu;
   ideal DisFactors;
@@ -220,7 +220,7 @@ static proc Simplify_Equ(ideal Equ, list DisEqu)
 
 
 //Checks=[total, tri-check, 0dim-check, c-check, i-check, gen-check];
-proc Check_Consistence_CGB(ideal Equ, list DisEqu)
+static proc Check_Consistence_CGB(ideal Equ, list DisEqu)
 {
 
   Checks[1] = Checks[1] + 1;
@@ -703,8 +703,8 @@ proc set_global_rings() {
   def br_list = ringlist(BR);
   
   // Make the ordering of parameters consistent with variables.
-  string ord_var = br_list[3][1][1];
-  br_list[1][3][1][1] = ord_var;
+  //string ord_var = br_list[3][1][1];
+  //br_list[1][3][1][1] = ord_var;
 
   // Extend R[U][X] to R[U][A, X] where A is the set of auxiliary variables.
   def @RUA = ring(extend_ring_with_aux(br_list));

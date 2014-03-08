@@ -5,7 +5,6 @@ LIB "teachstd.lib";
 
 LIB "../CGB/cgb_mod.lib";
 
-// KEEP IT
 proc set_global_rings_mccgb() {
   // Basering is R[U][X].
   def BR = basering;
@@ -26,10 +25,10 @@ proc set_global_rings_mccgb() {
 	
 }
 	
-// KEEP IT
 proc leadcoef_X(poly P) {
   int flag = 0;
   if (nameof(basering) != "@R") {
+
     def BR = basering;
     setring(@R);
     flag = 1;
@@ -46,7 +45,6 @@ proc leadcoef_X(poly P) {
   return (c);
 }
 
-// KEEP IT
 proc lpp_X(poly P) {
   int flag = 0;
 
@@ -67,7 +65,6 @@ proc lpp_X(poly P) {
     return (m);
 }
 
-// KEEP IT
 proc lm_X(poly P) {
   int flag = 0;
   if (nameof(basering) != "@R") {
@@ -87,7 +84,6 @@ proc lm_X(poly P) {
   return (T);
 }
 
-// KEEP IT
 proc listDeleteByPoly(list l, poly f) {
   int i;
   if (size(l) == 0) {
@@ -102,7 +98,6 @@ proc listDeleteByPoly(list l, poly f) {
   }
 }
 
-// KEEP IT
 proc appearInBranch(poly f, list branch) {
   // Basering is @RP.
   if (size(branch[3]) == 0) {
@@ -127,7 +122,6 @@ proc appearInBranch(poly f, list branch) {
   }
 }
 
-// KEEP IT.
 proc checkCoefZero(poly c, ideal E) {
   // Basering is @RP.
   ideal GE = radical(E);
@@ -142,7 +136,6 @@ proc checkCoefZero(poly c, ideal E) {
   
 }
 
-// KEEP IT
 proc getCoefOfPP(poly pp, poly f) {
   // Basering is @RP.
   poly c;
@@ -158,7 +151,6 @@ proc getCoefOfPP(poly pp, poly f) {
   return (c);
 }
 
-// KEEP IT
 proc listContains(poly f, list l) {
   if (size(l) == 0) {
     return (0);
@@ -173,7 +165,6 @@ proc listContains(poly f, list l) {
   }
 }
 
-// KEEP IT
 proc genCandidateFaithfulPolys(poly lpp_f, list G, ideal E, list N) {
   // Basering is @RP.
   if (size(G) == 0) {
@@ -192,7 +183,6 @@ proc genCandidateFaithfulPolys(poly lpp_f, list G, ideal E, list N) {
   return (res_list);
 }
 
-// KEEP IT
 proc ideal_exclude(ideal I, ideal J) {
   // Basering is @RP.
   if (size(I) == 0) {
@@ -221,7 +211,6 @@ proc ideal_exclude(ideal I, ideal J) {
   return (radical(I));
 }
 
-// KEEP IT
 proc getNSquareFreeFromProd(poly h) {
   // Basering is @RP.
   ideal FL = factorize(h, 1);
@@ -234,7 +223,18 @@ proc getNSquareFreeFromProd(poly h) {
   return (res_list);
 }
 
-// KEEP IT
+proc idealUnion(ideal I, ideal J) {
+  // Basering is @RP.
+  ideal K = I;
+  int i;
+  int n = size(K);
+  for (i = 1; i <= size(J); i++) {
+    K[n + i] = J[i];
+  }
+
+  return (K);
+}
+
 proc redRepN(ideal E, list N, poly f) 
 "
 E, N are in red-representation.
@@ -242,8 +242,7 @@ If (E, N) is inconsistent, then E == ideal(1).
 "
 {
   // Basering is @RP.
-  //ideal E1 = radical(E + ideal(f));
-  ideal E1 = radical(E + ideal(f));
+  ideal E1 = radical(idealUnion(E, ideal(f)));
 
   poly h = 1;
   if (size(N) > 0) {
@@ -257,7 +256,6 @@ If (E, N) is inconsistent, then E == ideal(1).
   return (res_E, N);
 }
 
-// KEEP IT
 proc redRepNN(ideal E, list N, poly f) 
 "
 E, N are in red-representation.
@@ -280,7 +278,6 @@ If (E, N) is inconsistent, then N == list().
   return (newE, newN);
 }
 
-// KEEP IT
 proc splitBranch(ideal E, list N, poly f) 
 "
 E, N are in red-representation.
@@ -309,7 +306,6 @@ E, N are in red-representation.
   return (res_list);
 }
 
-// KEEP IT.
 proc checkNonNull(poly f, ideal E, list N) {
   // Basering is @RP.
   ideal E_red;
@@ -324,7 +320,6 @@ proc checkNonNull(poly f, ideal E, list N) {
   return (0);
 }
 
-// KEEP IT
 proc makeRedRepresentation(ideal E, list N) {
   // Basering is @RP.
   int i;
@@ -372,7 +367,6 @@ proc makeRedRepresentation(ideal E, list N) {
   return (newE, newN);
 }
 
-// KEEP IT
 proc checkNullRedRep(ideal E, list N, poly f) 
 "
 E, N are in red-representation.
@@ -386,7 +380,6 @@ E, N are in red-representation.
   return (0);
 }
 
-// KEEP IT
 proc checkNonNullRedRep(ideal E, list N, poly f)
 "
 E, N are in red-representation.
@@ -403,7 +396,6 @@ E, N are in red-representation.
   return (0);
 }
 
-// KEEP IT
 proc getHigherCoefs(poly f, poly t) {
   // Basering is @RP.
   list res_list;
@@ -415,7 +407,6 @@ proc getHigherCoefs(poly f, poly t) {
   return (res_list);
 }
 
-// KEEP IT
 proc checkEssentialInBranch(poly t, list G, ideal E, list N, link out) {
   // Basering is @RP.
   int i;
@@ -507,6 +498,7 @@ proc checkEssentialInBranch(poly t, list G, ideal E, list N, link out) {
 	  fprintf(out, "%s is either zero or not.", string(higher_coefs[i]));
 	}
 	
+	// higher_coefs[i] is either zero or not.
 	sub_branches = splitBranch(E_rem, N_rem, higher_coefs[i]);
 	fprintf(out, "Split (<%s>, Pi{%s}) wrt %s:", string(E_rem), string(N_rem), string(higher_coefs[i]));
 	E_rem = sub_branches[1][1];
@@ -623,8 +615,20 @@ proc get_nonzero_part(list l) {
     return (res_list);
 }
 
-// KEEP IT
-// Used for top-down algorithm.
+proc modcgsSplit(list modcgs, int idx_rm, list new_branches) {
+  list new_modcgs = delete(modcgs, i);
+  int i;
+
+  if (size(new_branches) > 0) {
+    for (i = 1; i <= size(new_branches); i++) {
+      new_modcgs = insert(new_modcgs, new_branches[i], size(new_modcgs));
+    }
+  }
+
+  return (new_modcgs);
+}
+
+// Procedure for checking the essentiality of a given polynomial.
 proc checkEssential(poly g, list G, list modcgs, link out) {
   // Basering is @RP.
   int i, j;
@@ -679,8 +683,7 @@ proc checkEssential(poly g, list G, list modcgs, link out) {
   return (0);
 }
 
-// KEEP IT
-proc genMCCGB_topdown(ideal G, list modcgs, link out) {
+proc genMCCGB(ideal G, list modcgs, link out) {
   // Basering is @R.
 
   //(G, modcgs) = cgb_mod(Polys, Equ, DisEqu, out);
@@ -737,7 +740,6 @@ proc genMCCGB_topdown(ideal G, list modcgs, link out) {
      
 }
 
-// KEEP IT
 proc showMCCGB(list mccgb, link out) {
     int i;
 
@@ -754,7 +756,6 @@ proc showMCCGB(list mccgb, link out) {
 }
 
 
-// KEEP IT
 proc show_list_to_file(list l, link out) {
   int i;
   if (size(l) == 0) {
@@ -766,7 +767,6 @@ proc show_list_to_file(list l, link out) {
   }
 }
 
-// KEEP IT
 proc gen_indices_sub(int T, int Len) {
   int i, j;
   list res_list;
@@ -794,7 +794,6 @@ proc gen_indices_sub(int T, int Len) {
   return (res_list);
 }
 
-// KEEP IT
 proc gen_sub_list(list l) 
 "USAGE:    Generate all the non-empty proper subsets of l.
 RETURN:    A list of lists."
@@ -822,7 +821,6 @@ RETURN:    A list of lists."
   return (sub_list);
 }
 
-// KEEP IT
 proc list_diff(list L1, list L2) {
   if (size(L1) == 0) {
     return (list());
@@ -843,7 +841,6 @@ proc list_diff(list L1, list L2) {
   return (res);
 }
 
-// KEEP IT
 proc check_comprehensive(list G, list M, list modcgs, string diff_basis, link out) {
   // Basering is @R.
   if (size(G) == 0) {
@@ -905,7 +902,6 @@ proc check_comprehensive(list G, list M, list modcgs, string diff_basis, link ou
   } // Endif.
 }
 
-// KEEP IT
 proc check_minimal(list M, list modcgs, link out) 
 "
 Assume that M is already a CGB.
@@ -945,7 +941,6 @@ Assume that M is already a CGB.
   return (dump_res);
 }
 
-// KEEP IT
 proc check_validity(ideal cgb, list mccgb, list modcgs, link out) {
   fprintf(out, newline + "============================");
   fprintf(out, "Now check whether M is comprehensive and minimal:");

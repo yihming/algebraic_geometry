@@ -703,8 +703,10 @@ proc genMCCGB(ideal G, list modcgs, link out) {
 
   // Initially, set G to be mccgb.
   for (i = 1; i <= size(G); i++) {
-    mccgb[i] = G[i];
+    //mccgb[i] = G[i];
+    mccgb[i] = G[size(G) + 1 - i];
   }
+
   fprintf(out, "Initially, M = {");
   show_list_to_file(mccgb, out);
   fprintf(out, "}.");

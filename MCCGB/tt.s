@@ -1,7 +1,8 @@
 // Example 5.1 in D. Kapur, Y. Sun and D. Wang, "An Efficient Method for Computing Comprehensive Groebner Bases", ISSAC 2011.
 LIB "mcgb.lib";
+LIB "mcgbcheck.lib";
 	
-link out = "example51_lex.mp";
+link out = "new_test.mp";
 exportto(Top, out);
 open(out);
 
@@ -23,8 +24,20 @@ ideal G;
 list Modcgs;
 list mccgb;
 
-//(G, Modcgs) = cgb_mod(polys, ideal(), list(), out);
+(G, Modcgs) = cgb_mod(polys, ideal(), list(), out);
 list M = mcgbMain(ideal(), list(), polys);
+
+string reason;
+int is_valid;
+
+/*
+(reason, is_valid) = check_validity(G, M, Modcgs, out);
+if (is_valid) {
+  print("The result is a cgb.");
+} else {
+  print(reason);
+}
+*/
 
 
 close(out);

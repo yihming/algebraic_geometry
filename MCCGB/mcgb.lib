@@ -68,6 +68,18 @@ proc getNSquareFreeFromProd(poly h) {
   return (res_list);
 }
 
+proc idealUnion(ideal I, ideal J) {
+  // Basering is @RP.
+  int i;
+  int n = size(I);
+
+  for (i = 1; i <= size(J); i++) {
+    I[n + i] = J[i];
+  }
+
+  return (I);
+}
+
 proc redRepN(ideal E, list N, poly c) {
   // Basering is @RP.
   ideal E1 = radical(idealUnion(E, ideal(c)));
@@ -126,6 +138,26 @@ proc splitBranch(ideal E, list N, poly c) {
   return (res_list);
 }
 
+proc checkNull(poly c, ideal E, list N) {
+  // Basering is @RP.
+  ideal ERad = radical(E);
+  if (reduce(c, groebner(ERad)) == 0) {
+    return (1);
+  } else {
+    return (0);
+  }
+}
+
+proc checkNullRRep(poly c, ideal E, list N) {
+  // Basering is @RP.
+
+  if (reduce(c, groebner(E)) == 0) {
+    return (1);
+  } 
+
+  return (0);
+}
+
 proc checkNonNull(poly c, ideal E, list N) {
   // Basering is @RP.
   list sub_branches = splitBranch(E, N, c);
@@ -179,7 +211,7 @@ proc makeRRep(list modcgs) {
   return (modcgsRed);
 }
 
-proc appearInBranch(poly f, list branch) {
+proc appearsInBranch(poly f, list branch) {
   // Basering is @RP.
   if (size(branch[3]) == 0) {
     return (0);
@@ -195,7 +227,7 @@ proc appearInBranch(poly f, list branch) {
       return (1);
     } else {
       // TODO: make it consistent with the definition.
-      return (0);
+      
     }
   }
 
@@ -266,7 +298,8 @@ proc deletePolyFromList(list L, poly f) {
   int i;
   for (i = 1; i <= size(L); i++) {
     if (f == L[i]) {
-      return (delete(L, i));
+      L = delete(L, i);
+      break;
     }
   }
 
@@ -296,12 +329,49 @@ proc getCandidatePolys(poly pp, list M, ideal E) {
   return (G_can);
 }
 
+proc deletePolyFromG(list G, poly f) {
+  // Basering is @RP.
+  if (size(G) == 0) {
+    return (list());
+  }
+
+  int i;
+  for (i = 1; i <= size(G); i++) {
+    if (G[i][1] + G[i][2] == f) {
+      G = delete(G, i);
+      break;
+    }
+  }
+
+  return (G);
+}
+
+proc insertPolyIntoG(list G, poly f, ideal E, list N) {
+  // Basering is @RP.
+  poly f_null;
+  poly f_nonnull;
+  
+  while (f > 0) {
+    poly cur_coef = leadcoef_U(f);
+    if (checkNullRRep(cur_coef, E, N)) {
+      f_null = f_null + lm_X(f);
+    } else {
+      f_nonnull = f_nonnull + lm_X(f);
+    }
+    f = f - lm_X(f);
+  }
+
+  list l = f_nonnull, f_null;
+  G = insert(G, l, size(G));
+  return (G);
+}
+
 proc checkEssentialByHC(poly f, poly pf, list higher_coefs, poly g, list G_can, ideal E, list N, list G_branch, list BL) {
   // Basering is @RP.
   if (size(higher_coefs) == 0) {
     // {g} covers f in (E, N).
-    G_branch = delete(G_branch, f);
-    G_branch = insert(G_branch, g, size(G_branch));
+    G_branch = deletePolyFromG(G_branch, f);
+    G_branch = insertPolyIntoG(G_branch, g, E, N);
     BL = insert(BL, list(E, N, G_branch), size(BL));
     return (0, BL);
   } else {
@@ -309,30 +379,34 @@ proc checkEssentialByHC(poly f, poly pf, list higher_coefs, poly g, list G_can, 
     for (i = 1; i <= size(higher_coefs); i++) {
       poly cur_c = higher_coefs[i];
       
-      if (reduce(cur_c, E)) {
+      if (checkNullRRep(cur_c, E, N)) {
 	// sigma(cur_c) is always 0.
+	i++;
 	continue;
-      } else if (checkNonNull(cur_c, E, N)) {
-	// sigma(cur_c) is never 0.
-	G_can = deletePolyFromList(G_can, g);
-	return (checkEssentialInBranch(f, pf, G_can, E, N, G_branch, BL));
       } else {
-	// sigma(cur_c) is not determined.
-	list branches = splitBranch(E, N, cur_c);
-	int is_essential;
-	list BL_new;
-	(is_essential, BL_new) = checkEssentialInBranch(f, pf, G_can, branches[1][1], branches[1][2], G_branch, BL);
-	if (is_essential) {
-	  return (1, BL_new);
-	} else {
+	if (checkNonNull(cur_c, E, N)) {
+	  // sigma(cur_c) is never 0.
 	  G_can = deletePolyFromList(G_can, g);
-	  return (checkEssentialInBranch(f, pf, G_can, branches[2][1], branches[2][2], G_branch, BL_new));
+	  return (checkEssentialInBranch(f, pf, G_can, E, N, G_branch, BL));
+	} else {
+	  // sigma(cur_c) is not determined.
+	  list branches = splitBranch(E, N, cur_c);
+	  int is_essential;
+	  (is_essential, BL) = checkEssentialInBranch(f, pf, G_can, branches[1][1], branches[1][2], G_branch, BL);
+	  if (is_essential) {
+	    return (1, BL);
+	  } else {
+	    G_can = deletePolyFromList(G_can, g);
+	    return (checkEssentialInBranch(f, pf, G_can, branches[2][1], branches[2][2], G_branch, BL));
+	  }
 	}
       }
+
     }
-    G_branch = delete(G_branch, f);
-    G_branch = insert(G_branch, g, size(G_branch));
-    BL = insert(BL, list(E, N, G_branch, size(BL)));
+
+    G_branch = deletePolyFromG(G_branch, f);
+    G_branch = insertPolyIntoG(G_branch, g, E, N);
+    BL = insert(BL, list(E, N, G_branch), size(BL));
     return (0, BL);
   }
 }
@@ -340,8 +414,8 @@ proc checkEssentialByHC(poly f, poly pf, list higher_coefs, poly g, list G_can, 
 proc getHigherCoefs(poly f, poly pp) {
   // Basering is @RP.
   list higher_coefs;
-  while (lppX(f) >= pp) {
-    higher_coefs = insert(higher_coefs, lppX(f), size(higher_coefs));
+  while (lppX(f) > pp) {
+    higher_coefs = insert(higher_coefs, leadcoef_U(f), size(higher_coefs));
     f = f - lm_X(f);
   }
 
@@ -363,6 +437,7 @@ proc getCoefOfPP(poly f, poly pp) {
 proc checkEssentialInBranch(poly f, poly pf, list M, ideal E, list N, list G_branch, list BL) {
   // Basering is @RP.
   list G_can = getCandidatePolys(pf, M, E);
+
   if (size(G_can) == 0) {
     list branch = E, N, G_branch;
     BL = insert(BL, branch, size(BL));
@@ -377,13 +452,12 @@ proc checkEssentialInBranch(poly f, poly pf, list M, ideal E, list N, list G_bra
   } else {
     list branches = splitBranch(E, N, cp);
     int is_essential;
-    list BL_new;
     list G_can_rem = deletePolyFromList(G_can, g);
-    (is_essential, BL_new) = checkEssentialInBranch(f, pf, G_can_rem, branches[1][1], branches[1][2], BL);
+    (is_essential, BL) = checkEssentialInBranch(f, pf, G_can_rem, branches[1][1], branches[1][2], G_branch, BL);
     if (is_essential) {
-      return (1, BL_new);
+      return (1, BL);
     } else {
-      return (checkEssentialInBranch(f, pf, G_can, branches[2][1], branches[2][2], G_branch, BL_new));
+      return (checkEssentialInBranch(f, pf, G_can, branches[2][1], branches[2][2], G_branch, BL));
     }
   }
 }
@@ -407,9 +481,7 @@ proc checkEssential(poly f, list M, list modcgs) {
       ideal E_cur = modcgs[i][1];
       list N_cur = modcgs[i][2];
       list G_cur = modcgs[i][3];
-      list BL_new;
-      (is_essential, BL_new) = checkEssentialInBranch(f, pf, MRem, E_cur, N_cur, G_cur, BL);
-      BL = BL_new;
+      (is_essential, BL) = checkEssentialInBranch(f, pf, MRem, E_cur, N_cur, G_cur, BL);
       if (is_essential) {
 	return (1, list());
       }
@@ -430,6 +502,8 @@ proc mcgbMain(ideal E, list N, ideal F) {
     return (list());
   }
 
+  set_global_rings_mcgb();
+
   // Switch to @RP.
   setring(@RP);
   def G = imap(@R, G);
@@ -444,10 +518,12 @@ proc mcgbMain(ideal E, list N, ideal F) {
 
   for (i = 1; i <= size(G); i++) {
     poly cur_f = G[i];
+    print(cur_f);
     int is_essential;
     list BL;
     (is_essential, BL) = checkEssential(cur_f, M, modcgsRed);
     if (is_essential == 0) {
+      
       list modcgs1;
       for (j = 1; j <= size(modcgs); j++) {
 	if (!appearsInBranch(cur_f, modcgs[j])) {
@@ -457,8 +533,9 @@ proc mcgbMain(ideal E, list N, ideal F) {
       for (j = 1; j <= size(BL); j++) {
 	modcgs1 = insert(modcgs1, BL[j], size(modcgs1));
       }
-      M = delete(M, i);
-    }
+      M = deletePolyFromList(M, cur_f);
+    } 
+    
   }
 
   // Switch back to @R.

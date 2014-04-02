@@ -1,0 +1,241 @@
+LIB "mcgb.lib";
+
+proc listContains(poly f, list l) {
+  if (size(l) == 0) {
+    return (0);
+  } else {
+    int i;
+    for (i = 1; i <= size(l); i++) {
+      if (f == l[i] || -f == l[i]) {
+	return (1);
+      }
+    }
+    return (0);
+  }
+}
+
+proc show_list_to_file(list l, link out) {
+  int i;
+  if (size(l) == 0) {
+    fprintf(out, newline);
+  } else {
+    for (i = 1; i <= size(l); i++) {
+      fprintf(out, "        %s,", string(l[i]));
+    }
+  }
+}
+
+proc gen_indices_sub(int T, int Len) {
+  int i, j;
+  list res_list;
+  if (Len == 1) {
+    for (i = 1; i <= T; i++) {
+      res_list = insert(res_list, list(i), size(res_list));
+    }
+    return (res_list);
+  }
+
+  list sub_list = gen_indices_sub(T, Len - 1);
+  for (i = 1; i <= size(sub_list); i++) {
+    list cur_sub_list = sub_list[i];
+    int starting_point = cur_sub_list[size(cur_sub_list)] + 1;
+   
+    if (starting_point <= T){
+      for (j = starting_point; j <= T; j++) {
+	list l = cur_sub_list;
+	l = insert(l, j, size(l));
+	res_list = insert(res_list, l, size(res_list));
+      }
+    }
+  }
+
+  return (res_list);
+}
+
+proc gen_sub_list(list l) 
+"USAGE:    Generate all the non-empty proper subsets of l.
+RETURN:    A list of lists."
+{
+  int i, j;
+  
+  // Only generate the largest proper subsets.
+  list index_list = gen_indices_sub(size(l), size(l) - 1);
+
+  if (size(index_list) == 0) {
+    return (list());
+  }
+
+  // General case.
+  list sub_list;
+  for (i = 1; i <= size(index_list); i++) {
+    list cur_index_list = index_list[i];
+    list res_list;
+    for (j = 1; j <= size(cur_index_list); j++) {
+      res_list = insert(res_list, l[cur_index_list[j]], size(res_list));
+    }
+    sub_list = insert(sub_list, res_list, size(sub_list));
+  }
+
+  return (sub_list);
+}
+
+proc list_diff(list L1, list L2) {
+  if (size(L1) == 0) {
+    return (list());
+  }
+
+  if (size(L2) == 0) {
+    return (L1);
+  }
+
+  int i;
+  list res;
+  for (i = 1; i <= size(L1); i++) {
+    if (!listContains(L1[i], L2)) {
+      res = insert(res, L1[i], size(res));
+    }
+  }
+
+  return (res);
+}
+
+proc check_comprehensive(list G, list M, list modcgs, string diff_basis, link out) {
+  // Basering is @R.
+  if (size(G) == 0) {
+    fprintf(out, "G is empty.");
+    return (1);
+  }
+
+  if (size(M) == 0) {
+    fprintf(out, "M is empty.");
+    return (0);
+  }
+
+  // General case:
+  list check_list = list_diff(G, M);
+  if (size(check_list) == 0) {
+    fprintf(out, "G = M.");
+    return (1);
+  } else {
+    int i, j;
+    // For dumping.
+    int dump_res = 1;
+    // Switch to R[X, U].
+    setring(@RP);
+    def G = imap(@R, G);
+    def M = imap(@R, M);
+    def modcgs = imap(@R, modcgs);
+    def check_list = imap(@R, check_list);
+    poly g_tobechecked;
+
+    fprintf(out, diff_basis);
+    show_list_to_file(check_list, out);
+    fprintf(out, "].");
+    
+    for (i = 1; i <= size(check_list); i++) {
+      fprintf(out, newline + "++++++++++++++++++++++++++++");
+      fprintf(out, "Now consider g = %s:", string(check_list[i]));
+      g_tobechecked = check_list[i];
+      int is_essential;
+      list BL;
+      (is_essential, BL) = checkEssential(g_tobechecked, M, modcgs);
+      if (is_essential) {
+	// g_tobechecked cannot be covered by any poly in M in some branch.
+	// Switch back to R[U][X].
+	setring(@R);
+	//return (0);
+	// For dumping.
+	if (dump_res == 1) {
+	  dump_res = 0;
+	  fprintf(out, "Thus, g is essential for some branch it appears in.");
+	} 
+      } else {
+	fprintf(out, "Thus, g is covered by some poly in M in all branches it appears in.");
+      }
+    } // Endfor.
+
+    // All polys in check_list is non-essential.
+    // Switch back to R[U][X].
+    setring(@R);
+    //return (1);
+    // For dumping.
+    return (dump_res);
+  } // Endif.
+}
+
+proc check_minimal(list M, list modcgs, link out) 
+"
+Assume that M is already a CGB.
+"
+{
+  // For dumping.
+  int dump_res = 1;
+
+  if (size(M) <= 1) {
+    return (1);
+  }
+
+  list M_subs = gen_sub_list(M);
+
+  int i, j;
+  for (i = 1; i <= size(M_subs); i++) {
+    // For each maximal proper subset of M.
+    fprintf(out, newline + "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+    fprintf(out, "%s. Now check M_sub[%s] = [", string(i), string(i));
+    show_list_to_file(M_subs[i], out);
+    fprintf(out, "    ]:");
+
+    string diff_basis = "M - M_sub[" + string(i) + "] = [";
+
+    if (check_comprehensive(M, M_subs[i], modcgs, diff_basis, out)) {
+      // M_sub[i] is also a CGB, then M is not minimal.
+      fprintf(out, "The subset M_sub[%s] is also a CGB of <F>.", string(i));
+      //return (0);
+      // For dumping.
+      if (dump_res == 1) {dump_res = 0;}
+    } else {
+      fprintf(out, "The subset M_sub[%s] is not comprehensive.", string(i));
+    }
+  }
+  // return (1);
+  // For dumping.
+  return (dump_res);
+}
+
+proc check_validity(ideal cgb, list mccgb, list modcgs, link out) {
+  fprintf(out, newline + "============================");
+  fprintf(out, "Now check whether M is comprehensive and minimal:");
+  fprintf(out, "------------------");
+
+  fprintf(out, "First, check the comprehensiveness of M:" + newline);
+
+  list G;
+  int i;
+  if (size(cgb) > 0) {
+    for (i = 1; i <= size(cgb); i++) {
+      G = insert(G, cgb[i], size(G));
+    }
+  }
+
+  string diff_basis = "G - M = [";
+
+  if (check_comprehensive(G, mccgb, modcgs, diff_basis, out)) {
+    // mccgb is comprehensive, then check the minimality.
+    fprintf(out, newline + "M is comprehensive.");
+    fprintf(out, newline + newline + "================================");
+    fprintf(out, "Second, check the minimality of M:");
+    if (check_minimal(mccgb, modcgs, out)) {
+      // mccgb is also minimal.
+      fprintf(out, newline + "M is minimal.");
+      return ("", 1);
+    } else {
+      // mccgb is not minimal.
+      fprintf(out, newline + "M is not minimal.");
+      return ("it is not minimal", 0);
+    }
+  } else {
+    // mccgb is not comprehensive.
+    fprintf(out, newline + "M is not comprehensive.");
+    return ("it is not comprehensive", 0);
+  }
+}

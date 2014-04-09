@@ -24,7 +24,7 @@ list mccgb;
 fprintf(out, "%s" + newline, StringCGB(G));
 fprintf(out, "%s" + newline, StringModCGS_mod(Modcgs));
 
-mccgb = genMCCGB_topdown(G, Modcgs, out);
+mccgb = genMCCGB(G, Modcgs, out);
 
 fprintf(out, "%s" + newline, StringCGB(G));
 showMCCGB(mccgb, out);

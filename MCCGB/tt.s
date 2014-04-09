@@ -30,14 +30,14 @@ list M = mcgbMain(ideal(), list(), polys);
 string reason;
 int is_valid;
 
-/*
+
 (reason, is_valid) = check_validity(G, M, Modcgs, out);
 if (is_valid) {
   print("The result is a cgb.");
 } else {
   print(reason);
 }
-*/
+  
 
 
 close(out);

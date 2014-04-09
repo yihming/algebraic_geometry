@@ -1,7 +1,12 @@
-LIB "mccgb.lib";
+LIB "mcgb.lib";
+LIB "mcgbcheck.lib";
 
 link out = "weispfenning_1.mp";
+exportto(Top, out);
 open(out);
+
+int dbg_mode = 1;
+exportto(Top, dbg_mode);
 	
 ring r = (0, v, u), x, lp;
 
@@ -16,33 +21,20 @@ fprintf(out, "%s" + newline + "}." + newline, polys[size(polys)]);
 	
 ideal G;
 list Modcgs;
-list mccgb;
+list M;
 	
 (G, Modcgs) = cgb_mod(polys, ideal(), list(), out);
-
-fprintf(out, "%s" + newline, StringCGB(G));
 fprintf(out, "%s" + newline, StringModCGS_mod(Modcgs));
 
-mccgb = genMCCGB_topdown(G, Modcgs, out);
-	
 fprintf(out, "%s" + newline, StringCGB(G));
-showMCCGB(mccgb, out);
+
+M = mcgbMain(ideal(), list(), polys);
+
+fprintf(out, "%s" + newline, StringMCGB(M));
+
 fprintf(out, "The size of CGB is: %s"+newline, string(size(G)));
 fprintf(out, "The size of M is: %s"+newline, string(size(mccgb)));
-fprintf(out, "%s" + newline, StringModCGS_mod(Modcgs));
 
-
-// Check the validity of my_res;
-string err_msg;
-int flag;
-(err_msg, flag) = check_validity(G, mccgb, Modcgs, out);
-if (flag) {
-    fprintf(out, newline + "================================") ;
-    fprintf(out, "It is Comprehensive and Minimal indeed!");
-} else {
-    fprintf(out, newline + "================================") ;
-    fprintf(out, "It is not valid, since %s.", err_msg);
-}
-
+check_validity(G, M, Modcgs, out);
 	
 close(out);

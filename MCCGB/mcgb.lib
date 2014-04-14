@@ -155,7 +155,7 @@ proc checkNull(poly c, ideal E, list N) {
     return (0);
   }
 }
-
+/*
 proc checkNullRRep(poly c, ideal E, list N) {
   // Basering is @RP.
 
@@ -165,6 +165,7 @@ proc checkNullRRep(poly c, ideal E, list N) {
 
   return (0);
 }
+*/
 
 proc checkNonNull(poly c, ideal E, list N) {
   // Basering is @RP.
@@ -361,7 +362,7 @@ proc insertPolyIntoG(list G, poly f, ideal E, list N) {
   
   while (f > 0) {
     poly cur_coef = leadcoef_U(f);
-    if (checkNullRRep(cur_coef, E, N)) {
+    if (checkNull(cur_coef, E, N)) {
       f_null = f_null + lm_X(f);
     } else {
       f_nonnull = f_nonnull + lm_X(f);
@@ -387,7 +388,7 @@ proc checkEssentialByHC(poly f, poly pf, list higher_coefs, poly g, list G_can, 
     for (i = 1; i <= size(higher_coefs); i++) {
       poly cur_c = higher_coefs[i];
       
-      if (checkNullRRep(cur_c, E, N)) {
+      if (checkNull(cur_c, E, N)) {
 	// sigma(cur_c) is always 0.
 	i++;
 	continue;

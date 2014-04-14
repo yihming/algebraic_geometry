@@ -140,8 +140,16 @@ proc splitBranch(ideal E, list N, poly c) {
 
 proc checkNull(poly c, ideal E, list N) {
   // Basering is @RP.
-  ideal ERad = radical(E);
-  if (reduce(c, groebner(ERad)) == 0) {
+  // (E, N) in R-representation.
+  poly Nprod = 1;
+  int i;
+  for (i = 1; i <= size(N); i++) {
+    Nprod = Nprod * N[i];
+  }
+
+  ideal Ered = radical(ideal_exclude(E, ideal(Nprod)));
+
+  if (reduce(c, groebner(Ered)) == 0) {
     return (1);
   } else {
     return (0);
@@ -518,7 +526,6 @@ proc mcgbMain(ideal E, list N, ideal F) {
 
   for (i = 1; i <= size(G); i++) {
     poly cur_f = G[i];
-    print(cur_f);
     int is_essential;
     list BL;
     (is_essential, BL) = checkEssential(cur_f, M, modcgsRed);
@@ -543,4 +550,19 @@ proc mcgbMain(ideal E, list N, ideal F) {
   def M = imap(@RP, M);
 
   return (M);
+}
+
+proc showMCGB(list M, link out) {
+    int i;
+
+    fprintf(out, "M = [" + newline );
+    if (size(M) == 0) {
+        fprintf(out, newline);
+    } else {
+	for (i = 1; i < size(M); i++) {
+	    fprintf(out, "%s,", M[i]);
+	}
+	fprintf(out, "%s." + newline, M[size(M)]);
+    }
+    fprintf(out, "].");
 }

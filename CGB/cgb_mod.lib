@@ -801,13 +801,15 @@ proc cgb_mod(ideal Polys, ideal Equ, list DisEqu, link out)
   // Remove auxiliary variables from Modcgs.
   Modcgs = remove_aux_from_modcgs(Modcgs);
 
-  fprintf(out, "%snumber of checkes: %s", newline, newline) ;
-  fprintf(out, "trivial checks: %s", string(Checks[2]))	    ;
-  fprintf(out, "0-dim checks: %s", string(Checks[3]))	    ;
-  fprintf(out, "c-checks: %s", string(Checks[4]))	    ;
-  fprintf(out, "i-checks: %s", string(Checks[5]))	    ;
-  fprintf(out, "general checks: %s", string(Checks[6]))	    ;
-  fprintf(out, "total checks: %s%s", string(Checks[1]), newline) ;
+  if (defined(debug_mode) && debug_mode == 1) {
+    fprintf(out, "%snumber of checkes: %s", newline, newline) ;
+    fprintf(out, "trivial checks: %s", string(Checks[2]))	    ;
+    fprintf(out, "0-dim checks: %s", string(Checks[3]))	    ;
+    fprintf(out, "c-checks: %s", string(Checks[4]))	    ;
+    fprintf(out, "i-checks: %s", string(Checks[5]))	    ;
+    fprintf(out, "general checks: %s", string(Checks[6]))	    ;
+    fprintf(out, "total checks: %s%s", string(Checks[1]), newline) ;
+  }
 	
 
   // Switch to R[U][X], and copy G and Modcgs.

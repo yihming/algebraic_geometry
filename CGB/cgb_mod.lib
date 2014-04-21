@@ -626,8 +626,18 @@ static proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
 
   //get minimal Dickson basis
   AllVarPolys, Gr, MGr = Divides_MPolys(GB);
-  MDBasis, LeadCoeffFactors = Get_MDBasis(AllVarPolys);
 
+  if (defined(debug_mode) && debug_mode == 1) {
+    ideal NotMDBasised;
+    for (i = 1; i <= size(AllVarPolys); i++) {
+      NotMDBasised = NotMDBasised + Remove_Aux(AllVarPolys[i]);
+    }
+    fprintf(out, "\vec{G} = [");
+    fprintf(out, "%s", show(NotMDBasised));
+    fprintf(out, "\t ].");
+  }
+
+  MDBasis, LeadCoeffFactors = Get_MDBasis(AllVarPolys);
 
   //trivial branches
   for (i = 1; i <= size(Gr); i++)

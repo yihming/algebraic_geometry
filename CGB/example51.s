@@ -7,7 +7,7 @@ LIB "cgb_mod.lib";
 
 // File link for output.
 link out = "example51.mp" ;
-open(out)			   ;
+open(out);			   ;
 
 //the rings, where "x, y" are variables, "a, b, c" are parameters, and "u,v" are 
 //auxillary variables. By using "u,v", the algorithm can perform module operators in polynomial rings.

@@ -5,8 +5,8 @@ link out = "weispfenning_4.mp";
 exportto(Top, out);
 open(out);
 
-int dbg_mode = 1;
-exportto(Top, dbg_mode);
+int debug_mode = 1;
+exportto(Top, debug_mode);
 
 ring r = (0, v, u), (z, y, x), lp;
 
@@ -21,17 +21,15 @@ fprintf(out, "%s" + newline + "}." + newline, polys[size(polys)]);
 
 ideal G;
 list Modcgs;
-list M;
 
 (G, Modcgs) = cgb_mod(polys, ideal(), list(), out);
 fprintf(out, "%s" + newline, StringModCGS_mod(Modcgs));
 
 fprintf(out, "%s" + newline, StringCGB(G));
 
-M = mcgbMain(ideal(), list(), polys);
+list M = mcgbMain(ideal(), list(), polys);
 
-fprintf(out, "%s" + newline, StringMCGB(M));
-	
+showMCGB(M, out);
 fprintf(out, "The size of CGB is: %s"+newline, string(size(G)));
 fprintf(out, "The size of M is: %s"+newline, string(size(M)));
 

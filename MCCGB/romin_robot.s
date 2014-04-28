@@ -1,23 +1,24 @@
-// Application in MCCGS paper by A. Montes.
-// Nine points circle Theorem.
+// Example 12 in MCCGS paper by A. Montes.
+// The system of the Romin robot (Gonzalez-Lopez and Recio, 1993).
 LIB "mcgb.lib";
 LIB "mcgbcheck.lib";
 	
-link out = "montes_nine_points_circle.mp";
+link out = "romin_robot.mp";
 exportto(Top, out);
 open(out);
 
 int debug_mode = 1;
 exportto(Top, debug_mode);
-	
-ring r = (0, a, b, c, d), (x, y, x(0), y(0), r(2)), dp;
 
-ideal polys = (b-d)*x + (c-a)*y + 2ad - 2bc,
-	(c-a)*x + (b-d)*y,
-	(a-x(0))^2 + (b-y(0))^2-r(2)^2,
-	(c-x(0))^2 + (d-y(0))^2 - r(2)^2,
-	(a+c-x(0))^2 + (b+d-y(0))^2 - r(2)^2,
-	(x-x(0))^2 + (y-y(0))^2 - r(2)^2;
+ring r = (0, l2, l3, a, b, c, d), (c3, s3, c2, s2, c1, s1), lp;
+
+ideal polys = a + d * s1,
+	b - d * c1,
+	l2*c2 + l3*c3 - d,
+	l2*s2 + l3*s3 - c,
+	s1^2 + c1^2 - 1,
+	s2^2 + c2^2 - 1,
+	s3^2 + c3^2 - 1;
 	
 fprintf(out, "F = {");
 int i;

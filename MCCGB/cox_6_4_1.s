@@ -37,4 +37,3 @@ fprintf(out, "The size of MCCGB is: %s" + newline, string(size(M)));
 check_validity(G, M, Modcgs, out);
 
 close(out);
-)

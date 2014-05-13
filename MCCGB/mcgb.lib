@@ -384,7 +384,7 @@ proc checkEssentialByHC(poly f, poly pf, list higher_coefs, poly g, list G_can, 
     BL = insert(BL, list(E, N, G_branch), size(BL));
 
     if (defined(debug_mode) && debug_mode == 1) {
-      fprintf(out, "{%s} covers %s in (%s, %s)" + newline, string(g), string(f), string(E), string(N));
+      fprintf(out, "{%s} covers %s in (<%s>, {%s})" + newline, string(g), string(f), string(E), string(N));
     }
     return (0, BL);
   } else {
@@ -422,7 +422,7 @@ proc checkEssentialByHC(poly f, poly pf, list higher_coefs, poly g, list G_can, 
     BL = insert(BL, list(E, N, G_branch), size(BL));
 
     if (defined(debug_mode) && debug_mode == 1) {
-      fprintf(out, "{%s} covers %s in (%s, %s)" + newline, string(g), string(f), string(E), string(N));
+      fprintf(out, "{%s} covers %s in (<%s>, {%s})" + newline, string(g), string(f), string(E), string(N));
     }
     return (0, BL);
   }
@@ -460,7 +460,7 @@ proc checkEssentialInBranch(poly f, poly pf, list M, ideal E, list N, list G_bra
     BL = insert(BL, branch, size(BL));
 
     if (defined(debug_mode) && debug_mode == 1) {
-      fprintf(out, "No subsets of M covers %s in (%s, %s)" + newline, string(f), string(E), string(N));
+      fprintf(out, "No subsets of M covers %s in (<%s>, {%s})" + newline, string(f), string(E), string(N));
     }
     return (1, BL);
   }

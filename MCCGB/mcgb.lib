@@ -82,7 +82,10 @@ proc idealUnion(ideal I, ideal J) {
 
 proc redRepN(ideal E, list N, poly c) {
   // Basering is @RP.
-  ideal E1 = radical(idealUnion(E, ideal(c)));
+  // reduce c by radical(E).
+  poly c_red = reduce(c, radical(E));
+
+  ideal E1 = radical(idealUnion(E, ideal(c_red)));
  
   poly h = 1;
   if (size(N) > 0) {
@@ -118,7 +121,6 @@ proc redRepNN(ideal E, list N, poly c) {
 proc splitBranch(ideal E, list N, poly c) {
   // Basering is @RP.
   list res_list;
-
   ideal E0;
   list N0;
   (E0, N0) = redRepN(E, N, c);
@@ -394,22 +396,38 @@ proc checkEssentialByHC(poly f, poly pf, list higher_coefs, poly g, list G_can, 
       
       if (checkNull(cur_c, E, N)) {
 	// sigma(cur_c) is always 0.
-	i++;
+	i++; // In SINGULAR, we need this statement before continue.
 	continue;
       } else {
 	if (checkNonNull(cur_c, E, N)) {
 	  // sigma(cur_c) is never 0.
 	  G_can = deletePolyFromList(G_can, g);
+	  if (defined(debug_mode) && debug_mode == 1) {
+	    fprintf(out, "There is some non-null higher coef %s. So %s cannot cover %s in (<%s>, {%s})", cur_c, g, f, E, N);
+	  }
 	  return (checkEssentialInBranch(f, pf, G_can, E, N, G_branch, BL));
 	} else {
 	  // sigma(cur_c) is not determined.
+	  if (defined(debug_mode) && debug_mode >= 1) {
+	    fprintf(out, "Split branch (<%s>, {%s}) w.r.t. %s:", E, N, cur_c);
+	  }
 	  list branches = splitBranch(E, N, cur_c);
 	  int is_essential;
+	  if (defined(debug_mode) && debug_mode == 1) {
+	    fprintf(out, "Come to sub-branch (<%s> {%s}):", branches[1][1], branches[1][2]);
+	  }
 	  (is_essential, BL) = checkEssentialInBranch(f, pf, G_can, branches[1][1], branches[1][2], G_branch, BL);
 	  if (is_essential) {
+	    if (defined(debug_mode) && debug_mode == 1) {
+	      fprintf(out, "%s is essential due to sub-branch (<%s>, {%s}).", f, branches[1][1], branches[1][2]);
+	    }
 	    return (1, BL);
 	  } else {
 	    G_can = deletePolyFromList(G_can, g);
+	    if (defined(debug_mode) && debug_mode == 1) {
+	      fprintf(out, "%s is covered in the first sub-branch (<%s>, {%s}).", f, branches[1][1], branches[1][2]);
+	      fprintf(out, "Continue with the other sub-branch (<%s>, {%s}):", branches[2][1], branches[2][2]);
+	    }
 	    return (checkEssentialInBranch(f, pf, G_can, branches[2][1], branches[2][2], G_branch, BL));
 	  }
 	}
@@ -468,16 +486,33 @@ proc checkEssentialInBranch(poly f, poly pf, list M, ideal E, list N, list G_bra
   poly g = G_can[1];
   list higher_coefs = getHigherCoefs(g, pf);
   poly cp = getCoefOfPP(g, pf);
+  fprintf(out, "Coef(%s, %s) = %s", g, pf, cp);
   if (checkNonNull(cp, E, N)) {
+    if (defined(debug_mode) && debug_mode == 1) {
+      fprintf(out, "Coef(g, pf) is non-null. Now check higher coefs:");
+    }
     return (checkEssentialByHC(f, pf, higher_coefs, g, G_can, E, N, G_branch, BL));
   } else {
+    if (defined(debug_mode) && debug_mode >= 1) {
+      fprintf(out, "Split branch (<%s>, {%s}) w.r.t. %s:", E, N, cp);
+    }
     list branches = splitBranch(E, N, cp);
     int is_essential;
     list G_can_rem = deletePolyFromList(G_can, g);
+    if (defined(debug_mode) && debug_mode >= 1) {
+      fprintf(out, "Come to sub-branch (<%s>, {%s}):", branches[1][1], branches[1][2]);
+    }
     (is_essential, BL) = checkEssentialInBranch(f, pf, G_can_rem, branches[1][1], branches[1][2], G_branch, BL);
     if (is_essential) {
+      if (defined(debug_mode) && debug_mode >= 1) {
+	fprintf(out, "%s is essential due to sub-branch (<%s>, {%s}).", branches[1][1], branches[1][2]);
+      }
       return (1, BL);
     } else {
+      if (defined(debug_mode) && debug_mode >= 1) {
+	fprintf(out, "%s is covered in the first sub-branch (<%s>, {%s}).", f, branches[1][1], branches[1][2]);
+	fprintf(out, "Continue with the other sub-branch (<%s>, {%s}):", branches[2][1], branches[2][2]);
+      }
       return (checkEssentialInBranch(f, pf, G_can, branches[2][1], branches[2][2], G_branch, BL));
     }
   }
@@ -502,6 +537,9 @@ proc checkEssential(poly f, list M, list modcgs) {
       ideal E_cur = modcgs[i][1];
       list N_cur = modcgs[i][2];
       list G_cur = modcgs[i][3];
+      if (defined(debug_mode) && debug_mode == 1) {
+	fprintf(out, "Now come to Branch %s: (<%s>, {%s}):", string(i), E_cur, N_cur);
+      }
       (is_essential, BL) = checkEssentialInBranch(f, pf, MRem, E_cur, N_cur, G_cur, BL);
       if (is_essential) {
 	if (defined(debug_mode) && debug_mode == 1) {

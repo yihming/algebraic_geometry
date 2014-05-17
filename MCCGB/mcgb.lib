@@ -80,10 +80,11 @@ proc idealUnion(ideal I, ideal J) {
   return (I);
 }
 
+
 proc redRepN(ideal E, list N, poly c) {
   // Basering is @RP.
   // reduce c by radical(E).
-  poly c_red = reduce(c, radical(E));
+  poly c_red = reduce(c, groebner(radical(E)));
 
   ideal E1 = radical(idealUnion(E, ideal(c_red)));
  
@@ -102,6 +103,9 @@ proc redRepN(ideal E, list N, poly c) {
 
 proc redRepNN(ideal E, list N, poly c) {
   // Basering is @RP.
+  // E is radical.
+  poly c_red = reduce(c, groebner(E));
+
   int i;
   poly N_prod = 1;
 
@@ -111,7 +115,7 @@ proc redRepNN(ideal E, list N, poly c) {
     }
   }
 
-  poly h1 = reduce(N_prod * c, E);
+  poly h1 = N_prod * c_red;
   ideal newE = ideal_exclude(E, groebner(ideal(h1)));
   list newN = getNSquareFreeFromProd(h1);
 

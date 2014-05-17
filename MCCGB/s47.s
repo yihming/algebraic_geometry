@@ -1,4 +1,3 @@
-// Non-terminating bug
 LIB "mcgb.lib";
 LIB "mcgbcheck.lib";
 
@@ -40,7 +39,8 @@ fprintf(out, "%s" + newline, StringModCGS_mod(Modcgs));
 
 fprintf(out, "%s" + newline, StringCGB(G));
 
-list M, Modcgs_new;
+list M;
+list Modcgs_new;
 
 (M, Modcgs_new) = mcgbMain(ideal(), list(), polys);
 

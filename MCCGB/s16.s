@@ -1,4 +1,3 @@
-// Non-terminating bug.
 LIB "mcgb.lib";
 LIB "mcgbcheck.lib";
 

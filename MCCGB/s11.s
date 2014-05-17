@@ -1,3 +1,4 @@
+// Bug in cgb_mod.lib
 LIB "mcgb.lib";
 LIB "mcgbcheck.lib";
 
@@ -31,7 +32,9 @@ fprintf(out, "%s" + newline, StringModCGS_mod(Modcgs));
 
 fprintf(out, "%s" + newline, StringCGB(G));
 
-list M = mcgbMain(ideal(), list(), polys);
+list M, Modcgs_new;
+	
+(M, Modcgs_new) = mcgbMain(ideal(), list(), polys);
 
 showMCGB(M, out);
 fprintf(out, "The size of CGB is: %s"+newline, string(size(G)));

@@ -7,7 +7,7 @@ exportto(Top, out);
 open(out);
 
 int debug_mode = 1;
-exportto(Top, debug_mode;
+exportto(Top, debug_mode);
 
 ring r = (0, u), x, lp;
 

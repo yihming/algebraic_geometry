@@ -474,7 +474,7 @@ proc checkEssentialInBranch(poly f, poly pf, list M, ideal E, list N, list G_bra
   list G_can = getCandidatePolys(pf, M, E);
 
   if (size(G_can) == 0) {
-    list branch = E, N, G_branch;
+    list branch = E, N, list(0);
     BL = insert(BL, branch, size(BL));
 
     if (defined(debug_mode) && debug_mode == 1) {
@@ -505,7 +505,7 @@ proc checkEssentialInBranch(poly f, poly pf, list M, ideal E, list N, list G_bra
     (is_essential, BL) = checkEssentialInBranch(f, pf, G_can_rem, branches[1][1], branches[1][2], G_branch, BL);
     if (is_essential) {
       if (defined(debug_mode) && debug_mode >= 1) {
-	fprintf(out, "%s is essential due to sub-branch (<%s>, {%s}).", branches[1][1], branches[1][2]);
+	fprintf(out, "%s is essential due to sub-branch (<%s>, {%s}).", f, branches[1][1], branches[1][2]);
       }
       return (1, BL);
     } else {
@@ -583,30 +583,36 @@ proc mcgbMain(ideal E, list N, ideal F) {
 
   for (i = 1; i <= size(G); i++) {
     poly cur_f = G[i];
+    if (defined(debug_mode) && debug_mode == 1) {
+      fprintf(out, "Now check %s:", cur_f);
+    }
     int is_essential;
     list BL;
     (is_essential, BL) = checkEssential(cur_f, M, modcgsRed);
     if (is_essential == 0) {
       
       list modcgs1;
-      for (j = 1; j <= size(modcgs); j++) {
-	if (!appearsInBranch(cur_f, modcgs[j])) {
-	  modcgs1 = insert(modcgs1, modcgs[j], size(modcgs1));
+      for (j = 1; j <= size(modcgsRed); j++) {
+	if (!appearsInBranch(cur_f, modcgsRed[j])) {
+	  modcgs1 = insert(modcgs1, modcgsRed[j], size(modcgs1));
 	}
       }
       for (j = 1; j <= size(BL); j++) {
 	modcgs1 = insert(modcgs1, BL[j], size(modcgs1));
       }
+      modcgsRed = modcgs1;
       M = deletePolyFromList(M, cur_f);
     } 
     
   }
+  
 
   // Switch back to @R.
   setring(@R);
   def M = imap(@RP, M);
+  def modcgsRed = imap(@RP, modcgsRed);
 
-  return (M);
+  return (M, modcgsRed);
 }
 
 proc showMCGB(list M, link out) {

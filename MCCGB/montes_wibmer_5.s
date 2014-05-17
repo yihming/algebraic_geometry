@@ -9,7 +9,7 @@ open(out);
 int debug_mode = 1;
 exportto(Top, debug_mode);
 
-ring r = (0, a, b), (x(2), x(3), y(2), y(3)), lp;
+ring r = (0, a, b), (x(2), x(3), y(2), y(3)), dp;
 
 ideal polys = (a-1)*y(2) - b*(x(2)-1), (a-1)*(x(2)+1)+b*y(2),
 	      (a+1)*y(3) - b*(x(3)+1), (a+1)*(x(3)-1)+b*y(3),
@@ -40,4 +40,3 @@ fprintf(out, "The size of M is: %s"+newline, string(size(M)));
 check_validity(G, M, Modcgs, out);
 	
 close(out);
-

@@ -102,19 +102,25 @@ proc list_diff(list L1, list L2) {
 proc check_comprehensive(list G, list M, list modcgs, string diff_basis, link out) {
   // Basering is @R.
   if (size(G) == 0) {
-    fprintf(out, "G is empty.");
+    if (defined(debug_mode) && debug_mode == 1) {
+      fprintf(out, "G is empty.");
+    }
     return (1);
   }
 
   if (size(M) == 0) {
-    fprintf(out, "M is empty.");
+    if (defined(debug_mode) && debug_mode == 1) {
+      fprintf(out, "M is empty.");
+    }
     return (0);
   }
 
   // General case:
   list check_list = list_diff(G, M);
   if (size(check_list) == 0) {
-    fprintf(out, "G = M.");
+    if (defined(debug_mode) && debug_mode == 1) {
+      fprintf(out, "G = M.");
+    }
     return (1);
   } else {
     int i, j;
@@ -125,13 +131,17 @@ proc check_comprehensive(list G, list M, list modcgs, string diff_basis, link ou
     def modcgs = imap(@R, modcgs);
     def check_list = imap(@R, check_list);
 
-    fprintf(out, diff_basis);
-    show_list_to_file(check_list, out);
-    fprintf(out, "].");
+    if (defined(debug_mode) && debug_mode == 1) {    
+      fprintf(out, diff_basis);
+      show_list_to_file(check_list, out);
+      fprintf(out, "].");
+    }
     
     for (i = 1; i <= size(check_list); i++) {
-      fprintf(out, newline + "++++++++++++++++++++++++++++");
-      fprintf(out, "Now consider g = %s:", string(check_list[i]));
+      if (defined(debug_mode) && debug_mode == 1) {      
+	fprintf(out, newline + "++++++++++++++++++++++++++++");
+	fprintf(out, "Now consider g = %s:", string(check_list[i]));
+      }
       poly g_tobechecked = check_list[i];
       int is_essential;
       list BL;
@@ -173,30 +183,38 @@ Assume that M is already a CGB.
   int i, j;
   for (i = 1; i <= size(M_subs); i++) {
     // For each maximal proper subset of M.
-    fprintf(out, newline + "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
-    fprintf(out, "%s. Now check M_sub[%s] = [", string(i), string(i));
-    show_list_to_file(M_subs[i], out);
-    fprintf(out, "    ]:");
+    if (defined(debug_mode) && debug_mode == 1) {
+      fprintf(out, newline + "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+      fprintf(out, "%s. Now check M_sub[%s] = [", string(i), string(i));
+      show_list_to_file(M_subs[i], out);
+      fprintf(out, "    ]:");
+    }
 
     string diff_basis = "M - M_sub[" + string(i) + "] = [";
 
     if (check_comprehensive(M, M_subs[i], modcgs, diff_basis, out)) {
       // M_sub[i] is also a CGB, then M is not minimal.
-      fprintf(out, "The subset M_sub[%s] is also a CGB of <F>.", string(i));
+      if (defined(debug_mode) && debug_mode == 1) {
+	fprintf(out, "The subset M_sub[%s] is also a CGB of <F>.", string(i));
+      }
       return (0);
     } else {
-      fprintf(out, "The subset M_sub[%s] is not comprehensive.", string(i));
+      if (defined(debug_mode) && debug_mode == 1) {
+	fprintf(out, "The subset M_sub[%s] is not comprehensive.", string(i));
+      }
     }
   }
   return (1);
 }
 
-proc check_validity(ideal cgb, list mccgb, list modcgs, link out) {
-  fprintf(out, newline + "============================");
-  fprintf(out, "Now check whether M is comprehensive and minimal:");
-  fprintf(out, "------------------");
+proc check_validity(ideal cgb, list mccgb, list modcgs, list modcgs_new, link out) {
+  if (defined(debug_mode) && debug_mode == 1) {
+    fprintf(out, newline + "============================");
+    fprintf(out, "Now check whether M is comprehensive and minimal:");
+    fprintf(out, "------------------");
 
-  fprintf(out, "First, check the comprehensiveness of M:" + newline);
+    fprintf(out, "First, check the comprehensiveness of M:" + newline);
+  }
 
   list G;
   int i;
@@ -210,21 +228,29 @@ proc check_validity(ideal cgb, list mccgb, list modcgs, link out) {
 
   if (check_comprehensive(G, mccgb, modcgs, diff_basis, out)) {
     // mccgb is comprehensive, then check the minimality.
-    fprintf(out, newline + "M is comprehensive.");
-    fprintf(out, newline + newline + "================================");
-    fprintf(out, "Second, check the minimality of M:");
-    if (check_minimal(mccgb, modcgs, out)) {
+    if (defined(debug_mode) && debug_mode == 1) {
+      fprintf(out, newline + "M is comprehensive.");
+      fprintf(out, newline + newline + "================================");
+      fprintf(out, "Second, check the minimality of M:");
+    }
+    if (check_minimal(mccgb, modcgs_new, out)) {
       // mccgb is also minimal.
-      fprintf(out, newline + "M is minimal.");
+      if (defined(debug_mode) && debug_mode == 1) {
+	fprintf(out, newline + "M is minimal.");
+      }
       return ("", 1);
     } else {
       // mccgb is not minimal.
-      fprintf(out, newline + "M is not minimal.");
+      if (defined(debug_mode) && debug_mode == 1) {
+	fprintf(out, newline + "M is not minimal.");
+      }
       return ("it is not minimal", 0);
     }
   } else {
-    // mccgb is not comprehensive.
-    fprintf(out, newline + "M is not comprehensive.");
+    //mccgb is not comprehensive.
+    if (defined(debug_mode) && debug_mode == 1) {
+      fprintf(out, newline + "M is not comprehensive.");
+    }
     return ("it is not comprehensive", 0);
   }
 }

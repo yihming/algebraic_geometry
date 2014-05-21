@@ -30,6 +30,7 @@ proc ideal_exclude(ideal I, ideal J) {
     return (ideal());
   }
 
+
   if (size(J) == 0) {
     return (I);
   }
@@ -381,6 +382,21 @@ proc insertPolyIntoG(list G, poly f, ideal E, list N) {
   return (G);
 }
 
+proc lookUpIndex(poly f) {
+  // Basering is @RP.
+  if (size(CGB) == 0) {
+    return (0);
+  } else {
+    int i;
+    for (i = 1; i <= size(CGB); i++) {
+      if (CGB[i] == f) {
+	return (i);
+      }
+    }
+    return (0);
+  }
+}
+
 proc checkEssentialByHC(poly f, poly pf, list higher_coefs, poly g, list G_can, ideal E, list N, list G_branch, list BL) {
   // Basering is @RP.
   if (size(higher_coefs) == 0) {
@@ -389,8 +405,11 @@ proc checkEssentialByHC(poly f, poly pf, list higher_coefs, poly g, list G_can, 
     G_branch = insertPolyIntoG(G_branch, g, E, N);
     BL = insert(BL, list(E, N, G_branch), size(BL));
 
+    int idx_g = lookUpIndex(g);
+    int idx_f = lookUpIndex(f);
+
     if (defined(debug_mode) && debug_mode == 1) {
-      fprintf(out, "{%s} covers %s in (<%s>, {%s})" + newline, string(g), string(f), string(E), string(N));
+      fprintf(out, "{f_%s = %s} covers f_%s = %s in (<%s>, {%s})" + newline, string(idx_g), string(g), string(idx_f), string(f), string(E), string(N));
     }
     return (0, BL);
   } else {
@@ -422,9 +441,6 @@ proc checkEssentialByHC(poly f, poly pf, list higher_coefs, poly g, list G_can, 
 	  }
 	  (is_essential, BL) = checkEssentialInBranch(f, pf, G_can, branches[1][1], branches[1][2], G_branch, BL);
 	  if (is_essential) {
-	    if (defined(debug_mode) && debug_mode == 1) {
-	      fprintf(out, "%s is essential due to sub-branch (<%s>, {%s}).", f, branches[1][1], branches[1][2]);
-	    }
 	    return (1, BL);
 	  } else {
 	    G_can = deletePolyFromList(G_can, g);
@@ -443,8 +459,11 @@ proc checkEssentialByHC(poly f, poly pf, list higher_coefs, poly g, list G_can, 
     G_branch = insertPolyIntoG(G_branch, g, E, N);
     BL = insert(BL, list(E, N, G_branch), size(BL));
 
+    int idx_g = lookUpIndex(g);
+    int idx_f = lookUpIndex(f);
+
     if (defined(debug_mode) && debug_mode == 1) {
-      fprintf(out, "{%s} covers %s in (<%s>, {%s})" + newline, string(g), string(f), string(E), string(N));
+      fprintf(out, "{f_%s = %s} covers f_%s = %s in (<%s>, {%s})" + newline, string(idx_g), string(g), string(idx_f), string(f), string(E), string(N));
     }
     return (0, BL);
   }
@@ -481,16 +500,22 @@ proc checkEssentialInBranch(poly f, poly pf, list M, ideal E, list N, list G_bra
     list branch = E, N, list(0);
     BL = insert(BL, branch, size(BL));
 
+    int idx_f = lookUpIndex(f);
+
     if (defined(debug_mode) && debug_mode == 1) {
-      fprintf(out, "No subsets of M covers %s in (<%s>, {%s})" + newline, string(f), string(E), string(N));
+      fprintf(out, "No subsets of M covers f_%s = %s in (<%s>, {%s})" + newline, string(idx_f), string(f), string(E), string(N));
+      fprintf(out, "%s is essential due to (<%s>, {%s}).", f, E, N);
     }
     return (1, BL);
   }
 
-  poly g = G_can[1];
+  int idx = random(1, size(G_can));
+  poly g = G_can[idx];
   list higher_coefs = getHigherCoefs(g, pf);
   poly cp = getCoefOfPP(g, pf);
-  fprintf(out, "Coef(%s, %s) = %s", g, pf, cp);
+  if (defined(debug_mode) && debug_mode == 1) {
+    fprintf(out, "Coef(%s, %s) = %s", g, pf, cp);
+  }
   if (checkNonNull(cp, E, N)) {
     if (defined(debug_mode) && debug_mode == 1) {
       fprintf(out, "Coef(g, pf) is non-null. Now check higher coefs:");
@@ -508,13 +533,11 @@ proc checkEssentialInBranch(poly f, poly pf, list M, ideal E, list N, list G_bra
     }
     (is_essential, BL) = checkEssentialInBranch(f, pf, G_can_rem, branches[1][1], branches[1][2], G_branch, BL);
     if (is_essential) {
-      if (defined(debug_mode) && debug_mode >= 1) {
-	fprintf(out, "%s is essential due to sub-branch (<%s>, {%s}).", f, branches[1][1], branches[1][2]);
-      }
       return (1, BL);
     } else {
+      int idx_f = lookUpIndex(f);
       if (defined(debug_mode) && debug_mode >= 1) {
-	fprintf(out, "%s is covered in the first sub-branch (<%s>, {%s}).", f, branches[1][1], branches[1][2]);
+	fprintf(out, "f_%s = %s is covered in the first sub-branch (<%s>, {%s}).", string(idx_f), f, branches[1][1], branches[1][2]);
 	fprintf(out, "Continue with the other sub-branch (<%s>, {%s}):", branches[2][1], branches[2][2]);
       }
       return (checkEssentialInBranch(f, pf, G_can, branches[2][1], branches[2][2], G_branch, BL));
@@ -560,6 +583,68 @@ proc checkEssential(poly f, list M, list modcgs) {
   return (0, BL);
 }
 
+proc listContains(list l, poly f) {
+  if (size(l) == 0) {
+    return (0);
+  } 
+
+  int i;
+  for (i = 1; i <= size(l); i++) {
+    if (l[i] == f) {
+      return (1);
+    }
+  }
+
+  return (0);
+}
+
+proc listContainsList(list m_l, list m) {
+  if (size(m_l) == 0) {
+    return (0);
+  }
+
+  int i;
+  for (i = 1; i <= size(m_l); i++) {
+    if (listEquals(m_l[i], m)) {
+      return (1);
+    }
+  }
+
+  return (0);
+}
+
+proc listEquals(list l1, list l2) {
+  if (size(l1) != size(l2)) {
+    return (0);
+  }
+
+  if (size(l1) == 0) {
+    if (size(l2) == 0) {
+      return (1);
+    } else {return (0);}
+  }
+
+  if (size(l2) == 0) {
+    return (0);
+  }
+
+  // General Case.
+  int i;
+  for (i = 1; i <= size(l1); i++) {
+    if (!listContains(l2, l1[i])) {
+      return (0);
+    }
+  }
+
+  for (i = 1; i <= size(l2); i++) {
+    if (!listContains(l1, l2[i])) {
+      return (0);
+    }
+  }
+
+  return (1);
+}
+
 proc mcgbMain(ideal E, list N, ideal F) {
   // Basering is @R.
   ideal G;
@@ -576,6 +661,8 @@ proc mcgbMain(ideal E, list N, ideal F) {
   // Switch to @RP.
   setring(@RP);
   def G = imap(@R, G);
+  def CGB = G;
+  exportto(Top, CGB);
   def modcgs = imap(@R, modcgs);
 
   list modcgsRed = makeRRep(modcgs);
@@ -585,10 +672,17 @@ proc mcgbMain(ideal E, list N, ideal F) {
     M[i] = G[i];
   }
 
-  for (i = 1; i <= size(G); i++) {
-    poly cur_f = G[i];
+  int size_cgb = size(G);
+  list checked_indices;
+
+  while (size(checked_indices) < size_cgb) {
+    int cur_idx = random(1, size_cgb);
+    while (listContains(checked_indices, cur_idx)) {
+      cur_idx = random(1, size_cgb);
+    }
+    poly cur_f = G[cur_idx];
     if (defined(debug_mode) && debug_mode == 1) {
-      fprintf(out, "Now check %s:", cur_f);
+      fprintf(out, "Now check f_%s = %s:", string(cur_idx), cur_f);
     }
     int is_essential;
     list BL;
@@ -607,7 +701,7 @@ proc mcgbMain(ideal E, list N, ideal F) {
       modcgsRed = modcgs1;
       M = deletePolyFromList(M, cur_f);
     } 
-    
+    checked_indices = insert(checked_indices, cur_idx, size(checked_indices));
   }
   
 

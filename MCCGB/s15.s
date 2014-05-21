@@ -1,4 +1,3 @@
-// Not minimal.
 LIB "mcgb.lib";
 LIB "mcgbcheck.lib";
 
@@ -28,16 +27,36 @@ list Modcgs;
 fprintf(out, "%s" + newline, StringModCGS_mod(Modcgs));
 
 fprintf(out, "%s" + newline, StringCGB(G));
+debug_mode = 0;
 
-list M, Modcgs_new;
-	
-(M, Modcgs_new) = mcgbMain(ideal(), list(), polys);
+int running_time = 10;
 
-showMCGB(M, out);
-fprintf(out, "The size of CGB is: %s"+newline, string(size(G)));
-fprintf(out, "The size of M is: %s"+newline, string(size(M)));
+list M_list;
 
-check_validity(G, M, Modcgs_new, out);
+while (running_time > 0) {
+  list M, Modcgs_new;
+  (M, Modcgs_new) = mcgbMain(ideal(), list(), polys);
+  if (size(M_list) == 0 || !listContainsList(M_list, M)) {
+    string dull						      ;
+    int flag			;
+    (dull, flag) = check_validity(G, M, Modcgs, Modcgs_new, out) ;
+    if (flag) {
+      M_list = insert(M_list, M, size(M_list));
+    } else {
+	fprintf(out, "WRONG!")	;
+    }
+  }
+
+  running_time = running_time - 1 ;
+}
+
+for (i = 1; i <= size(M_list); i++) {
+  fprintf(out, "=============================="+newline) ;
+  fprintf(out, "M_%s is "+newline, string(i)) ;
+  showMCGB(M_list[i], out)		       ;
+}
+
+printf(string(size(M_list)));
 	
 close(out);
 

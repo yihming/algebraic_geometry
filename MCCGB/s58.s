@@ -37,7 +37,7 @@ showMCGB(M, out);
 fprintf(out, "The size of CGB is: %s"+newline, string(size(G)));
 fprintf(out, "The size of M is: %s"+newline, string(size(M)));
 
-check_validity(G, M, Modcgs_new, out);
+check_validity(G, M, Modcgs, Modcgs_new, out);
 	
 close(out);
 

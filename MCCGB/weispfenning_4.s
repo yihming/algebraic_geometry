@@ -27,12 +27,23 @@ fprintf(out, "%s" + newline, StringModCGS_mod(Modcgs));
 
 fprintf(out, "%s" + newline, StringCGB(G));
 
-list M = mcgbMain(ideal(), list(), polys);
+list M_list;
 
-showMCGB(M, out);
-fprintf(out, "The size of CGB is: %s"+newline, string(size(G)));
-fprintf(out, "The size of M is: %s"+newline, string(size(M)));
+debug_mode = 0;
+int run = 10;
+int i	    ;
+	
+for (i = 1; i <= run; i++) {
+  list M, Modcgs_new;
+  (M, Modcgs_new) = mcgbMain(ideal(), list(), polys);
+  if (size(M_list) == 0 || !listContainsList(M_list, M)) {
+    if (check_validity(G, M, Modcgs, Modcgs_new, out)) {
+      M_list = insert(M_list, M, size(M_list));
+    } else {
+      printf("Not mcgb!");
+    }
+  }
+}
 
-check_validity(G, M, Modcgs, out);
 	
 close(out);

@@ -2,7 +2,7 @@ LIB "random.lib";
 LIB "mcgb.lib";
 LIB "mcgbcheck.lib";
 
-link out = "test.mp";
+link out = "linear.mp";
 exportto(Top, out);
 open(out);
 
@@ -28,7 +28,7 @@ fprintf(out, "%s" + newline + "}." + newline, polys[size(polys)]);
 ideal G;
 list Modcgs;
 
-(G, Modcgs) = cgb_mod(polys, ideal(), list(v-u), out);
+(G, Modcgs) = cgb_mod(polys, ideal(), list(), out);
 fprintf(out, "%s" + newline, StringModCGS_mod(Modcgs));
 	
 fprintf(out, "%s" + newline, StringCGB(G));
@@ -41,7 +41,7 @@ list M_list;
 
 while (running_time > 0) {
   list M, Modcgs_new;
-  (M, Modcgs_new) = mcgbMain(ideal(), list(v-u), polys);
+  (M, Modcgs_new) = mcgbMain(ideal(), list(), polys);
   if (size(M_list) == 0 || !listContainsList(M_list, M)) {
     string dull;
     int flag;

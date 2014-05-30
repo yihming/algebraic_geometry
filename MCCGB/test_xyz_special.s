@@ -1,8 +1,9 @@
+// MCGBs have different sizes.
 LIB "random.lib";
 LIB "mcgb.lib";
 LIB "mcgbcheck.lib";
 
-link out = "linear_temp.mp";
+link out = "test_xyz_special.mp";
 exportto(Top, out);
 open(out);
 
@@ -15,8 +16,8 @@ ring r = (0, u, v), (x, y, z), lp;
 
 //ideal polys = randomid(I, 2, 4);
 
-ideal polys = vx + (u-v)*y + (u+v)*z,
-	(v-u)*x + (u+v)*y + (-v)*z;
+ideal polys = vx + y + (u+v)*z,
+	(v-u)*x -y + (-v)*z;
 
 fprintf(out, "F = {");
 int i;
@@ -28,8 +29,10 @@ fprintf(out, "%s" + newline + "}." + newline, polys[size(polys)]);
 ideal G_origin;
 list Modcgs;
 
-(G_origin, Modcgs) = cgb_mod(polys, ideal(), list(), out);
+(G_origin, Modcgs) = cgb_mod(polys, ideal(), list(u-v), out);
+//ideal G = G_origin					    ;
 ideal G = G_origin[3], G_origin[4], G_origin[2], G_origin[1] ;
+	
 fprintf(out, "%s" + newline, StringModCGS_mod(Modcgs));
 	
 fprintf(out, "%s" + newline, StringCGB(G));
@@ -42,8 +45,8 @@ list M_list;
 
 while (running_time > 0) {
   list M, Modcgs_new;
-  //(M, Modcgs_new) = mcgbMain(ideal(), list(), polys);
-  (M, Modcgs_new) = mcgbMainProvisional(G, Modcgs);
+  //(M, Modcgs_new) = mcgbMain(ideal(), list(u-v), polys);
+  (M, Modcgs_new) = mcgbMainProvisional(G, Modcgs) ;
   if (size(M_list) == 0 || !listContainsList(M_list, M)) {
     string dull;
     int flag;

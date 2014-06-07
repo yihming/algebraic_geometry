@@ -49,7 +49,7 @@ LIB "ring.lib";
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-static proc Add_Aux_Polys(ideal polys)
+proc Add_Aux_Polys(ideal polys)
 {
   if (size(polys) == 0)
   {
@@ -66,7 +66,7 @@ static proc Add_Aux_Polys(ideal polys)
   return(MPolys);
 }
 
-static proc Add_Aux_Equ(ideal Equ)
+proc Add_Aux_Equ(ideal Equ)
 {
   if (size(Equ) == 0)
   {
@@ -84,7 +84,7 @@ static proc Add_Aux_Equ(ideal Equ)
 }
 
 
-static proc Radical_Equ(ideal Equ)
+proc Radical_Equ(ideal Equ)
 {
   if (size(Equ) == 0)
   {
@@ -130,7 +130,7 @@ static proc Radical_Equ(ideal Equ)
 }
 
 
-static proc Simplify_DisEqu(list DisEqu, ideal Equ)
+proc Simplify_DisEqu(list DisEqu, ideal Equ)
 {
   list newDisEqu;
   ideal DisFactors;
@@ -174,7 +174,7 @@ static proc Simplify_DisEqu(list DisEqu, ideal Equ)
   return(newDisEqu);
 }
 
-static proc Simplify_Equ(ideal Equ, list DisEqu)
+proc Simplify_Equ(ideal Equ, list DisEqu)
 {
   if (size(Equ) == 0)
   {
@@ -220,7 +220,7 @@ static proc Simplify_Equ(ideal Equ, list DisEqu)
 
 
 //Checks=[total, tri-check, 0dim-check, c-check, i-check, gen-check];
-static proc Check_Consistence_CGB(ideal Equ, list DisEqu)
+proc Check_Consistence_CGB(ideal Equ, list DisEqu)
 {
 
   Checks[1] = Checks[1] + 1;
@@ -347,7 +347,7 @@ static proc Check_Consistence_CGB(ideal Equ, list DisEqu)
 }
 
 
-static proc Trivial_Poly(ideal polys)
+proc Trivial_Poly(ideal polys)
 {
   poly tripoly = 0;
 
@@ -370,7 +370,7 @@ static proc Trivial_Poly(ideal polys)
 }
 
 
-static proc Remove_Aux(poly mp);
+proc Remove_Aux(poly mp);
 {
   ideal SpeAux = groebner(ideal(Auxiliary[1] - 1, Auxiliary[2] - 1));
 
@@ -380,7 +380,7 @@ static proc Remove_Aux(poly mp);
 }
 
 
-static proc Divides_MPolys(ideal polys)
+proc Divides_MPolys(ideal polys)
 {
   ideal AllVarPolys;
   list Gr, MGr;
@@ -418,7 +418,7 @@ static proc Divides_MPolys(ideal polys)
 
 
 //1: c1>c2
-static proc Bigger(list c1 , list c2)
+proc Bigger(list c1 , list c2)
 {
   int i, flag;
 
@@ -442,7 +442,7 @@ static proc Bigger(list c1 , list c2)
 
 
 
- proc Get_MDBasis(ideal GB)
+proc Get_MDBasis(ideal GB)
 {
   setring(@RUA);
   ideal newGB = imap(@AXU, GB);
@@ -591,19 +591,20 @@ static proc Bigger(list c1 , list c2)
 
 
 
-static proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
+proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
 {
   ideal GB, AllVarPolys, CGB;
   list Gr, MGr, MDBasis, LeadCoeffFactors;
   poly tempP, H;
   int i;
 
-
   ideal newEqu = groebner(Equ);
   newEqu = Radical_Equ(newEqu);
   list newDisEqu = Simplify_DisEqu(DisEqu, newEqu);
   newEqu = Simplify_Equ(newEqu, newDisEqu);
-
+  
+  print("Consider branch:");
+  show(newEqu);
 
   //check consistence of (Equ, DisEqu)
   if (!Check_Consistence_CGB(newEqu, newDisEqu))
@@ -614,10 +615,15 @@ static proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
   ideal newMEqu = Add_Aux_Equ(newEqu);
 
   //compute the full elinimating Grobner basis
-  GB = groebner(MPolys + newMEqu + ideal(Auxiliary[1] * Auxiliary[2]));
+  ideal MixIdeals = MPolys + newMEqu + ideal(Auxiliary[1] * Auxiliary[2]);
+  //GB = groebner(MPolys + newMEqu + ideal(Auxiliary[1] * Auxiliary[2]));
+  show(MixIdeals);
+  GB = groebner(MixIdeals);
+  print("GB is:");
+  show(GB);
 
   tempP = Trivial_Poly(GB);
-
+  
   if (tempP != 0)
   {
     Modcgs = Modcgs + list(list(newEqu, newDisEqu, list(tempP)));
@@ -626,16 +632,6 @@ static proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
 
   //get minimal Dickson basis
   AllVarPolys, Gr, MGr = Divides_MPolys(GB);
-
-  if (defined(debug_mode) && debug_mode == 2) {
-    ideal NotMDBasised;
-    for (i = 1; i <= size(AllVarPolys); i++) {
-      NotMDBasised = NotMDBasised + Remove_Aux(AllVarPolys[i]);
-    }
-    fprintf(out, "\vec{G} = [");
-    fprintf(out, "%s", show(NotMDBasised));
-    fprintf(out, "\t ].");
-  }
 
   MDBasis, LeadCoeffFactors = Get_MDBasis(AllVarPolys);
 
@@ -672,7 +668,8 @@ static proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
   list tempDisEqu;
   for (i = 1; i <= size(LeadCoeffFactors); i++)
   {
-    CGB = CGB + cgb_mod_main(AllVarPolys, newEqu + LeadCoeffFactors[i], newDisEqu + tempDisEqu);
+    //CGB = CGB + cgb_mod_main(AllVarPolys, newEqu + LeadCoeffFactors[i], newDisEqu + tempDisEqu);
+    CGB = CGB + cgb_mod_main(MPolys, newEqu + LeadCoeffFactors[i], newDisEqu + tempDisEqu);
     tempDisEqu = tempDisEqu + list(LeadCoeffFactors[i]);
   }
 
@@ -743,10 +740,11 @@ proc cgb_mod(ideal Polys, ideal Equ, list DisEqu, link out)
   // BR is R[U][X].
   def BR = basering;
 
+  option(redSB);
+
   set_global_rings(ordering);
 
   // Base ring is R[A, X, U] now.
-
   // Set Variable List.
   // Switch to R[U][X].
   setring(BR);

@@ -7,7 +7,7 @@ open(out);
 
 int debug_mode = 0;
 exportto(Top, debug_mode);
-	
+
 ring r = (0, v, u), (z, y, x), lp;
 
 ideal polys = u*y + x, v*z + x + 1;

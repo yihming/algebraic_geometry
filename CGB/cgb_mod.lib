@@ -615,12 +615,19 @@ proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
   ideal newMEqu = Add_Aux_Equ(newEqu);
 
   //compute the full elinimating Grobner basis
-  ideal MixIdeals = MPolys + newMEqu + ideal(Auxiliary[1] * Auxiliary[2]);
+  ideal MixIdeals = MPolys + newMEqu;
   //GB = groebner(MPolys + newMEqu + ideal(Auxiliary[1] * Auxiliary[2]));
+  print("F U E :");
   show(MixIdeals);
   GB = groebner(MixIdeals);
   print("GB is:");
-  show(GB);
+  ideal U = std(Auxiliary[1], Auxiliary[2]-1);
+  ideal V = std(Auxiliary[1] - 1, Auxiliary[2]);
+  int i;
+  for (i = 1; i <= size(GB); i++) {
+    printf("%s", reduce(GB[i], V));
+  }
+  //show(GB);
 
   tempP = Trivial_Poly(GB);
   
@@ -632,7 +639,6 @@ proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
 
   //get minimal Dickson basis
   AllVarPolys, Gr, MGr = Divides_MPolys(GB);
-
   MDBasis, LeadCoeffFactors = Get_MDBasis(AllVarPolys);
 
   //trivial branches
@@ -656,7 +662,9 @@ proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
   //major branch
   if (Check_Consistence_CGB(newEqu, newDisEqu + LeadCoeffFactors))
   {
-
+    print("Here!");
+    print("MDBasis:");
+    show(MDBasis);
     Modcgs = Modcgs + list(list(newEqu, newDisEqu + LeadCoeffFactors, MDBasis));
     for (i = 1; i <= size(MDBasis); i++)
     {
@@ -666,6 +674,10 @@ proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
 
   //other branches
   list tempDisEqu;
+
+  // randomize the order of LeadCoeffFactors.
+  LeadCoeffFactors = randomize(LeadCoeffFactors);
+
   for (i = 1; i <= size(LeadCoeffFactors); i++)
   {
     //CGB = CGB + cgb_mod_main(AllVarPolys, newEqu + LeadCoeffFactors[i], newDisEqu + tempDisEqu);
@@ -677,7 +689,42 @@ proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
   return(CGB);
 }
 
+proc listContains_prime(list l, poly f) {
+  if (size(l) == 0) {
+    return (0);
+  } 
 
+  int i;
+  for (i = 1; i <= size(l); i++) {
+    if (l[i] == f) {
+      return (1);
+    }
+  }
+
+  return (0);
+}
+
+proc randomize(list lcs) {
+  int n = size(lcs);
+
+  if (n <= 1) {
+    return (lcs);
+  }
+
+  list rd_lcs;
+  list checked_indices;
+
+  while (size(checked_indices) < n) {
+    int cur_idx = random(1, n);
+    while (listContains_prime(checked_indices, cur_idx)) {
+      cur_idx = random(1, n);
+    }
+    rd_lcs = insert(rd_lcs, lcs[cur_idx], size(rd_lcs));
+    checked_indices = insert(checked_indices, cur_idx, size(checked_indices));
+  }
+
+  return (rd_lcs);
+}
 
 proc extend_ring_with_aux(list ring_list) {
   string aux1 = "auxU";

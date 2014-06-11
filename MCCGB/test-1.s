@@ -2,20 +2,16 @@ LIB "random.lib";
 LIB "mcgb.lib";
 LIB "mcgbcheck.lib";
 
-link out = "test_zyx.mp";
+link out = "test-1.mp";
 exportto(Top, out);
 open(out);
 
-int debug_mode = 1;
+int debug_mode = 0;
 exportto(Top, debug_mode);
 	
 ring r = (0, u, v), (y, x, z), lp;
 
-//ideal I = ux, uy, uz, vx, vy, vz;
-
-//ideal polys = randomid(I, 2, 4);
-
-ideal polys = (u-v)*x + vx + (u+v)*z,
+ideal polys = (u-v)*y + vx + (u+v)*z,
 	(u+v)*y + (-u+v)*x + (-v)*z;
 
 fprintf(out, "F = {");
@@ -34,16 +30,28 @@ fprintf(out, "%s" + newline, StringModCGS_mod(Modcgs));
 	
 fprintf(out, "%s" + newline, StringCGB(G));
 
+	/*
+setring @RP			;
+def F = imap(@R, polys)		;
+option(redSB)			;
+def RGB = std(F)		;
+setring @R			;
+def RGB = imap(@RP, RGB)		;
+fprintf(out, "RGB = [")			;
+fprintf(out, "%s", RGB)			;
+fprintf(out, "].")			;
+*/
+	
 debug_mode = 0;
 
-int running_time = 10;
+int running_time = 30;
 
 list M_list;
 
 while (running_time > 0) {
   list M, Modcgs_new;
-  //(M, Modcgs_new) = mcgbMain(ideal(), list(), polys);
-  (M, Modcgs_new) = mcgbMainProvisional(G, Modcgs) ;
+  (M, Modcgs_new) = mcgbMain(ideal(), list(), polys);
+  //(M, Modcgs_new) = mcgbMainProvisional(G, Modcgs) ;
   if (size(M_list) == 0 || !listContainsList(M_list, M)) {
     string dull;
     int flag;

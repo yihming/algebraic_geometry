@@ -5,7 +5,7 @@ link out = "weispfenning_3.mp";
 exportto(Top, out);
 open(out);
 
-int debug_mode = 1;
+int debug_mode = 0;
 exportto(Top, debug_mode);
 	
 ring r = (0, v, u), (z, y, x), lp;

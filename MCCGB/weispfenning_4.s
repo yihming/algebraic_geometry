@@ -8,7 +8,7 @@ open(out);
 int debug_mode = 1;
 exportto(Top, debug_mode);
 
-ring r = (0, v, u), (z, y, x), lp;
+ring r = (0, v, u), (y, x), lp;
 
 ideal polys = y + u*x + v, u*y + x + v;
 
@@ -37,6 +37,6 @@ fprintf(out, "The size of CGB is: %s" + newline, string(size(G))) ;
 fprintf(out, "The size of M is: %s" + newline, string(size(M)))	  ;
 
 check_validity(G, M, Modcgs, Modcgs_new, out) ;
-
-*/	
+*/
+	
 close(out);

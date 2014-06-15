@@ -6,12 +6,24 @@ LIB "teachstd.lib";
 LIB "../CGB/cgb_mod.lib";
 
 proc set_global_rings_mcgb() {
+  if (defined(@R)) {
+    kill @P; kill @R; kill @RP;
+  }
+
   // Basering is K[U][X].
   def BR = basering;
   def @R = basering;
+  def br_list = ringlist(BR);  
 
-  def Rx = ringlist(BR);
+  // Make the ordering of parameters consistent with variables.
+  //string ord_var = br_list[3][1][1];
+  //br_list[1][3][1][1] = ord_var;
+
+  //def @R = ring(br_list);
+  def Rx = br_list;
+
   def @P = ring(Rx[1]);
+
   
   Rx[1] = 0;
   def D = ring(Rx);
@@ -276,7 +288,6 @@ proc leadcoef_U(poly P) {
     flag = 1;
     def P = imap(BR, P);
   }
-
   poly C = leadcoef(P);
   
   if (flag) {
@@ -662,7 +673,7 @@ proc sortCGB(ideal G) {
 }
 
 proc mcgbMain(ideal E, list N, ideal F) {
-  // Basering is @R.
+  // basering is @R.
   ideal G;
   list modcgs;
 
@@ -674,7 +685,7 @@ proc mcgbMain(ideal E, list N, ideal F) {
 
   set_global_rings_mcgb();
 
-    // Switch to @RP.
+  // Switch to @RP.
   setring(@RP);
   //def G_origin = imap(@R, G);
   
@@ -800,6 +811,148 @@ proc mcgbMainProvisional(ideal G, list modcgs) {
 
   return (M, modcgsRed);
 }
+
+// For Canonical CGB.
+
+proc monic(poly f) {
+  // basering is @RP.
+  if (f == 0) {
+    return (f);
+  } else {
+    return (f / leadcoef(f));
+  }
+}
+
+proc lesscoef(poly coef_f, coef_g) {
+  if (coef_f == 0 && coef_g == 0) {
+    return (2);
+  }
+
+  if (leadmonom(coef_f) < leadmonom(coef_g)) {
+    return (1);
+  } else {
+    if (leadmonom(coef_f) > leadmonom(coef_g)) {
+      return (0);
+    } else {
+      if (leadcoef(coef_f) == leadcoef(coef_g)) {
+	return (lesscoef(coef_f - lead(coef_f), coef_g - lead(coef_g)));
+      } else {
+	return (leadcoef(coef_f) < leadcoef(coef_g));
+      }
+    }
+  }
+}
+
+proc lesspoly(poly f, poly g) 
+"
+f, g are monic polynomials.
+"
+{
+  // basering is @RP.
+  if (f == 0 || g == 0) {
+    return (2);
+  }
+
+  if (lppX(f) < lppX(g)) {
+    return (1);
+  } else {
+    if (lppX(f) > lppX(g)) {
+      return (0);
+    } else {
+      poly lc_f = leadcoef_U(f);
+      poly lc_g = leadcoef_U(g);
+      if (lc_f != lc_g) {
+	return (lesscoef(lc_f, lc_g));
+      } else {
+	return (lesspoly(f - lm_X(f), g - lm_X(g)));
+      }
+    }
+  }
+}
+
+proc sortPolyDesc(ideal I) {
+  
+}
+
+proc idealExclude(ideal M, poly f) {
+
+}
+
+proc updateCGS(list CGS, poly f, list BL) {
+
+}
+
+proc deleteGeneratorFromIdeal(ideal M, poly f) {
+
+}
+
+proc trySubstitute(poly f, poly f_red, ideal M, list CGS) {
+
+}
+
+proc replaceGeneratorInIdeal(ideal M, poly f_old, poly f_new) {
+
+}
+
+proc ccgbMain(ideal E, list N, ideal F) {
+  ideal G;
+  list modcgs;
+
+  (G, modcgs) = cgb_mod(F, E, N, out);
+
+  if (size(G) == 0 || size(modcgs) == 0) {
+    return (list());
+  }
+
+  set_global_rings_mcgb();
+
+  // Switch to @RP.
+  setring @RP;
+  def G = imap(@R, G);
+  G = sortPolyDesc(G);
+  def CGB = G;
+  exportto(Top, CGB);
+  def modcgs = imap(@R, modcgs);
+
+  list modcgsRed = makeRRep(modcgs);
+  ideal M = G;
+  int i, j;
+
+  for (i = 1; i <= size(G); i++) {
+    poly cur_g = G[i];
+    if (defined(debug_mode) && debug_mode == 1) {
+      fprintf(out, "Now check g_%s = %s:", string(i), cur_g);
+    }
+    int is_essential;
+    list BL;
+    poly g_red = reduce(cur_g, idealExclude(M, cur_g));
+    if (g_red == 0 || g_red == cur_g) {
+      // Notice: need to modify checkEssential with ideal M instead
+      //   of list M.
+      (is_essential, BL) = checkEssential(cur_g, M, modcgsRed);
+      if (!is_essential) {
+	modcgsRed = updateCGS(modcgsRed, cur_g, BL);
+	M = deleteGeneratorFromIdeal(M, cur_g);
+      }
+    } else {
+      int success; 
+      (success, BL) = trySubstitute(cur_g, g_red, M, modcgsRed);
+      if (success) {
+	modcgsRed = updateCGS(modcgsRed, cur_g, BL);
+	M = replaceGeneratorInIdeal(M, cur_g, g_red);
+      }
+    }
+  } // End of for.
+
+  // Switch back to @R.
+  setring @R;
+  def CCGB = imap(@RP, M);
+  def CGSRed = imap(@RP, modcgsRed);
+  
+  return (CCGB, CGSRed);
+}
+
+
 
 proc showMCGB(list M, link out) {
     int i;

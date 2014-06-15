@@ -743,15 +743,16 @@ proc extend_ring_with_aux(list ring_list) {
   }
 
   // Add the ordering for auxiliary variables.
+  string ord_var = ring_var_config[3][1][1];
   for (i = size(ring_var_config[3]); i >= 1; i--) {
     ring_var_config[3][i+1] = ring_var_config[3][i];
   }
-  ring_var_config[3][1] = list("lp", intvec(1, 1));
+  ring_var_config[3][1] = list(ord_var, intvec(1, 1));
 
   return (ring_var_config);
 }
 	
-proc set_global_rings() {
+static proc set_global_rings() {
   // Base ring is R[U][X].
   def BR = basering;
   def br_list = ringlist(BR);

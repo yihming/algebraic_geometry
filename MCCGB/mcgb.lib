@@ -350,7 +350,7 @@ proc deletePolyFromG(list G, poly f) {
 
   int i;
   for (i = 1; i <= size(G); i++) {
-    if (G[i][1] + G[i][2] == f) {
+    if (equivalent(G[i][1] + G[i][2], f)) {
       G = delete(G, i);
       break;
     }
@@ -369,9 +369,19 @@ proc insertPolyIntoG(list G, poly f, ideal E, list N) {
     if (checkNull(cur_coef, E, N)) {
       f_null = f_null + lm_X(f);
     } else {
-      f_nonnull = f_nonnull + lm_X(f);
+      poly m_nonnull = reduce(lm_X(f), E);
+      poly m_null = lm_X(f) - m_nonnull;
+      f_nonnull = f_nonnull + m_nonnull;
+      f_null = f_null + m_null;
     }
     f = f - lm_X(f);
+  }
+
+  // Make f_nonnull monic.
+  poly div_factor = leadcoef(f_nonnull);
+  if (div_factor != 1) {
+    f_nonnull = f_nonnull / div_factor;
+    f_null = f_null / div_factor;
   }
 
   list l = f_nonnull, f_null;
@@ -466,6 +476,78 @@ proc checkEssentialByHC(poly f, poly pf, list higher_coefs, poly g, list G_can, 
   }
 }
 
+proc checkEssentialByHCRandom(poly f, poly pf, list higher_coefs, poly g, list G_can, ideal E, list N, list G_branch, list BL) {
+  // Basering is @RP.
+  if (size(higher_coefs) == 0) {
+    // {g} covers f in (E, N).
+    G_branch = deletePolyFromG(G_branch, f);
+    G_branch = insertPolyIntoG(G_branch, g, E, N);
+    BL = insert(BL, list(E, N, G_branch), size(BL));
+
+    int idx_g = lookUpIndex(g);
+    int idx_f = lookUpIndex(f);
+
+    if (defined(debug_mode) && debug_mode == 1) {
+      fprintf(out, "{f_%s = %s} covers f_%s = %s in (<%s>, {%s})" + newline, string(idx_g), string(g), string(idx_f), string(f), string(E), string(N));
+    }
+    return (0, BL);
+  } else {
+    int i;
+    for (i = 1; i <= size(higher_coefs); i++) {
+      poly cur_c = higher_coefs[i];
+      
+      if (checkNull(cur_c, E, N)) {
+	// sigma(cur_c) is always 0.
+	i++; // In SINGULAR, we need this statement before continue.
+	continue;
+      } else {
+	if (checkNonNull(cur_c, E, N)) {
+	  // sigma(cur_c) is never 0.
+	  G_can = deletePolyFromList(G_can, g);
+	  if (defined(debug_mode) && debug_mode == 1) {
+	    fprintf(out, "There is some non-null higher coef %s. So %s cannot cover %s in (<%s>, {%s})", cur_c, g, f, E, N);
+	  }
+	  return (checkEssentialInBranchRandom(f, pf, G_can, E, N, G_branch, BL));
+	} else {
+	  // sigma(cur_c) is not determined.
+	  if (defined(debug_mode) && debug_mode >= 1) {
+	    fprintf(out, "Split branch (<%s>, {%s}) w.r.t. %s:", E, N, cur_c);
+	  }
+	  list branches = splitBranch(E, N, cur_c);
+	  int is_essential;
+	  if (defined(debug_mode) && debug_mode == 1) {
+	    fprintf(out, "Come to sub-branch (<%s> {%s}):", branches[1][1], branches[1][2]);
+	  }
+	  (is_essential, BL) = checkEssentialInBranchRandom(f, pf, G_can, branches[1][1], branches[1][2], G_branch, BL);
+	  if (is_essential) {
+	    return (1, BL);
+	  } else {
+	    G_can = deletePolyFromList(G_can, g);
+	    if (defined(debug_mode) && debug_mode == 1) {
+	      fprintf(out, "%s is covered in the first sub-branch (<%s>, {%s}).", f, branches[1][1], branches[1][2]);
+	      fprintf(out, "Continue with the other sub-branch (<%s>, {%s}):", branches[2][1], branches[2][2]);
+	    }
+	    return (checkEssentialInBranchRandom(f, pf, G_can, branches[2][1], branches[2][2], G_branch, BL));
+	  }
+	}
+      }
+
+    }
+
+    G_branch = deletePolyFromG(G_branch, f);
+    G_branch = insertPolyIntoG(G_branch, g, E, N);
+    BL = insert(BL, list(E, N, G_branch), size(BL));
+
+    int idx_g = lookUpIndex(g);
+    int idx_f = lookUpIndex(f);
+
+    if (defined(debug_mode) && debug_mode == 1) {
+      fprintf(out, "{f_%s = %s} covers f_%s = %s in (<%s>, {%s})" + newline, string(idx_g), string(g), string(idx_f), string(f), string(E), string(N));
+    }
+    return (0, BL);
+  }
+}
+
 proc getHigherCoefs(poly f, poly pp) {
   // Basering is @RP.
   list higher_coefs;
@@ -488,11 +570,10 @@ proc getCoefOfPP(poly f, poly pp) {
 
   return (0);
 }
-
-proc checkEssentialInBranch(poly f, poly pf, list M, ideal E, list N, list G_branch, list BL) {
+proc checkEssentialInBranch(poly f, poly pf, list MRem, ideal E, list N, list G_branch, list BL) {
   // Basering is @RP.
-  list G_can = getCandidatePolys(pf, M, E);
-
+  MRem = listAsceOrd(MRem);
+  list G_can = getCandidatePolys(pf, MRem, E);
   if (size(G_can) == 0) {
     list branch = E, N, list(0);
     BL = insert(BL, branch, size(BL));
@@ -506,8 +587,7 @@ proc checkEssentialInBranch(poly f, poly pf, list M, ideal E, list N, list G_bra
     return (1, BL);
   }
 
-  int idx = random(1, size(G_can));
-  poly g = G_can[idx];
+  poly g = G_can[1];
   list higher_coefs = getHigherCoefs(g, pf);
   poly cp = getCoefOfPP(g, pf);
   if (defined(debug_mode) && debug_mode == 1) {
@@ -542,6 +622,58 @@ proc checkEssentialInBranch(poly f, poly pf, list M, ideal E, list N, list G_bra
   }
 }
 
+proc checkEssentialInBranchRandom(poly f, poly pf, list MRem, ideal E, list N, list G_branch, list BL) {
+  // Basering is @RP.
+  list G_can = getCandidatePolys(pf, MRem, E);
+  if (size(G_can) == 0) {
+    list branch = E, N, list(0);
+    BL = insert(BL, branch, size(BL));
+
+    int idx_f = lookUpIndex(f);
+
+    if (defined(debug_mode) && debug_mode == 1) {
+      fprintf(out, "No subsets of M covers f_%s = %s in (<%s>, {%s})" + newline, string(idx_f), string(f), string(E), string(N));
+      fprintf(out, "%s is essential due to (<%s>, {%s}).", f, E, N);
+    }
+    return (1, BL);
+  }
+
+  int idx = random(1, size(G_can));
+  poly g = G_can[idx];
+  list higher_coefs = getHigherCoefs(g, pf);
+  poly cp = getCoefOfPP(g, pf);
+  if (defined(debug_mode) && debug_mode == 1) {
+    fprintf(out, "Coef(%s, %s) = %s", g, pf, cp);
+  }
+  if (checkNonNull(cp, E, N)) {
+    if (defined(debug_mode) && debug_mode == 1) {
+      fprintf(out, "Coef(g, pf) is non-null. Now check higher coefs:");
+    }
+    return (checkEssentialByHCRandom(f, pf, higher_coefs, g, G_can, E, N, G_branch, BL));
+  } else {
+    if (defined(debug_mode) && debug_mode >= 1) {
+      fprintf(out, "Split branch (<%s>, {%s}) w.r.t. %s:", E, N, cp);
+    }
+    list branches = splitBranch(E, N, cp);
+    int is_essential;
+    list G_can_rem = deletePolyFromList(G_can, g);
+    if (defined(debug_mode) && debug_mode >= 1) {
+      fprintf(out, "Come to sub-branch (<%s>, {%s}):", branches[1][1], branches[1][2]);
+    }
+    (is_essential, BL) = checkEssentialInBranchRandom(f, pf, G_can_rem, branches[1][1], branches[1][2], G_branch, BL);
+    if (is_essential) {
+      return (1, BL);
+    } else {
+      int idx_f = lookUpIndex(f);
+      if (defined(debug_mode) && debug_mode >= 1) {
+	fprintf(out, "f_%s = %s is covered in the first sub-branch (<%s>, {%s}).", string(idx_f), f, branches[1][1], branches[1][2]);
+	fprintf(out, "Continue with the other sub-branch (<%s>, {%s}):", branches[2][1], branches[2][2]);
+      }
+      return (checkEssentialInBranchRandom(f, pf, G_can, branches[2][1], branches[2][2], G_branch, BL));
+    }
+  }
+}
+
 proc equivalent(poly f, poly g) {
   // Basering is @RP.
   f = f / leadcoef(f);
@@ -568,7 +700,6 @@ proc checkEssential(poly f, list M, list modcgs) {
 	  pf = lppX(modcgs[i][3][j][1]);
 	}
       }
-      print(pf);
       int is_essential;
       list MRem = deletePolyFromList(M, f);
       ideal E_cur = modcgs[i][1];
@@ -578,6 +709,44 @@ proc checkEssential(poly f, list M, list modcgs) {
 	fprintf(out, "Now come to Branch %s: (<%s>, {%s}):", string(i), E_cur, N_cur);
       }
       (is_essential, BL) = checkEssentialInBranch(f, pf, MRem, E_cur, N_cur, G_cur, BL);
+      if (is_essential) {
+	if (defined(debug_mode) && debug_mode == 1) {
+	  fprintf(out, "%s is essential" + newline + "=================", string(f));
+	}
+	return (1, list());
+      } 
+    }
+  }
+
+  if (defined(debug_mode) && debug_mode == 1) {
+    fprintf(out, "%s is non-essential" + newline + "=====================", string(f));
+  }
+  return (0, BL);
+}
+
+proc checkEssentialRandom(poly f, list M, list modcgs) {
+  // Basering is @RP.
+  list BL;
+  int i, j;
+  
+  for (i = 1; i <= size(modcgs); i++) {
+    if (appearsInBranch(f, modcgs[i])) {
+      // f appears in this branch.
+      poly pf;
+      for (j = 1; j <= size(modcgs[i][3]); j++) {
+	if (equivalent(f, modcgs[i][3][j][1] + modcgs[i][3][j][2])) {
+	  pf = lppX(modcgs[i][3][j][1]);
+	}
+      }
+      int is_essential;
+      list MRem = deletePolyFromList(M, f);
+      ideal E_cur = modcgs[i][1];
+      list N_cur = modcgs[i][2];
+      list G_cur = modcgs[i][3];
+      if (defined(debug_mode) && debug_mode == 1) {
+	fprintf(out, "Now come to Branch %s: (<%s>, {%s}):", string(i), E_cur, N_cur);
+      }
+      (is_essential, BL) = checkEssentialInBranchRandom(f, pf, MRem, E_cur, N_cur, G_cur, BL);
       if (is_essential) {
 	if (defined(debug_mode) && debug_mode == 1) {
 	  fprintf(out, "%s is essential" + newline + "=================", string(f));
@@ -606,6 +775,21 @@ proc listContains(list l, poly f) {
   }
 
   return (0);
+}
+
+proc listLookUp(list l, poly f) {
+  if (size(l) == 0) {
+    return (-1);
+  }
+
+  int i;
+  for (i = 1; i <= size(l); i++) {
+    if (l[i] == f) {
+      return (i);
+    }
+  }
+
+  return (-1);
 }
 
 proc listContainsList(list m_l, list m) {
@@ -655,6 +839,7 @@ proc listEquals(list l1, list l2) {
   return (1);
 }
 
+// Obsolete.
 proc sortCGB(ideal G) {
   // Basering is @RP.
   
@@ -671,7 +856,72 @@ proc sortCGB(ideal G) {
   return (G_sorted);
 }
 
+
 proc mcgbMain(ideal E, list N, ideal F) {
+  // basering is @R.
+  ideal G;
+  list modcgs;
+
+  (G, modcgs) = cgb_mod(F, E, N, out);
+
+  if (size(G) == 0 || size(modcgs) == 0) {
+    return (list());
+  }
+
+
+  set_global_rings_mcgb();
+
+  // Switch to @RP.
+  setring(@RP);
+  def G = imap(@R, G);
+  G = sortPolyDesc(G);
+
+  def CGB = G;
+  exportto(Top, CGB);
+  def modcgs = imap(@R, modcgs);
+
+  list modcgsRed = makeRRep(modcgs);
+  list M;
+  int i, j;
+  for (i = 1; i <= size(G); i++) {
+    M[i] = G[i];
+  }
+
+  for (i = 1; i <= size(G); i++) {
+    poly cur_f = G[i];
+    if (defined(debug_mode) && debug_mode == 1) {
+      fprintf(out, "Now check f_%s = %s:", string(i), cur_f);
+    }
+    int is_essential;
+    list BL;
+    (is_essential, BL) = checkEssential(cur_f, M, modcgsRed);
+    if (is_essential == 0) {
+      
+      list modcgs1;
+      for (j = 1; j <= size(modcgsRed); j++) {
+	if (!appearsInBranch(cur_f, modcgsRed[j])) {
+	  modcgs1 = insert(modcgs1, modcgsRed[j], size(modcgs1));
+	}
+      }
+      for (j = 1; j <= size(BL); j++) {
+	modcgs1 = insert(modcgs1, BL[j], size(modcgs1));
+      }
+      modcgsRed = modcgs1;
+      M = deletePolyFromList(M, cur_f);
+    } 
+    
+  }
+
+
+  // Switch back to @R.
+  setring(@R);
+  def M = imap(@RP, M);
+  def modcgsRed = imap(@RP, modcgsRed);
+
+  return (M, modcgsRed);
+}
+
+proc mcgbRandMain(ideal E, list N, ideal F) {
   // basering is @R.
   ideal G;
   list modcgs;
@@ -686,9 +936,6 @@ proc mcgbMain(ideal E, list N, ideal F) {
 
   // Switch to @RP.
   setring(@RP);
-  //def G_origin = imap(@R, G);
-  
-  //def G = sortCGB(G_origin);
   def G = imap(@R, G);
 
   def CGB = G;
@@ -711,7 +958,6 @@ proc mcgbMain(ideal E, list N, ideal F) {
       cur_idx = random(1, size_cgb);
     }
     poly cur_f = G[cur_idx];
-    //poly cur_f = G[i];
     if (defined(debug_mode) && debug_mode == 1) {
       fprintf(out, "Now check f_%s = %s:", string(cur_idx), cur_f);
     }
@@ -744,72 +990,6 @@ proc mcgbMain(ideal E, list N, ideal F) {
   return (M, modcgsRed);
 }
 
-proc mcgbMainProvisional(ideal G, list modcgs) {
-  // Basering is @R.
-
-  if (size(G) == 0 || size(modcgs) == 0) {
-    return (list());
-  }
-
-  set_global_rings_mcgb();
-
-    // Switch to @RP.
-  setring(@RP);
-  def G = imap(@R, G);
-
-  def CGB = G;
-  exportto(Top, CGB);
-  def modcgs = imap(@R, modcgs);
-
-  list modcgsRed = makeRRep(modcgs);
-  list M;
-  int i, j;
-  for (i = 1; i <= size(G); i++) {
-    M[i] = G[i];
-  }
-
-  int size_cgb = size(G);
-  //list checked_indices;
-
-  //  while (size(checked_indices) < size_cgb) {
-  for (i = 1; i <= size_cgb; i++) {
-    //int cur_idx = random(1, size_cgb);
-    //while (listContains(checked_indices, cur_idx)) {
-    //cur_idx = random(1, size_cgb);
-    //}
-    //poly cur_f = G[cur_idx];
-    poly cur_f = G[i];
-    if (defined(debug_mode) && debug_mode == 1) {
-      fprintf(out, "Now check f_%s = %s:", string(cur_idx), cur_f);
-    }
-    int is_essential;
-    list BL;
-    (is_essential, BL) = checkEssential(cur_f, M, modcgsRed);
-    if (is_essential == 0) {
-      
-      list modcgs1;
-      for (j = 1; j <= size(modcgsRed); j++) {
-	if (!appearsInBranch(cur_f, modcgsRed[j])) {
-	  modcgs1 = insert(modcgs1, modcgsRed[j], size(modcgs1));
-	}
-      }
-      for (j = 1; j <= size(BL); j++) {
-	modcgs1 = insert(modcgs1, BL[j], size(modcgs1));
-      }
-      modcgsRed = modcgs1;
-      M = deletePolyFromList(M, cur_f);
-    } 
-    //checked_indices = insert(checked_indices, cur_idx, size(checked_indices));
-  }
-  
-
-  // Switch back to @R.
-  setring(@R);
-  def M = imap(@RP, M);
-  def modcgsRed = imap(@RP, modcgsRed);
-
-  return (M, modcgsRed);
-}
 
 // For Canonical CGB.
 
@@ -870,27 +1050,257 @@ f, g are monic polynomials.
 }
 
 proc sortPolyDesc(ideal I) {
+  // Basering is @RP.
+  if (size(I) <= 1) {
+    return (I);
+  }
+
+  // Bubble sort.
+  int i;
+  int swapped = 1;
+  int n = size(I);
+  poly tmp;
   
+  while (swapped == 1) {
+    swapped = 0;
+    for (i = 1; i <= n-1; i++) {
+      if (lesspoly(I[i], I[i+1])) {
+	tmp = I[i];
+	I[i] = I[i+1];
+	I[i+1] = tmp;
+	swapped = 1;
+      }
+    }
+    n = n - 1;
+  }
+
+  return (I);
 }
 
-proc idealExclude(ideal M, poly f) {
+proc idealExcludePoly(ideal M, poly f) {
+  // Basering is @RP.
+  if (size(M) == 0) {
+    return (M);
+  }
 
+  ideal new_M;
+  int i;
+
+  for (i = 1; i <= size(M); i++) {
+    if (!equivalent(M[i], f)) {
+      new_M = new_M + M[i];
+    }
+  }
+
+  return (new_M);
 }
 
 proc updateCGS(list CGS, poly f, list BL) {
+  // Basering @RP.
+  if (size(CGS) == 0) {return (CGS);}
 
+  list CGS_new;
+  int i;
+
+  for (i = 1; i <= size(CGS); i++) {
+    if (!appearsInBranch(f, CGS[i])) {
+      CGS_new = insert(CGS_new, CGS[i], size(CGS_new));
+    }
+  }
+
+  for (i = 1; i <= size(BL); i++) {
+    CGS_new = insert(CGS_new, BL[i], size(CGS_new));
+  }
+
+  return (CGS_new);
 }
 
-proc deleteGeneratorFromIdeal(ideal M, poly f) {
+proc listAsceOrd(list L) {
+  if (size(L) <= 1) {return (L);}
 
+  // Bubble sort.
+  int i;
+  int swapped = 1;
+  int n = size(L);
+  poly tmp;
+
+  while (swapped == 1) {
+    swapped = 0;
+    for (i = 1; i <= n-1; i++) {
+      if (lesspoly(L[i+1], L[i])) {
+	tmp = L[i];
+	L[i] = L[i+1];
+	L[i+1] = tmp;
+	swapped = 1;
+      }
+    }
+    n = n - 1;
+  }
+
+  return (L);
 }
 
-proc trySubstitute(poly f, poly f_red, ideal M, list CGS) {
+proc getEssentialOnlyInBranchByHC(poly f, poly pp_f, list higher_coefs, poly g, list G_can, ideal E, list N, list G_branch, list BL) {
+  // Basering is @RP.
+  if (size(higher_coefs) == 0) {
+    // g covers f in (E, N).
+    G_branch = deletePolyFromG(G_branch, f);
+    // Issue: the function below must make the non-zero part monic.
+    G_branch = insertPolyIntoG(G_branch, g, E, N);
+    BL = insert(BL, list(E, N, G_branch), size(BL));
 
+    return (BL);
+  } else {
+    int i;
+    for (i = 1; i <= size(higher_coefs); i++) {
+      poly cur_c = higher_coefs[i];
+
+      if (checkNull(cur_c, E, N)) {
+	// sigma(cur_c) is always 0.
+	i++; // In SINGULAR, we need this statement before continue.
+	continue;
+      } else {
+	if (checkNonNull(cur_c, E, N)) {
+	  // sigma(cur_c) is never 0.
+	  G_can = deletePolyFromList(G_can, g);
+	  return (getEssentialOnlyInBranch(f, pp_f, G_can, E, N, G_branch, BL));
+	} else {
+	  // sigma(cur_c) is not determined.
+	  list branches = splitBranch(E, N, cur_c);
+	  list G_can_rem = deletePolyFromList(G_can_rem, g);
+	  BL = getEssentialOnlyInBranch(f, pp_f, G_can, branches[1][1], branches[1][2], G_branch, BL);
+	  BL = getEssentialOnlyInBranch(f, pp_f, G_can, branches[2][1], branches[2][2], G_branch, BL);
+	  return (BL);
+	}
+      }
+    } // End for.
+    
+    // all higher coefs are zero.
+    G_branch = deletePolyFromG(G_branch, f);
+    G_branch = insertPolyIntoG(G_branch, g, E, N);
+    BL = insert(BL, list(E, N, G_branch), size(BL));
+
+    return (BL);
+  } // End if.
 }
 
-proc replaceGeneratorInIdeal(ideal M, poly f_old, poly f_new) {
+proc getEssentialOnlyInBranch(poly f, poly pp_f, list MRem, ideal E, list N, list G_branch, list BL) {
+  // Basering is @RP.
+  MRem = listAsceOrd(MRem);
+  list G_can = getCandidatePolys(pp_f, MRem, E);
+  
+  if (size(G_can) == 0) {
+    list branch = E, N, G_branch;
+    BL = insert(BL, branch, size(BL));
+    return (BL);
+  }
 
+  poly g = G_can[1];
+  list higher_coefs = getHigherCoefs(g, pp_f);
+  poly cp = getCoefOfPP(g, pp_f);
+  if (checkNonNull(cp, E, N)) {
+    return (getEssentialOnlyInBranchByHC(f, pp_f, higher_coefs, g, G_can, E, N, G_branch, BL));
+  } else {
+    list branches = splitBranch(E, N, cp);
+    list G_can_rem = deletePolyFromList(G_can, g);
+    BL = getEssentialOnlyInBranch(f, pp_f, G_can_rem, branches[1][1], branches[1][2], G_branch, BL);
+    BL = getEssentialOnlyInBranch(f, pp_f, G_can, branches[2][1], branches[2][2], G_branch, BL);
+    return (BL);
+  }
+}
+
+proc getEssentialOnlyCGS(poly f, list M, list CGS) {
+  // Basering is @RP.
+  list BL;
+  int i, j;
+
+  for (i = 1; i <= size(CGS); i++) {
+    if (appearsInBranch(f, CGS[i])) {
+      poly pp_f;
+      for (j = 1; j <= size(CGS[i][3]); j++) {
+	if (equivalent(f, CGS[i][3][j][1] + CGS[i][3][j][2])) {
+	  pp_f = lppX(CGS[i][3][j][1]);
+	}
+      }
+      list MRem = deletePolyFromList(M, f);
+      ideal E_cur = CGS[i][1];
+      list N_cur = CGS[i][2];
+      list G_cur = CGS[i][3];
+      BL = getEssentialOnlyInBranch(f, pp_f, MRem, E_cur, N_cur, G_cur, BL);
+      
+    }
+  }
+
+  CGS = updateCGS(CGS, f, BL);
+  
+  for (i = 1; i <= size(CGS); i++) {
+    if (appearsInBranch(f, CGS[i])) {
+      return (1, CGS);
+    }
+  }
+
+  return (0, CGS);
+}
+
+// A little bit cheating.
+proc checkCGB(list M1, list M, list CGS) {
+  // Basering is @RP.
+  poly g;
+  int i;
+  int is_essential;
+  list BL;
+
+  for (i = 1; i <= size(M); i++) {
+    if (!listContains(M1, M[i])) {
+      g = M[i];
+      break;
+    }
+  }
+
+  if (g == 0) {return (0, list());}
+
+  if (size(CGS) == 0) {return (1, CGS);}
+
+  (is_essential, BL) = checkEssential(g, M1, CGS);
+
+  if (is_essential) {
+    return(0, list());
+  } else {
+    CGS = updateCGS(CGS, g, BL);
+    return (1, CGS);
+  }
+}
+
+proc trySubstitute(poly f, poly f_red, list M, list CGS) {
+  // Basering is @RP.
+  int is_essential;
+  list CGS1;
+  (is_essential, CGS1) = getEssentialOnlyCGS(f, M, CGS);
+
+  if (!is_essential) {
+    return (0, CGS1);
+  } else {
+    int success;
+    list M1 = substPolyInList(M, f, f_red);
+    (success, CGS1) = checkCGB(M1, M, CGS1);
+    if (success) {
+      return (1, CGS1);
+    } else {
+      return (0, list());
+    }
+  }
+}
+
+proc substPolyInList(list M, poly g_old, poly g_new) {
+  // Basering is @RP.
+  int idx = listLookUp(M, g_old);
+
+  if (idx != -1) {
+    M = delete(M, idx);
+    M = insert(M, g_new, idx - 1);
+  }
+
+  return (M);
 }
 
 proc ccgbMain(ideal E, list N, ideal F) {
@@ -914,8 +1324,12 @@ proc ccgbMain(ideal E, list N, ideal F) {
   def modcgs = imap(@R, modcgs);
 
   list modcgsRed = makeRRep(modcgs);
-  ideal M = G;
+  list M;
   int i, j;
+
+  for (i = 1; i <= size(G); i++) {
+    M = insert(M, G[i], size(M));
+  }
 
   for (i = 1; i <= size(G); i++) {
     poly cur_g = G[i];
@@ -924,28 +1338,41 @@ proc ccgbMain(ideal E, list N, ideal F) {
     }
     int is_essential;
     list BL;
-    poly g_red = reduce(cur_g, idealExclude(M, cur_g));
+    list modcgs_new;
+    
+    ideal MRem_ideal;
+    for (j = 1; j <= size(M); j++) {
+      if (M[j] != cur_g) {
+	MRem_ideal = MRem_ideal + M[j];
+      }
+    }
+
+    poly g_red = reduce(cur_g, MRem_ideal);
+    g_red = monic(g_red);
     if (g_red == 0 || g_red == cur_g) {
-      // Notice: need to modify checkEssential with ideal M instead
-      //   of list M.
       (is_essential, BL) = checkEssential(cur_g, M, modcgsRed);
       if (!is_essential) {
 	modcgsRed = updateCGS(modcgsRed, cur_g, BL);
-	M = deleteGeneratorFromIdeal(M, cur_g);
+	M = deletePolyFromList(M, cur_g);
       }
     } else {
       int success; 
-      (success, BL) = trySubstitute(cur_g, g_red, M, modcgsRed);
+      (success, modcgs_new) = trySubstitute(cur_g, g_red, M, modcgsRed);
       if (success) {
-	modcgsRed = updateCGS(modcgsRed, cur_g, BL);
-	M = replaceGeneratorInIdeal(M, cur_g, g_red);
+	modcgsRed = modcgs_new;
+	M = substPolyInList(M, cur_g, g_red);
       }
     }
   } // End of for.
 
+  ideal M_ideal;
+  for (i = 1; i <= size(M); i++) {
+    M_ideal = M_ideal + M[i];
+  }
+
   // Switch back to @R.
   setring @R;
-  def CCGB = imap(@RP, M);
+  def CCGB = imap(@RP, M_ideal);
   def CGSRed = imap(@RP, modcgsRed);
   
   return (CCGB, CGSRed);
@@ -965,5 +1392,19 @@ proc showMCGB(list M, link out) {
 	}
 	fprintf(out, "%s." + newline, M[size(M)]);
     }
-    fprintf(out, "].");
+    fprintf(out, "]."+newline);
+}
+
+proc showCCGB(ideal G, link out) {
+  int i;
+  fprintf(out, "C = [" + newline);
+  if (size(G) == 0) {
+    fprintf(out, newline);
+  } else {
+    for (i = 1; i < size(G); i++) {
+      fprintf(out, "%s", G[i]);
+    }
+    fprintf(out, "%s." + newline, G[size(G)]);
+  }
+  fprintf(out, "]."+newline);
 }

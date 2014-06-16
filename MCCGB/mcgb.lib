@@ -542,6 +542,18 @@ proc checkEssentialInBranch(poly f, poly pf, list M, ideal E, list N, list G_bra
   }
 }
 
+proc equivalent(poly f, poly g) {
+  // Basering is @RP.
+  f = f / leadcoef(f);
+  g = g / leadcoef(g);
+
+  if (f == g) {
+    return (1);
+  } else {
+    return (0);
+  }
+}
+
 proc checkEssential(poly f, list M, list modcgs) {
   // Basering is @RP.
   list BL;
@@ -552,10 +564,11 @@ proc checkEssential(poly f, list M, list modcgs) {
       // f appears in this branch.
       poly pf;
       for (j = 1; j <= size(modcgs[i][3]); j++) {
-	if (f == modcgs[i][3][j][1] + modcgs[i][3][j][2]) {
+	if (equivalent(f, modcgs[i][3][j][1] + modcgs[i][3][j][2])) {
 	  pf = lppX(modcgs[i][3][j][1]);
 	}
       }
+      print(pf);
       int is_essential;
       list MRem = deletePolyFromList(M, f);
       ideal E_cur = modcgs[i][1];

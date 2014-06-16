@@ -603,8 +603,6 @@ proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
   list newDisEqu = Simplify_DisEqu(DisEqu, newEqu);
   newEqu = Simplify_Equ(newEqu, newDisEqu);
   
-  print("Consider branch:");
-  show(newEqu);
 
   //check consistence of (Equ, DisEqu)
   if (!Check_Consistence_CGB(newEqu, newDisEqu))
@@ -617,17 +615,7 @@ proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
   //compute the full elinimating Grobner basis
   ideal MixIdeals = MPolys + newMEqu;
   //GB = groebner(MPolys + newMEqu + ideal(Auxiliary[1] * Auxiliary[2]));
-  print("F U E :");
-  show(MixIdeals);
   GB = groebner(MixIdeals);
-  print("GB is:");
-  ideal U = std(Auxiliary[1], Auxiliary[2]-1);
-  ideal V = std(Auxiliary[1] - 1, Auxiliary[2]);
-  int i;
-  for (i = 1; i <= size(GB); i++) {
-    printf("%s", reduce(GB[i], V));
-  }
-  //show(GB);
 
   tempP = Trivial_Poly(GB);
   
@@ -662,9 +650,6 @@ proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
   //major branch
   if (Check_Consistence_CGB(newEqu, newDisEqu + LeadCoeffFactors))
   {
-    print("Here!");
-    print("MDBasis:");
-    show(MDBasis);
     Modcgs = Modcgs + list(list(newEqu, newDisEqu + LeadCoeffFactors, MDBasis));
     for (i = 1; i <= size(MDBasis); i++)
     {

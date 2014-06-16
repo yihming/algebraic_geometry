@@ -99,6 +99,54 @@ proc list_diff(list L1, list L2) {
   return (res);
 }
 
+proc check_comprehensive(list M, list CGS) {
+  // Basering is @R.
+  if (size(CGS) == 0) {
+    if (defined(debug_mode) && debug_mode == 1) {
+      fprintf(out, "CGS is empty.");
+    }
+    return (1);
+  }
+
+  if (size(M) == 0) {
+    if (defined(debug_mode) && debug_mode == 1) {
+      fprintf(out, "M is empty.");
+    }
+    return (0);
+  }
+
+  // Switch to @RP.
+  setring @RP;
+  def M = imap(@R, M);
+  def CGS = imap(@R, CGS);
+
+  int i, j;
+  for (i = 1; i <= size(CGS); i++) {
+    if (size(CGS[i][3]) > 0) {
+      for (j = 1; j <= size(CGS[i][3]); j++) {
+	poly f = monic(CGS[i][3][j][1] + CGS[i][3][j][2]);
+
+	if (!listContains(f, M)) {
+	  poly pp_f = lppX(CGS[i][3][j][1]);
+	  ideal E_cur;
+	  list N_cur;
+	  (E_cur, N_cur) = makeRRepInBranch(CGS[i][1], CGS[i][2]);
+	  list G_branch = CGS[i][3];
+	  int is_essential;
+	  list DontCare;
+	  (is_essential, DontCare) = checkEssentialInBranch(f, pp_f, M, E_cur, N_cur, G_branch, DontCare);
+	  if (is_essential) {
+	    return (0);
+	  }
+	}
+      } // End for.
+    }
+  } // End for.
+
+  return (1);
+}
+
+/*
 proc check_comprehensive(list G, list M, list modcgs, string diff_basis, link out) {
   // Basering is @R.
   if (size(G) == 0) {
@@ -168,7 +216,49 @@ proc check_comprehensive(list G, list M, list modcgs, string diff_basis, link ou
     return (1);
   } // Endif.
 }
+*/
 
+proc check_minimal(list M, list CGS) {
+  if (size(CGS) == 0) {
+    if (defined(debug_mode) && debug_mode == 1) {
+      fprintf(out, "CGS is empty.");
+    }
+    return (1);
+  }
+
+  if (size(M) == 0) {
+    if (defined(debug_mode) && debug_mode == 1) {
+      fprintf(out, "G is empty.");
+    }
+    return (0);
+  }
+
+  list M_subs = gen_sub_list(M);
+
+  int i, j;
+  for (i = 1; i <= size(M_subs); i++) {
+    // For each maximal proper subset of M.
+    if (defined(debug_mode) && debug_mode == 1) {
+      fprintf(out, newline + "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+      fprintf(out, "%s. Now check M_sub[%s] = [", string(i), string(i));
+      show_list_to_file(M_subs[i], out);
+      fprintf(out, "    ]:");
+    }
+
+    if (check_comprehensive(M_subs[i], CGS)) {
+      if (defined(debug_mode) && debug_mode == 1) {
+	fprintf(out, "The subset M_sub[%s] is also a CGS of <F>.", string(i));
+      }
+      return (0);
+    } else {
+      if (defined(debug_mode) && debug_mode == 1) {
+	fprintf(out, "The subset M_sub[%s] is not comprehensive.", string(i));
+      }
+    }
+  } // End for.
+  return (1);
+}
+/*
 proc check_minimal(list M, list modcgs, link out) 
 "
 Assume that M is already a CGB.
@@ -206,7 +296,51 @@ Assume that M is already a CGB.
   }
   return (1);
 }
+*/
 
+proc check_validity(list M, list CGS) {
+  // Basering is @RP.
+  if (defined(debug_mode) && debug_mode == 1) {
+    fprintf(out, newline + "============================");
+    fprintf(out, "Now check whether M is comprehensive and minimal:");
+    fprintf(out, "------------------");
+
+    fprintf(out, "First, check the comprehensiveness of M:" + newline);
+  }
+
+  if (check_comprehensive(M, CGS)) {
+    // M is comprehensive, then check the minimality.
+    if (defined(debug_mode) && debug_mode == 1) {
+      fprintf(out, newline + "M is comprehensive.");
+      fprintf(out, newline + newline + "================================");
+      fprintf(out, "Second, check the minimality of M:");
+    }
+    if (check_minimal(M, CGS)) {
+      // M is also minimal.
+      if (defined(debug_mode) && debug_mode == 1) {
+	fprintf(out, newline + "M is minimal.");
+      }
+      fprintf(out, "It is comprehensive and minimal.");
+      return (1);
+    } else {
+      // M is not minimal.
+      if (defined(debug_mode) && debug_mode == 1) {
+	fprintf(out, newline + "M is not minimal.");
+      }
+      fprintf(out, "It is comprehensive, but not minimal.");
+      return (0);
+    }
+  } else {
+    // M is not comprehensive.
+    if (defined(debug_mode) && debug_mode == 1) {
+      fprintf(out, newline + "M is not comprehensive.");
+    }
+    fprintf(out, "It is not comprehensive.");
+    return (0);
+  }
+}
+
+/*
 proc check_validity(ideal cgb, list mccgb, list modcgs, list modcgs_new, link out) {
   if (defined(debug_mode) && debug_mode == 1) {
     fprintf(out, newline + "============================");
@@ -254,3 +388,4 @@ proc check_validity(ideal cgb, list mccgb, list modcgs, list modcgs_new, link ou
     return ("it is not comprehensive", 0);
   }
 }
+*/

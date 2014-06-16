@@ -25,11 +25,10 @@ for (i = 1; i < size(polys); i++) {
 }
 fprintf(out, "%s" + newline + "}." + newline, polys[size(polys)]);
 
-ideal G_origin;
+ideal G;
 list Modcgs;
 
-(G_origin, Modcgs) = cgb_mod(polys, ideal(), list(), out);
-ideal G = G_origin[3], G_origin[4], G_origin[2], G_origin[1] ;
+(G, Modcgs) = cgb_mod(polys, ideal(), list(), out);
 fprintf(out, "%s" + newline, StringModCGS_mod(Modcgs));
 	
 fprintf(out, "%s" + newline, StringCGB(G));
@@ -42,8 +41,8 @@ list M_list;
 
 while (running_time > 0) {
   list M, Modcgs_new;
-  //(M, Modcgs_new) = mcgbMain(ideal(), list(), polys);
-  (M, Modcgs_new) = mcgbMainProvisional(G, Modcgs);
+  (M, Modcgs_new) = mcgbMain(ideal(), list(), polys);
+  //(M, Modcgs_new) = mcgbMainProvisional(G, Modcgs);
   if (size(M_list) == 0 || !listContainsList(M_list, M)) {
     string dull;
     int flag;

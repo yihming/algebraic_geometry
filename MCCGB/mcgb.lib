@@ -1378,7 +1378,24 @@ proc ccgbMain(ideal E, list N, ideal F) {
   return (CCGB, CGSRed);
 }
 
+proc getRGB(ideal F) {
+  // Basering is @R.
+  if (size(F) == 0) {return (ideal());}
 
+  def BR = basering;
+  setring @RP;
+  def F = imap(BR, F);
+  option(redSB);
+  def RGB = std(F);
+  if (size(RGB) == 1 && RGB[1] == 1) {
+    setring BR;
+    return (ideal(1));
+  } else {
+    setring BR;
+    def RGB = imap(@RP, RGB);
+    return (RGB);
+  }
+}
 
 proc showMCGB(list M, link out) {
     int i;
@@ -1398,6 +1415,20 @@ proc showMCGB(list M, link out) {
 proc showCCGB(ideal G, link out) {
   int i;
   fprintf(out, "C = [" + newline);
+  if (size(G) == 0) {
+    fprintf(out, newline);
+  } else {
+    for (i = 1; i < size(G); i++) {
+      fprintf(out, "%s", G[i]);
+    }
+    fprintf(out, "%s." + newline, G[size(G)]);
+  }
+  fprintf(out, "]."+newline);
+}
+
+proc showRGB(ideal G, link out) {
+  int i;
+  fprintf(out, "RGB = [" + newline);
   if (size(G) == 0) {
     fprintf(out, newline);
   } else {

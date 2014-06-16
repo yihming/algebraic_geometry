@@ -676,7 +676,7 @@ proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
   list tempDisEqu;
 
   // randomize the order of LeadCoeffFactors.
-  LeadCoeffFactors = randomize(LeadCoeffFactors);
+  //LeadCoeffFactors = randomize(LeadCoeffFactors);
 
   for (i = 1; i <= size(LeadCoeffFactors); i++)
   {
@@ -685,6 +685,13 @@ proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
     tempDisEqu = tempDisEqu + list(LeadCoeffFactors[i]);
   }
 
+
+  // Make polynomials in CGB monic w.r.t. K[U, X].
+  if (size(CGB) > 0) {
+    for (i = 1; i <= size(CGB); i++) {
+      CGB[i] = CGB[i] / leadcoef(CGB[i]);
+    }
+  }
 
   return(CGB);
 }
@@ -751,8 +758,9 @@ proc extend_ring_with_aux(list ring_list) {
 
   return (ring_var_config);
 }
-	
-static proc set_global_rings() {
+
+
+proc set_global_rings() {
   // Base ring is R[U][X].
   def BR = basering;
   def br_list = ringlist(BR);
@@ -780,7 +788,7 @@ static proc set_global_rings() {
 
   // Set ring to R[A, X, U].
   setring(@AXU);
-}
+}	
 
 // This is the top-level function.
 proc cgb_mod(ideal Polys, ideal Equ, list DisEqu, link out)

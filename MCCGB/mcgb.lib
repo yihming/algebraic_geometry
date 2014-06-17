@@ -83,6 +83,29 @@ proc idealUnion(ideal I, ideal J) {
 
 proc redRepN(ideal E, list N, poly c) {
   // Basering is @RP.
+
+  // reduce c by radical(E).
+  ideal E_rad = radical(E);
+  poly c_red = reduce(c, groebner(E_rad));
+
+  ideal E1 = radical(E_rad + ideal(c_red));
+  
+  poly h = 1;
+  if (size(N) > 0) {
+    int i; 
+    for (i = 1; i <= size(N); i++) {
+      h = h * N[i];
+    }
+  }
+
+  ideal E_res = quotient(E1, ideal(h));
+  
+  return (E_res, N);
+}
+
+/*
+proc redRepN(ideal E, list N, poly c) {
+  // Basering is @RP.
   // reduce c by radical(E).
   poly c_red = reduce(c, groebner(radical(E)));
 
@@ -100,7 +123,31 @@ proc redRepN(ideal E, list N, poly c) {
   
   return (res_E, N);
 }
+*/
 
+proc redRepNN(ideal E, list N, poly c) {
+  // Basering is @RP.
+  int i;
+
+  ideal E_rad = radical(E);
+
+  poly h = 1;
+  if (size(N) > 0) {
+    for (i = 1; i <= size(N); i++) {
+      h = h * N[i];
+    }
+  }
+
+  poly h1 = reduce(h * c, groebner(E_rad));
+  ideal E_res = quotient(E_rad, ideal(h1));
+  h1 = reduce(h1, groebner(E_res));
+  list N_res = getNSquareFreeFromProd(h1);
+
+  return (E_res, N_res);
+  
+}
+
+/*
 proc redRepNN(ideal E, list N, poly c) {
   // Basering is @RP.
   // E is radical.
@@ -121,6 +168,7 @@ proc redRepNN(ideal E, list N, poly c) {
 
   return (newE, newN);
 }
+*/
 
 proc splitBranch(ideal E, list N, poly c) {
   // Basering is @RP.
@@ -146,6 +194,18 @@ proc splitBranch(ideal E, list N, poly c) {
 
 proc checkNull(poly c, ideal E, list N) {
   // Basering is @RP.
+
+  ideal E_rad = radical(E);
+  if (reduce(c, groebner(E_rad)) == 0) {
+    return (1);
+  } else {
+    return (0);
+  }
+}
+
+/*
+proc checkNull(poly c, ideal E, list N) {
+  // Basering is @RP.
   // (E, N) in R-representation.
   poly Nprod = 1;
   int i;
@@ -161,6 +221,8 @@ proc checkNull(poly c, ideal E, list N) {
     return (0);
   }
 }
+*/
+
 /*
 proc checkNullRRep(poly c, ideal E, list N) {
   // Basering is @RP.
@@ -1391,6 +1453,12 @@ proc getRGB(ideal F) {
     setring BR;
     return (ideal(1));
   } else {
+    // Make polys in RGB monic.
+    int i;
+    for (i = 1; i <= size(RGB); i++) {
+      RGB[i] = RGB[i] / leadcoef(RGB[i]);
+    }
+
     setring BR;
     def RGB = imap(@RP, RGB);
     return (RGB);

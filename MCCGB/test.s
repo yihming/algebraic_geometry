@@ -10,7 +10,8 @@ int debug_mode = 0;
 exportto(Top, debug_mode);
 	
 ring r = (0, u, v), (x, y, z), lp;
-
+fprintf(out, "The given ring is:")	;
+fprintf(out, "%s"+newline, r)		;
 //ideal I = ux, uy, uz, vx, vy, vz;
 
 //ideal polys = randomid(I, 2, 4);

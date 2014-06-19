@@ -1340,7 +1340,7 @@ proc trySubstitute(poly f, poly f_red, list M, list CGS) {
   (is_essential, CGS1) = getEssentialOnlyCGS(f, M, CGS);
 
   if (!is_essential) {
-    return (0, CGS1);
+    return (-1, CGS1);
   } else {
     int success;
     list M1 = substPolyInList(M, f, f_red);
@@ -1420,10 +1420,21 @@ proc ccgbMain(ideal E, list N, ideal F) {
     } else {
       int success; 
       (success, modcgs_new) = trySubstitute(cur_g, g_red, M, modcgsRed);
-      if (success) {
+
+      if (success == -1) {
+	// cur_g is already non-essential.
 	modcgsRed = modcgs_new;
-	M = substPolyInList(M, cur_g, g_red);
+	M = deletePolyFromList(M, cur_g);
+      } else {
+	if (success == 1) {
+	  // cur_g is essential,
+	  // and when replaced by g_red, M is still a CGB.
+	  modcgsRed = modcgs_new;
+	  M = substPolyInList(M, cur_g, g_red);
+	}
+	// Otherwise, cur_g is kept in M.
       }
+
     }
   } // End of for.
 

@@ -4,7 +4,7 @@ link out = "bad_test.mp";
 
 int debug_mode = 0		;
 
-int sim_times = 100		;
+int sim_times = 20		;
 	
 ring r = (0, a, b), (x, y, u, v), lp;
 
@@ -15,3 +15,13 @@ list nonnull_list = list()	;
 
 simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode) ;
 
+out = "bad_test.homog"	;
+setring @RP			;
+def F = imap(r, polys)		;
+option(redSB)			;
+def RGB = std(F)		;
+
+setring r			;
+def RGB = imap(@RP, RGB)	;
+	
+simulate_homog(null_ideal, nonnull_list, RGB, "t", sim_times, out, debug_mode) ;	

@@ -25,58 +25,22 @@ proc show_list_to_file(list l, link out) {
   }
 }
 
-proc gen_indices_sub(int T, int Len) {
-  int i, j;
-  list res_list;
-  if (Len == 1) {
-    for (i = 1; i <= T; i++) {
-      res_list = insert(res_list, list(i), size(res_list));
-    }
-    return (res_list);
-  }
-
-  list sub_list = gen_indices_sub(T, Len - 1);
-  for (i = 1; i <= size(sub_list); i++) {
-    list cur_sub_list = sub_list[i];
-    int starting_point = cur_sub_list[size(cur_sub_list)] + 1;
-   
-    if (starting_point <= T){
-      for (j = starting_point; j <= T; j++) {
-	list l = cur_sub_list;
-	l = insert(l, j, size(l));
-	res_list = insert(res_list, l, size(res_list));
-      }
-    }
-  }
-
-  return (res_list);
-}
-
-proc gen_sub_list(list l) 
-"USAGE:    Generate all the non-empty proper subsets of l.
-RETURN:    A list of lists."
+proc gen_largest_proper_sublists(list l)
+"USAGE:    Generate all sublists of with size of size(l)-1
+RETURN:    A list of such sublists."
 {
-  int i, j;
-  
-  // Only generate the largest proper subsets.
-  list index_list = gen_indices_sub(size(l), size(l) - 1);
-
-  if (size(index_list) == 0) {
+  if (size(l) <= 1) {
     return (list());
   }
 
-  // General case.
-  list sub_list;
-  for (i = 1; i <= size(index_list); i++) {
-    list cur_index_list = index_list[i];
-    list res_list;
-    for (j = 1; j <= size(cur_index_list); j++) {
-      res_list = insert(res_list, l[cur_index_list[j]], size(res_list));
-    }
-    sub_list = insert(sub_list, res_list, size(sub_list));
+  list sub_lists;
+  int i;
+  for (i = 1; i <= size(l); i++) {
+    list l_sub = delete(l, i);
+    sub_lists = insert(sub_lists, l_sub, size(sub_lists));
   }
 
-  return (sub_list);
+  return (sub_lists);
 }
 
 proc list_diff(list L1, list L2) {
@@ -146,78 +110,6 @@ proc check_comprehensive(list M, list CGS) {
   return (1);
 }
 
-/*
-proc check_comprehensive(list G, list M, list modcgs, string diff_basis, link out) {
-  // Basering is @R.
-  if (size(G) == 0) {
-    if (defined(debug_mode) && debug_mode == 1) {
-      fprintf(out, "G is empty.");
-    }
-    return (1);
-  }
-
-  if (size(M) == 0) {
-    if (defined(debug_mode) && debug_mode == 1) {
-      fprintf(out, "M is empty.");
-    }
-    return (0);
-  }
-
-  // General case:
-  list check_list = list_diff(G, M);
-  if (size(check_list) == 0) {
-    if (defined(debug_mode) && debug_mode == 1) {
-      fprintf(out, "G = M.");
-    }
-    return (1);
-  } else {
-    int i, j;
-    // Switch to R[X, U].
-    setring(@RP);
-    def G = imap(@R, G);
-    def M = imap(@R, M);
-    def modcgs = imap(@R, modcgs);
-    def check_list = imap(@R, check_list);
-
-    if (defined(debug_mode) && debug_mode == 1) {    
-      fprintf(out, diff_basis);
-      show_list_to_file(check_list, out);
-      fprintf(out, "].");
-    }
-    
-    for (i = 1; i <= size(check_list); i++) {
-      if (defined(debug_mode) && debug_mode == 1) {      
-	fprintf(out, newline + "++++++++++++++++++++++++++++");
-	fprintf(out, "Now consider g = %s:", string(check_list[i]));
-      }
-      poly g_tobechecked = check_list[i];
-      int is_essential;
-      list BL;
-      (is_essential, BL) = checkEssential(g_tobechecked, M, modcgs);
-      if (is_essential) {
-	// g_tobechecked cannot be covered by any poly in M in some branch.
-	// Switch back to R[U][X].
-	setring(@R);
-	// For dumping.
-	if (defined(debug_mode)  && debug_mode >= 1) {
-	  fprintf(out, "Thus, g is essential for some branch it appears in.");
-	}
-	return (0);
-      } else {
-	if (defined(debug_mode) && debug_mode >= 1){
-	  fprintf(out, "Thus, g is covered by some poly in M in all branches it appears in.");
-	}
-      }
-    } // Endfor.
-
-    // All polys in check_list is non-essential.
-    // Switch back to R[U][X].
-    setring(@R);
-    return (1);
-  } // Endif.
-}
-*/
-
 proc check_minimal(list M, list CGS) {
   if (size(CGS) == 0) {
     if (defined(debug_mode) && debug_mode == 1) {
@@ -233,7 +125,7 @@ proc check_minimal(list M, list CGS) {
     return (0);
   }
 
-  list M_subs = gen_sub_list(M);
+  list M_subs = gen_largest_proper_sublists(M);
 
   int i, j;
   for (i = 1; i <= size(M_subs); i++) {
@@ -258,45 +150,6 @@ proc check_minimal(list M, list CGS) {
   } // End for.
   return (1);
 }
-/*
-proc check_minimal(list M, list modcgs, link out) 
-"
-Assume that M is already a CGB.
-"
-{
-  if (size(M) <= 1) {
-    return (1);
-  }
-
-  list M_subs = gen_sub_list(M);
-
-  int i, j;
-  for (i = 1; i <= size(M_subs); i++) {
-    // For each maximal proper subset of M.
-    if (defined(debug_mode) && debug_mode == 1) {
-      fprintf(out, newline + "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
-      fprintf(out, "%s. Now check M_sub[%s] = [", string(i), string(i));
-      show_list_to_file(M_subs[i], out);
-      fprintf(out, "    ]:");
-    }
-
-    string diff_basis = "M - M_sub[" + string(i) + "] = [";
-
-    if (check_comprehensive(M, M_subs[i], modcgs, diff_basis, out)) {
-      // M_sub[i] is also a CGB, then M is not minimal.
-      if (defined(debug_mode) && debug_mode == 1) {
-	fprintf(out, "The subset M_sub[%s] is also a CGB of <F>.", string(i));
-      }
-      return (0);
-    } else {
-      if (defined(debug_mode) && debug_mode == 1) {
-	fprintf(out, "The subset M_sub[%s] is not comprehensive.", string(i));
-      }
-    }
-  }
-  return (1);
-}
-*/
 
 proc check_validity(list M, list CGS) {
   // Basering is @RP.
@@ -340,52 +193,3 @@ proc check_validity(list M, list CGS) {
   }
 }
 
-/*
-proc check_validity(ideal cgb, list mccgb, list modcgs, list modcgs_new, link out) {
-  if (defined(debug_mode) && debug_mode == 1) {
-    fprintf(out, newline + "============================");
-    fprintf(out, "Now check whether M is comprehensive and minimal:");
-    fprintf(out, "------------------");
-
-    fprintf(out, "First, check the comprehensiveness of M:" + newline);
-  }
-
-  list G;
-  int i;
-  if (size(cgb) > 0) {
-    for (i = 1; i <= size(cgb); i++) {
-      G = insert(G, cgb[i], size(G));
-    }
-  }
-
-  string diff_basis = "G - M = [";
-
-  if (check_comprehensive(G, mccgb, modcgs, diff_basis, out)) {
-    // mccgb is comprehensive, then check the minimality.
-    if (defined(debug_mode) && debug_mode == 1) {
-      fprintf(out, newline + "M is comprehensive.");
-      fprintf(out, newline + newline + "================================");
-      fprintf(out, "Second, check the minimality of M:");
-    }
-    if (check_minimal(mccgb, modcgs_new, out)) {
-      // mccgb is also minimal.
-      if (defined(debug_mode) && debug_mode == 1) {
-	fprintf(out, newline + "M is minimal.");
-      }
-      return ("", 1);
-    } else {
-      // mccgb is not minimal.
-      if (defined(debug_mode) && debug_mode == 1) {
-	fprintf(out, newline + "M is not minimal.");
-      }
-      return ("it is not minimal", 0);
-    }
-  } else {
-    //mccgb is not comprehensive.
-    if (defined(debug_mode) && debug_mode == 1) {
-      fprintf(out, newline + "M is not comprehensive.");
-    }
-    return ("it is not comprehensive", 0);
-  }
-}
-*/

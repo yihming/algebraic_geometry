@@ -2,16 +2,18 @@ LIB "mcgb.lib";
 LIB "mcgbcheck.lib";
 
 proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode) {
+  def BR = basering;
+
   exportto(Top, out);
   exportto(Top, debug_mode);
   open(out);
 
   int i;
-
+  fprintf(out, newline+"+++++++++++++++++++++++++++++++++++++++"+newline);
 
   // Print ring configuration.
   fprintf(out, "The given ring is:");
-  fprintf(out, "%s" + newline, r);
+  fprintf(out, "%s" + newline, BR);
 
   // Print the given ideal.
   fprintf(out, "F = {");
@@ -38,13 +40,13 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode)
   fprintf(out, "%s" + newline, StringCGB(G));
   fprintf(out, newline + "Size is: %s." + newline, string(size(G)));
 
+  
   // Algorithm 1.
   fprintf(out, "================ Algorithm 1 =====================" + newline);
   int sim_cnt = 1;
   list M_list;
 
   while (sim_cnt <= sim_times) {
-
     list M, Modcgs_new;
     (M, Modcgs_new) = mcgbRandMain(E, N, F);
     if (size(M_list) == 0 || !listContainsList(M_list, M)) {
@@ -107,6 +109,30 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode)
   } else {
     check_validity(list(), Modcgs);
   }
+  
 
   close(out);
+}
+
+proc simulate_homog(ideal E, list N, ideal F, string var_name, int sim_times, link out, int debug_mode) {
+  def BR = basering;
+
+  homogenize_ring(var_name);
+
+  setring @H;
+  def dummy_var = var(nvars(@H));
+
+  // Homogenize the ideal F.
+  def F = imap(BR, F);
+  F = homog(F, dummy_var);
+  
+  def E = imap(BR, E);
+
+  if (!defined(N)) {
+    def N = imap(BR, N);
+  }
+  
+  simulate(E, N, F, sim_times, out, debug_mode);
+  
+
 }

@@ -2,11 +2,11 @@ LIB "simulation.lib"		;
 	
 link out = "sit21.mp";
 
-int debug_mode = 1;
+int debug_mode = 0;
 
 int sim_times = 20		;
 	
-ring r = (0, a, b), (z1, z2, z3), lp;
+ring r = (0, a, b), (z1, z2, z3), dp;
 
 ideal polys = (-a+b)*z1 + a *z2 + (a^2-1)*z3,
 	b * z1 + (a^2+1)*z2 + a^3 * z3 ;

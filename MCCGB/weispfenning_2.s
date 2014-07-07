@@ -6,7 +6,7 @@ int debug_mode = 0;
 
 int sim_times = 15		;
 
-ring r = (0, v, u), (z, y, x), lp;
+ring r = (0, v, u), (z, y, x), Dp;
 
 	
 ideal polys = u*y + x, v*z + x + 1;

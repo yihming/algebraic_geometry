@@ -16,6 +16,7 @@ list nonnull_list = list()	;
 
 simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode) ;
 
+/*
 out = "montes_wibmer_5.homog"	;
 setring @RP			;
 def F = imap(r, polys)		;
@@ -26,3 +27,4 @@ setring r			;
 def RGB = imap(@RP, RGB)	;
 	
 simulate_homog(null_ideal, nonnull_list, RGB, "t", sim_times, out, debug_mode) ;	
+*/

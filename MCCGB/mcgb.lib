@@ -6,6 +6,11 @@ LIB "teachstd.lib";
 LIB "../CGB/cgb_mod.lib";
 proc set_global_rings_mcgb() {
   // Basering is K[U][X].
+
+  if (defined(@R)) {
+    kill @R; kill @P; kill @RP;
+  }
+
   def BR = basering;
   def @R = basering;
 
@@ -99,8 +104,12 @@ proc redRepN(ideal E, list N, poly c) {
   }
 
   ideal E_res = quotient(E1, ideal(h));
+
+  // Modification: reduce h by E_res.
+  h = reduce(h, groebner(E_res));
+  list N_res = getNSquareFreeFromProd(h);
   
-  return (E_res, N);
+  return (E_res, N_res);
 }
 
 /*
@@ -139,6 +148,7 @@ proc redRepNN(ideal E, list N, poly c) {
   }
 
   poly h1 = reduce(h * c, groebner(E_rad));
+  // Quotient function here may not terminate.
   ideal E_res = quotient(E_rad, ideal(h1));
   h1 = reduce(h1, groebner(E_res));
   list N_res = getNSquareFreeFromProd(h1);
@@ -1052,6 +1062,116 @@ proc mcgbRandMain(ideal E, list N, ideal F) {
   return (M, modcgsRed);
 }
 
+proc homogenize_ring(string var_name) {
+  // Basering is @R.
+  def BR = basering;
+
+  if (defined(@H)) {
+    kill @H;
+  }
+
+  list ring_list = ringlist(BR);
+  
+  // Add the variable name.
+  ring_list[2] = insert(ring_list[2], var_name, size(ring_list[2]));
+
+  // Update the term ordering configuration.
+  intvec iv = ring_list[3][1][2];
+  iv = iv, 1;
+  ring_list[3][1][2] = iv;
+
+  // Construct the associated homogeneous ring.
+  def @H = ring(ring_list);
+  exportto(Top, @H);
+
+  setring BR;
+}
+
+proc mcgbRandMainHomo(ideal E, list N, ideal F, string var_name) {
+  def BR = basering;
+
+  // Construct the homogeneous ring from @R.
+  homogenize_ring(var_name);
+
+  // Switch to @H.
+  setring @H;
+  def E = imap(BR, E);
+  def N = imap(BR, N);
+  def F = imap(BR, F);
+  def additional_var = var(nvars(@H));
+
+  // Homogenize F.
+  F = homog(F, additional_var);
+
+  // Construct rings @R = @H, @RP, @P.
+  set_global_rings_mcgb();
+
+  ideal G;
+  list modcgs;
+
+  (G, modcgs) = cgb_mod(F, E, N, out);
+
+  if (size(G) == 0 || size(modcgs) == 0) {
+    return (list());
+  }
+
+  set_global_rings_mcgb();
+
+  // Switch to @RP.
+  setring(@RP);
+  def G = imap(@R, G);
+
+  def CGB = G;
+  exportto(Top, CGB);
+  def modcgs = imap(@R, modcgs);
+
+  list modcgsRed = makeRRep(modcgs);
+  list M;
+  int i, j;
+  for (i = 1; i <= size(G); i++) {
+    M[i] = G[i];
+  }
+
+  int size_cgb = size(G);
+  list checked_indices;
+
+  while (size(checked_indices) < size_cgb) {
+    int cur_idx = random(1, size_cgb);
+    while (listContains(checked_indices, cur_idx)) {
+      cur_idx = random(1, size_cgb);
+    }
+    poly cur_f = G[cur_idx];
+    if (defined(debug_mode) && debug_mode == 1) {
+      fprintf(out, "Now check f_%s = %s:", string(cur_idx), cur_f);
+    }
+    int is_essential;
+    list BL;
+    (is_essential, BL) = checkEssential(cur_f, M, modcgsRed);
+    if (is_essential == 0) {
+      
+      list modcgs1;
+      for (j = 1; j <= size(modcgsRed); j++) {
+	if (!appearsInBranch(cur_f, modcgsRed[j])) {
+	  modcgs1 = insert(modcgs1, modcgsRed[j], size(modcgs1));
+	}
+      }
+      for (j = 1; j <= size(BL); j++) {
+	modcgs1 = insert(modcgs1, BL[j], size(modcgs1));
+      }
+      modcgsRed = modcgs1;
+      M = deletePolyFromList(M, cur_f);
+    } 
+    checked_indices = insert(checked_indices, cur_idx, size(checked_indices));
+  }
+  
+
+  // Switch back to @R.
+  setring(@R);
+  def M = imap(@RP, M);
+  def modcgsRed = imap(@RP, modcgsRed);
+
+  return (M, modcgsRed);
+}
 
 // For Canonical CGB.
 

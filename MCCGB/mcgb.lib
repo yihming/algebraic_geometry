@@ -103,7 +103,11 @@ proc redRepN(ideal E, list N, poly c) {
     }
   }
 
+  printf("Comes to quotient.");
+  show(E1);
+  show(h);
   ideal E_res = quotient(E1, ideal(h));
+  printf("Leaves quotient.");
 
   // Modification: reduce h by E_res.
   h = reduce(h, groebner(E_res));
@@ -149,7 +153,12 @@ proc redRepNN(ideal E, list N, poly c) {
 
   poly h1 = reduce(h * c, groebner(E_rad));
   // Quotient function here may not terminate.
+  printf("Comes to quotient.");
+  show(E_rad);
+  show(h1);
   ideal E_res = quotient(E_rad, ideal(h1));
+  printf("Leaves quotient.");
+
   h1 = reduce(h1, groebner(E_res));
   list N_res = getNSquareFreeFromProd(h1);
 

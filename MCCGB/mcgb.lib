@@ -400,6 +400,23 @@ proc deletePolyFromList(list L, poly f) {
   return (L);
 }
 
+proc delEquivPolyFromList(list L, poly f) {
+  // Basering is @RP.
+  if (size(L) == 0) {
+    return (list());
+  }
+
+  int i;
+  for (i = 1; i <= size(L); i++) {
+    if (equivalent(f, L[i])) {
+      L = delete(L, i);
+      break;
+    }
+  }
+
+  return (L);
+}
+
 proc getCandidatePolys(poly pp, list M, ideal E) {
   if (size(M) == 0) {
     return (list());
@@ -817,10 +834,15 @@ proc checkEssentialRandom(poly f, list M, list modcgs) {
       for (j = 1; j <= size(modcgs[i][3]); j++) {
 	if (equivalent(f, modcgs[i][3][j][1] + modcgs[i][3][j][2])) {
 	  pf = lppX(modcgs[i][3][j][1]);
+	  break;
 	}
       }
       int is_essential;
-      list MRem = deletePolyFromList(M, f);
+      //list MRem = deletePolyFromList(M, f);
+      list MRem = M;
+      for (j = 1; j <= size(modcgs[i][3]); j++) {
+	MRem = delEquivPolyFromList(MRem, modcgs[i][3][j][1] + modcgs[i][3][j][2]);
+      }
       ideal E_cur = modcgs[i][1];
       list N_cur = modcgs[i][2];
       list G_cur = modcgs[i][3];

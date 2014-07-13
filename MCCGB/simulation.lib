@@ -40,7 +40,6 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode)
   fprintf(out, "%s" + newline, StringCGB(G));
   fprintf(out, newline + "Size is: %s." + newline, string(size(G)));
 
-  
   // Algorithm 1.
   fprintf(out, "================ Algorithm 1 =====================" + newline);
   int sim_cnt = 1;
@@ -63,6 +62,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode)
     fprintf(out, "Size is: %s." + newline, string(size(M_list[i])));
     check_validity(M_list[i], Modcgs);
   }
+  
 
   // Algorithm 2.
   fprintf(out, newline + "======================= Algorithm 2 ================" + newline);
@@ -109,6 +109,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode)
   } else {
     check_validity(list(), Modcgs);
   }
+  
   
 
   close(out);

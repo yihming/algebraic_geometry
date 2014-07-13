@@ -615,7 +615,19 @@ proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
   //compute the full elinimating Grobner basis
   ideal MixIdeals = MPolys + newMEqu;
   //GB = groebner(MPolys + newMEqu + ideal(Auxiliary[1] * Auxiliary[2]));
-  GB = groebner(MixIdeals);
+
+  // This is the part to see if the computation only on non-zero part can terminate soon.
+  //ideal U = std(ideal(Auxiliary[1] - 1, Auxiliary[2]));
+  //ideal V = std(ideal(Auxiliary[1], Auxiliary[2] - 1));
+
+  //if (size(MixIdeals) > 0) {
+  //for (i = 1; i <= size(MixIdeals); i++) {
+  //  MixIdeals[i] = reduce(MixIdeals[i], U) * Auxiliary[1];
+  //    }
+  //  }
+  // End of this part.
+
+  GB = std(MixIdeals);
 
   tempP = Trivial_Poly(GB);
   
@@ -661,7 +673,7 @@ proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
   list tempDisEqu;
 
   // randomize the order of LeadCoeffFactors.
-  //LeadCoeffFactors = randomize(LeadCoeffFactors);
+  LeadCoeffFactors = randomize(LeadCoeffFactors);
 
   for (i = 1; i <= size(LeadCoeffFactors); i++)
   {

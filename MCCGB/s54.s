@@ -5,7 +5,7 @@ link out = "s54.mp";
 
 int debug_mode = 0;
 
-int sim_times = 15		;
+int sim_times = 1		;
 	
 ring r = (0, a, b, cv, cw, sv, sw), (x1, x2, y1, y2), lp;
 

@@ -85,7 +85,18 @@ proc idealUnion(ideal I, ideal J) {
   return (I);
 }
 
+proc redRepN(ideal E, list N, poly c) {
+  // Basering is @RP.
+  ideal E_ext = E + ideal(c);
+  
+  if (Check_Consistence_CGB(E_ext, N)) {
+    return (radical(E_ext), N);
+  } else {
+    return (ideal(1), list(0));
+  }
+}
 
+/*
 proc redRepN(ideal E, list N, poly c) {
   // Basering is @RP.
 
@@ -116,7 +127,7 @@ proc redRepN(ideal E, list N, poly c) {
   return (E_res, N_res);
 }
 
-/*
+
 proc redRepN(ideal E, list N, poly c) {
   // Basering is @RP.
   // reduce c by radical(E).
@@ -138,6 +149,21 @@ proc redRepN(ideal E, list N, poly c) {
 }
 */
 
+proc redRepNN(ideal E, list N, poly c) {
+  // Basering is @RP.
+
+  list N_ext = insert(N, c, size(N));
+
+  if (Check_Consistence_CGB(E, N_ext)) {
+    poly c_red = reduce(c, groebner(radical(E)));
+    list N_ext_red = insert(N, c_red, size(N));
+    return (E, N_ext_red);
+  } else {
+    return (ideal(1), list(0));
+  }
+}
+
+/*
 proc redRepNN(ideal E, list N, poly c) {
   // Basering is @RP.
   int i;
@@ -166,7 +192,7 @@ proc redRepNN(ideal E, list N, poly c) {
   
 }
 
-/*
+
 proc redRepNN(ideal E, list N, poly c) {
   // Basering is @RP.
   // E is radical.
@@ -189,6 +215,7 @@ proc redRepNN(ideal E, list N, poly c) {
 }
 */
 
+
 proc splitBranch(ideal E, list N, poly c) {
   // Basering is @RP.
   list res_list;
@@ -198,7 +225,7 @@ proc splitBranch(ideal E, list N, poly c) {
   list sub1 = E0, N0;
   res_list = insert(res_list, sub1, size(res_list));
   list sub2;
-  if (groebner(E0)[1] == 1) {
+  if (E0[1] == 1) {
     // (E0, N0) is inconsistent.
     sub2 = E, N;
   } else {
@@ -210,6 +237,7 @@ proc splitBranch(ideal E, list N, poly c) {
   res_list = insert(res_list, sub2, size(res_list));
   return (res_list);
 }
+
 
 proc checkNull(poly c, ideal E, list N) {
   // Basering is @RP.
@@ -959,6 +987,39 @@ proc sortCGB(ideal G) {
   return (G_sorted);
 }
 
+proc set_global_objects() {
+  // Basering is @R.
+  def BR = basering;
+
+  list Variables;
+  int i;
+  for (i = 1; i <= nvars(BR); i++) {
+    Variables[i] = var(i);
+  }
+  
+  // Siwtch to @RP.
+  setring @RP;
+  def Variables = imap(BR, Variables);
+
+  // Switch to @P.
+  setring @P;
+  list Parameters;
+  for (i = 1; i <= nvars(@P); i++) {
+    Parameters[i] = var(i);
+  }
+
+  // Switch back to @RP.
+  setring @RP;
+  def Parameters = imap(@P, Parameters);
+
+  poly VMinDPoly = Variables[size(Variables)];
+  list Checks = 0, 0, 0, 0, 0, 0;
+
+  export(Variables, Parameters, VMinDPoly, Checks);
+
+  // Switch back to @R.
+  setring BR;
+}
 
 proc mcgbMain(ideal E, list N, ideal F) {
   // basering is @R.
@@ -971,8 +1032,9 @@ proc mcgbMain(ideal E, list N, ideal F) {
     return (list());
   }
 
-
   set_global_rings_mcgb();
+
+  set_global_objects();
 
   // Switch to @RP.
   setring(@RP);
@@ -1036,6 +1098,7 @@ proc mcgbRandMain(ideal E, list N, ideal F) {
   }
 
   set_global_rings_mcgb();
+  set_global_objects();
 
   // Switch to @RP.
   setring(@RP);
@@ -1527,6 +1590,7 @@ proc ccgbMain(ideal E, list N, ideal F) {
   }
 
   set_global_rings_mcgb();
+  set_global_objects();
 
   // Switch to @RP.
   setring @RP;

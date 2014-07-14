@@ -39,7 +39,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode)
   fprintf(out, "%s" + newline, StringModCGS_mod(Modcgs));
   fprintf(out, "%s" + newline, StringCGB(G));
   fprintf(out, newline + "Size is: %s." + newline, string(size(G)));
-
+  
   // Algorithm 1.
   fprintf(out, "================ Algorithm 1 =====================" + newline);
   int sim_cnt = 1;

@@ -222,8 +222,13 @@ proc Simplify_Equ(ideal Equ, list DisEqu)
 //Checks=[total, tri-check, 0dim-check, c-check, i-check, gen-check];
 proc Check_Consistence_CGB(ideal Equ, list DisEqu)
 {
-
+  //printf("Check the consistence of:");
+  //printf("E = ");
+  //show(Equ);
+  //printf("N = %s.", DisEqu);
+  // Basering is K[A, X, U].
   Checks[1] = Checks[1] + 1;
+
 
   //trivial checks
   if (!size(Equ))
@@ -238,12 +243,12 @@ proc Check_Consistence_CGB(ideal Equ, list DisEqu)
     return(0);
   }
 
+
   if (!size(DisEqu))
   {
     Checks[2] = Checks[2] + 1;
     return(1);
   }
-
 
   //normal form
   poly DE = 1;
@@ -258,7 +263,6 @@ proc Check_Consistence_CGB(ideal Equ, list DisEqu)
       return(0);
     }
   }
-
 
   //c-check
   int ctimes = 1;
@@ -281,6 +285,7 @@ proc Check_Consistence_CGB(ideal Equ, list DisEqu)
   }
 
   ideal tempGB, Spe;
+
 
   if (size(Indvar))
   {

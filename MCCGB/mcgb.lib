@@ -284,8 +284,10 @@ proc checkNullRRep(poly c, ideal E, list N) {
 
 proc checkNonNull(poly c, ideal E, list N) {
   // Basering is @RP.
-  list sub_branches = splitBranch(E, N, c);
-  if (sub_branches[1][1] == 1) {
+  ideal E0;
+  list N0;
+  (E0, N0) = redRepN(E, N, c);
+  if (E0[1] == 1) {
     return (1);
   } else { 
     return (0); 

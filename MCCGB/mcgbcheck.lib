@@ -92,9 +92,12 @@ proc check_comprehensive(list M, list CGS) {
 
 	if (!listContains(f, M)) {
 	  poly pp_f = lppX(CGS[i][3][j][1]);
-	  ideal E_cur;
-	  list N_cur;
-	  (E_cur, N_cur) = makeRRepInBranch(CGS[i][1], CGS[i][2]);
+	  ideal E_cur = CGS[i][1];
+	  list N_cur = CGS[i][2];
+	  if (size(N_cur) == 0) {
+	    N_cur = list(1);
+	  }
+	  //(E_cur, N_cur) = makeRRepInBranch(CGS[i][1], CGS[i][2]);
 	  list G_branch = CGS[i][3];
 	  int is_essential;
 	  list DontCare;

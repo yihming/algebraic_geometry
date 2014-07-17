@@ -14,7 +14,8 @@ ideal polys = (a-1)*y(2) - b*(x(2)-1), (a-1)*(x(2)+1)+b*y(2),
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
 
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode) ;
+//simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode) ;
+simulate_CGB(null_ideal, nonnull_list, polys, sim_times, out, debug_mode) ;
 
 /*
 out = "montes_wibmer_5.homog"	;

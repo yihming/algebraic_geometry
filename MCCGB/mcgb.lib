@@ -28,6 +28,34 @@ proc set_global_rings_mcgb() {
   setring(BR);
 }
 
+proc idealToList(ideal G) {
+  if (size(G) == 0) {
+    return (list());
+  }
+
+  int i;
+  list L;
+  for (i = 1; i <= size(G); i++) {
+    L = insert(L, G[i], size(L));
+  }
+
+  return (L);
+}
+
+proc listToIdeal(list L) {
+  if (size(L) == 0) {
+    return (ideal());
+  }
+
+  int i;
+  ideal G = 0;
+  for (i = 1; i <= size(L); i++) {
+    G = G + ideal(L[i]);
+  }
+
+  return (G);
+}
+
 proc ideal_exclude(ideal I, ideal J) {
   // Basering is @RP.
   if (size(I) == 0) {

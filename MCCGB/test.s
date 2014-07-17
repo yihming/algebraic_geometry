@@ -18,4 +18,5 @@ ideal polys = vx + y + (u+v)*z,
 ideal null_ideal = 0		;
 list nonnull_list = list()		;
 
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode) ;
+//simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode) ;
+simulate_CGB(null_ideal, nonnull_list, polys, sim_times, out, debug_mode) ;

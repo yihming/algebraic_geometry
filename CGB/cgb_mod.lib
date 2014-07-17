@@ -678,7 +678,7 @@ proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
   list tempDisEqu;
 
   // randomize the order of LeadCoeffFactors.
-  //LeadCoeffFactors = randomize(LeadCoeffFactors);
+  LeadCoeffFactors = randomize(LeadCoeffFactors);
 
   for (i = 1; i <= size(LeadCoeffFactors); i++)
   {
@@ -910,8 +910,10 @@ proc remove_aux_from_modcgs(list modcgs) {
   return(modcgs);
 }
 
-proc StringCGB(ideal cgb)
+proc StringCGB(cgb)
 {
+  // The type of cgb is either a list or an ideal.
+
   string Str = newline + "Comprehensive Groebner Basis: " + newline + newline;
   //ideal Factors;
   int i, j;

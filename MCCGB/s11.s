@@ -1,5 +1,5 @@
 // Bug in cgb_mod.lib
-LIB "simulation.lib"		;
+LIB "simulation.lib";
 	
 link out = "s11.mp";
 
@@ -17,4 +17,5 @@ ideal polys = (r*d3*d4-r+Z-r2^2*d3*d4+r2^2-d3^3*d4+d3^2*d4^2-d3*d4^3+d3*d4)*t^4
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
 	
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode) ;
+//simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode) ;
+simulate_CGB(null_ideal, nonnull_list, polys, sim_times, out, debug_mode) ;

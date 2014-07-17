@@ -14,7 +14,8 @@ ideal polys = (-a+b)*z1 + a *z2 + (a^2-1)*z3,
 ideal null_ideal = 0  ;
 list nonnull_list = list()	;
 	
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode) ;
+//simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode) ;
+simulate_CGB(null_ideal, nonnull_list, polys, sim_times, out, debug_mode) ;
 
 /*
 out = "sit21.homog"	;

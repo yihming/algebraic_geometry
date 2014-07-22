@@ -1736,7 +1736,9 @@ proc showMCGB(list M, link out) {
     fprintf(out, "]."+newline);
 }
 
-proc showCCGB(ideal G, link out) {
+proc showCCGB(G, link out) {
+  // G can only be an ideal or a list.
+
   int i;
   fprintf(out, "C = [" + newline);
   if (size(G) == 0) {

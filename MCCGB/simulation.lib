@@ -179,7 +179,7 @@ proc simulate_CCGB(ideal E, list N, ideal F, int sim_times, link out, int debug_
   close(out);
 }
 
-proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode) {
+proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode, intvec sim_option) {
   def BR = basering;
 
   exportto(Top, out);
@@ -218,78 +218,83 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode)
   fprintf(out, "%s" + newline, StringCGB(G));
   fprintf(out, newline + "Size is: %s." + newline, string(size(G)));
 
-  
+    
   // Algorithm 1.
-  fprintf(out, "================ Algorithm 1 =====================" + newline);
-  int sim_cnt = 1;
-  list M_list;
+  if (sim_option[1] > 0){
+    fprintf(out, "================ Algorithm 1 =====================" + newline);
+    int sim_cnt = 1;
+    list M_list;
 
-  while (sim_cnt <= sim_times) {
-    list M, Modcgs_new;
-    (M, Modcgs_new) = mcgbRandMain(E, N, F);
-    if (size(M_list) == 0 || !listContainsList(M_list, M)) {
-      M_list = insert(M_list, M, size(M_list));
+    while (sim_cnt <= sim_times) {
+      list M, Modcgs_new;
+      (M, Modcgs_new) = mcgbRandMain(E, N, F);
+      if (size(M_list) == 0 || !listContainsList(M_list, M)) {
+	M_list = insert(M_list, M, size(M_list));
+      }
+      sim_cnt = sim_cnt + 1;
     }
-    sim_cnt = sim_cnt + 1;
+  
+    // Print all MCGBs got from KSWCGB.
+    for (i = 1; i <= size(M_list); i++) {
+      fprintf(out, "---------------------" + newline);
+      fprintf(out, "M_%s" + newline, string(i));
+      showMCGB(M_list[i], out);
+      fprintf(out, "Size is: %s." + newline, string(size(M_list[i])));
+      check_validity(M_list[i], Modcgs);
+    }
   }
   
-  // Print all MCGBs got from KSWCGB.
-  for (i = 1; i <= size(M_list); i++) {
-    fprintf(out, "---------------------" + newline);
-    fprintf(out, "M_%s" + newline, string(i));
-    showMCGB(M_list[i], out);
-    fprintf(out, "Size is: %s." + newline, string(size(M_list[i])));
-    check_validity(M_list[i], Modcgs);
+  if (sim_option[2] > 0) {
+    // Algorithm 2.
+    fprintf(out, newline + "======================= Algorithm 2 ================" + newline);
+    list M_least, Modcgs_least;
+    (M_least, Modcgs_least) = mcgbMain(E, N, F);
+
+    // Print the least one among all MCGBs got from KSWCGB.
+    showMCGB(M_least, out);
+    fprintf(out, newline + "Size is: %s" + newline, string(size(M_least)));
+  
+    check_validity(M_least, Modcgs);
+  }
+
+  if (sim_option[3] > 0) {
+    // Algorithm 3.
+    fprintf(out, newline + "========================= Algorithm 3 ======================" + newline);
+    ideal CCGB;
+    list CGS_ccgb;
+    (CCGB, CGS_ccgb) = ccgbMain(E, N, F);
+  
+    // Print the canonical CGB of the given ideal.
+    showCCGB(CCGB, out);
+    fprintf(out, newline + "Size is: %s." + newline, string(size(CCGB)));
+    if (size(CCGB) != 0) {
+      list CCGB_list;
+      for (i = 1; i <= size(CCGB); i++) {
+	CCGB_list = insert(CCGB_list, CCGB[i], size(CCGB_list));
+      }
+      check_validity(CCGB_list, Modcgs);
+    } else {
+      check_validity(list(), Modcgs);
+    }
   }
   
-  
-  // Algorithm 2.
-  fprintf(out, newline + "======================= Algorithm 2 ================" + newline);
-  list M_least, Modcgs_least;
-  (M_least, Modcgs_least) = mcgbMain(E, N, F);
+  if (sim_option[4] > 0) {
+    // RGB.
+    fprintf(out, newline + "=================== RGB =================" + newline);
+    ideal RGB = getRGB(F);
 
-  // Print the least one among all MCGBs got from KSWCGB.
-  showMCGB(M_least, out);
-  fprintf(out, newline + "Size is: %s" + newline, string(size(M_least)));
-  
-  check_validity(M_least, Modcgs);
-
-  
-  // Algorithm 3.
-  fprintf(out, newline + "========================= Algorithm 3 ======================" + newline);
-  ideal CCGB;
-  list CGS_ccgb;
-  (CCGB, CGS_ccgb) = ccgbMain(E, N, F);
-  
-  // Print the canonical CGB of the given ideal.
-  showCCGB(CCGB, out);
-  fprintf(out, newline + "Size is: %s." + newline, string(size(CCGB)));
-  if (size(CCGB) != 0) {
-    list CCGB_list;
-    for (i = 1; i <= size(CCGB); i++) {
-      CCGB_list = insert(CCGB_list, CCGB[i], size(CCGB_list));
+    // Print the RGB of the given ideal.
+    showRGB(RGB, out);
+    fprintf(out, newline + "Size is: %s." + newline, string(size(RGB)));
+    if (size(RGB) != 0) {
+      list RGB_list;
+      for (i = 1; i <= size(RGB); i++) {
+	RGB_list = insert(RGB_list, RGB[i], size(RGB_list));
+      }
+      check_validity(RGB_list, Modcgs);
+    } else {
+      check_validity(list(), Modcgs);
     }
-    check_validity(CCGB_list, Modcgs);
-  } else {
-    check_validity(list(), Modcgs);
-  }
-  
- 
-  // RGB.
-  fprintf(out, newline + "=================== RGB =================" + newline);
-  ideal RGB = getRGB(F);
-
-  // Print the RGB of the given ideal.
-  showRGB(RGB, out);
-  fprintf(out, newline + "Size is: %s." + newline, string(size(RGB)));
-  if (size(RGB) != 0) {
-    list RGB_list;
-    for (i = 1; i <= size(RGB); i++) {
-      RGB_list = insert(RGB_list, RGB[i], size(RGB_list));
-    }
-    check_validity(RGB_list, Modcgs);
-  } else {
-    check_validity(list(), Modcgs);
   }
   
   

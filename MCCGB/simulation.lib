@@ -1,6 +1,8 @@
 LIB "mcgb.lib";
 LIB "mcgbcheck.lib";
 
+
+
 proc simulate_CGB(ideal E, list N, ideal F, int sim_times, link out, int debug_mode) {
   def BR = basering;
 
@@ -60,6 +62,120 @@ proc simulate_CGB(ideal E, list N, ideal F, int sim_times, link out, int debug_m
     fprintf(out, newline + "Size is: %s." + newline, string(size(G_list[i])));
   }
   
+  close(out);
+}
+
+proc simulate_LeastMCGB(ideal E, list N, ideal F, int sim_times, link out, int debug_mode) {
+  def BR = basering;
+
+  exportto(Top, out);
+  exportto(Top, debug_mode);
+  open(out);
+
+  int i;
+  fprintf(out, newline+"+++++++++++++++++++++++++++++++++++++++"+newline);
+
+  // Print ring configuration.
+  fprintf(out, "The given ring is:");
+  fprintf(out, "%s" + newline, BR);
+
+  // Print the given ideal.
+  fprintf(out, "F = {");
+  if (size(F) > 0) {
+    for (i = 1; i < size(F); i++) {
+      fprintf(out, "%s, ", F[i]);
+    }
+    fprintf(out, "%s" + newline + "}." + newline, F[size(F)]);
+  } else {
+    fprintf(out, newline + "}." + newline);
+  }
+
+  // Print the given parameter space.
+  fprintf(out, "E = {%s}." + newline, E);
+  fprintf(out, "N = {%s}." + newline, string(N));
+
+  // Least MCGBs.
+  list LeastMCGB_list;
+  list CGS_list;
+
+  int sim_cnt = 1;
+  while (sim_cnt <= sim_times) {
+    list M_least, Modcgs_least;
+
+    (M_least, Modcgs_least) = mcgbMain(E, N, F);
+    
+    if (!listContainsList(LeastMCGB_list, M_least)) {
+      LeastMCGB_list = insert(LeastMCGB_list, M_least, size(LeastMCGB_list));
+      CGS_list = insert(CGS_list, Modcgs_least, size(CGS_list));
+    }
+    sim_cnt = sim_cnt + 1;
+  }
+
+  // Print all least MCGBs got from KSWCGB.
+  for (i = 1; i <= size(LeastMCGB_list); i++) {
+    fprintf(out, "------------ Least MCGB %s -------------" + newline, string(i));
+    showMCGB(LeastMCGB_list[i], out);
+    check_validity(LeastMCGB_list[i], CGS_list[i]);
+    fprintf(out, newline + "Size is: %s" + newline, string(size(LeastMCGB_list[i])));
+  }
+
+  close(out);
+}
+
+proc simulate_CCGB(ideal E, list N, ideal F, int sim_times, link out, int debug_mode) {
+  def BR = basering;
+
+  exportto(Top, out);
+  exportto(Top, debug_mode);
+  open(out);
+
+  int i;
+  fprintf(out, newline+"+++++++++++++++++++++++++++++++++++++++"+newline);
+
+  // Print ring configuration.
+  fprintf(out, "The given ring is:");
+  fprintf(out, "%s" + newline, BR);
+
+  // Print the given ideal.
+  fprintf(out, "F = {");
+  if (size(F) > 0) {
+    for (i = 1; i < size(F); i++) {
+      fprintf(out, "%s, ", F[i]);
+    }
+    fprintf(out, "%s" + newline + "}." + newline, F[size(F)]);
+  } else {
+    fprintf(out, newline + "}." + newline);
+  }
+
+  // Print the given parameter space.
+  fprintf(out, "E = {%s}." + newline, E);
+  fprintf(out, "N = {%s}." + newline, string(N));
+
+  // CCGBs.
+  list CCGB_list, CGS_list;
+  int sim_cnt = 1;
+
+  while (sim_cnt <= sim_times) {
+    ideal CCGB;
+    list CGS_ccgb;
+    (CCGB, CGS_ccgb) = ccgbMain(E, N, F);
+    list CCGB_L = idealToList(CCGB);
+
+    if (!listContainsList(CCGB_list, CCGB_L)) {
+      CCGB_list = insert(CCGB_list, CCGB_L, size(CCGB_list));
+      CGS_list = insert(CGS_list, CGS_ccgb, size(CGS_list));
+    }
+    sim_cnt = sim_cnt + 1;
+  }
+
+  // Print all CCGBs.
+  for (i = 1; i <= size(CCGB_list); i++) {
+    fprintf(out, "----------------- CCGB %s -------------------" + newline, string(i));
+    showCCGB(CCGB_list[i], out);  // Problematic.
+    fprintf(out, newline + "Size is: %s." + newline, string(size(CCGB_list[i])));
+    check_validity(CCGB_list[i], CGS_list[i]);
+  }
+
   close(out);
 }
 

@@ -15,7 +15,7 @@ int sim_times = 15		;
 // opt2 -- 1 if running Algorithm 2; 0 otherwise.
 // opt3 -- 1 if running Algorithm 3; 0 otherwise.
 // opt4 -- 1 if running checking the CGBness of RGB; 0 otherwise.
-intvec sim_option = 1, 1, 1, 1	;
+intvec sim_option = 0, 0, 1, 1	;
 
 // lex order.
 ring r = (0, a, b, c, d), (x(1), x(2), y(1), y(2), s), lp;

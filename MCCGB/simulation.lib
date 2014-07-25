@@ -1,8 +1,6 @@
 LIB "mcgb.lib";
 LIB "mcgbcheck.lib";
 
-
-
 proc simulate_CGB(ideal E, list N, ideal F, int sim_times, link out, int debug_mode) {
   def BR = basering;
 

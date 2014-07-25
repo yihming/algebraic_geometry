@@ -3,7 +3,7 @@ LIB "primdec.lib";
 LIB "qhmoduli.lib";
 LIB "teachstd.lib";
 
-LIB "../CGB/cgb_mod.lib";
+LIB "cgb_mod.lib";
 proc set_global_rings_mcgb() {
   // Basering is K[U][X].
 

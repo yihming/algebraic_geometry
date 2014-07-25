@@ -1,19 +1,26 @@
-LIB "random.lib";
-LIB "mcgb.lib";
-LIB "mcgbcheck.lib";
+//LIB "random.lib";
+LIB "simulation.lib"		;
 
+// The output file name.
 link out = "test_zyx_special.mp";
-exportto(Top, out);
-open(out);
 
+// 0 -- no intermediate debug information is printed to the output file;
+// >0 -- otherwise.
 int debug_mode = 0;
-exportto(Top, debug_mode);
+
+// Times of running Algorithm 1 to generate different MCGBs.
+int sim_times = 20		;
+
+// sim_option = [opt1, opt2, opt3, opt4], where
+// opt1 -- 1 if running Algorithm 1; 0 otherwise.
+// opt2 -- 1 if running Algorithm 2; 0 otherwise.
+// opt3 -- 1 if running Algorithm 3; 0 otherwise.
+// opt4 -- 1 if running checking the CGBness of RGB; 0 otherwise.
+intvec sim_option = 1, 1, 1, 1	;
 	
+// lex order.	
 ring r = (0, u, v), (x, y, z), lp;
 
-fprintf(out, "The given ring is:")	;
-fprintf(out, "%s"+newline, r)		;
-	
 //ideal I = ux, uy, uz, vx, vy, vz;
 
 //ideal polys = randomid(I, 2, 4);
@@ -24,87 +31,4 @@ ideal polys = vx + y + (u+v)*z,
 ideal null_ideal = 0		;
 list nonnull_list = u-v	;
 
-fprintf(out, "F = {");
-int i;
-for (i = 1; i < size(polys); i++) {
-  fprintf(out, "%s, ", polys[i]);
-}
-fprintf(out, "%s" + newline + "}." + newline, polys[size(polys)]);
-
-fprintf(out, newline + "The initial E = <%s>.", null_ideal) ;
-fprintf(out, newline + "The initial N = {%s}.", nonnull_list) ;
-	
-ideal G;
-list Modcgs;
-	
-(G, Modcgs) = cgb_mod(polys, null_ideal, nonnull_list, out);
-fprintf(out, "%s" + newline, StringModCGS_mod(Modcgs));
-
-fprintf(out, "%s" + newline, StringCGB(G));
-
-// Algorithm 1:
-fprintf(out, newline+"=========== Algorithm 1 =============="+newline) ;
-int simulation_time = 15	;
-int simulation_cnt = 1;
-
-list M_list;
-
-while (simulation_cnt <= simulation_time) {
-  if (defined(debug_mode) && debug_mode > 0) {
-    fprintf(out, "Simulation %s:", string(simulation_cnt)) ;
-  }
-  list M, Modcgs_new;
-  (M, Modcgs_new) = mcgbRandMain(null_ideal, nonnull_list, polys);
-  if (size(M_list) == 0 || !listContainsList(M_list, M)) {
-    M_list = insert(M_list, M, size(M_list)) ;
-  }
-
-  simulation_cnt = simulation_cnt + 1 ;
-}
-
-for (i = 1; i <= size(M_list); i++) {
-  fprintf(out, "=========================" + newline);
-  fprintf(out, "M_%s is"+newline, string(i));
-  showMCGB(M_list[i], out);
-  check_validity(M_list[i], Modcgs) ;
-}
-
-// Algorithm 2:
-fprintf(out, newline+"========= Algorithm 2 ==============="+newline) ;
-list M_least, Modcgs_least	;
-(M_least, Modcgs_least) = mcgbMain(null_ideal, nonnull_list, polys) ;
-showMCGB(M_least, out)					   ;
-check_validity(M_least, Modcgs)				   ;
-
-// Algorithm 3:
-fprintf(out, newline + "============== Algorithm 3 =================" + newline) ;
-ideal CCGB						     ;
-list CGS_ccgb						     ;
-(CCGB, CGS_ccgb) = ccgbMain(null_ideal, nonnull_list, polys) ;
-showCCGB(CCGB, out)						     ;
-if (size(CCGB) != 0) {
-  list CCGB_list		;
-  for (i = 1; i <= size(CCGB); i++) {
-    CCGB_list = insert(CCGB_list, CCGB[i], size(CCGB_list)) ;
-  }
-  check_validity(CCGB_list, Modcgs) ;
-} else {
-  check_validity(list(), Modcgs) ;
-}
-
-// RGB.
-fprintf(out, newline + "================ RGB =====================" + newline) ;
-ideal RGB = getRGB(polys)	;
-showRGB(RGB, out)		;
-if (size(RGB) != 0) {
-  list RGB_list			;
-  for (i = 1; i <= size(RGB); i++) {
-    RGB_list = insert(RGB_list, RGB[i], size(RGB_list)) ;
-  }
-  check_validity(RGB_list, Modcgs) ;
-} else {
-  check_validity(list(), Modcgs) ;
-}
-	
-close(out);
-
+simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;

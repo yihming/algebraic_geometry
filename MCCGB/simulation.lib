@@ -179,6 +179,7 @@ proc simulate_CCGB(ideal E, list N, ideal F, int sim_times, link out, int debug_
 
 proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode, intvec sim_option) {
   def BR = basering;
+  system("--no-warn", 1);
 
   exportto(Top, out);
   exportto(Top, debug_mode);
@@ -207,14 +208,14 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   fprintf(out, "N = {%s}." + newline, string(N));
 
   // KSWCGB and KSWCGS.
-  ideal G;
+  ideal G_beginning;
   list Modcgs;
   
-  (G, Modcgs) = cgb_mod(F, E, N, out);
+  (G_beginning, Modcgs) = cgb_mod(F, E, N, out);
 
   fprintf(out, "%s" + newline, StringModCGS_mod(Modcgs));
-  fprintf(out, "%s" + newline, StringCGB(G));
-  fprintf(out, newline + "Size is: %s." + newline, string(size(G)));
+  fprintf(out, "%s" + newline, StringCGB(G_beginning));
+  fprintf(out, newline + "Size is: %s." + newline, string(size(G_beginning)));
 
     
   // Algorithm 1.
@@ -295,7 +296,19 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
     }
   }
   
-  
+  int contain_flag = 1;
+ 
+  for (i = 1; i <= size(RGB); i++) {
+    if (! idealContains(G_beginning, RGB[i])) {
+      contain_flag = 0;
+      break;
+    }
+  }
+  if (contain_flag) {
+    fprintf(out, "RGB is a subset of CGB!");
+  } else {
+    fprintf(out, "RGB is not a subset of CGB!");
+  }
 
   close(out);
 }

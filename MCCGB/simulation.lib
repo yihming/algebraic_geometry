@@ -267,10 +267,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
     showCCGB(CCGB, out);
     fprintf(out, newline + "Size is: %s." + newline, string(size(CCGB)));
     if (size(CCGB) != 0) {
-      list CCGB_list;
-      for (i = 1; i <= size(CCGB); i++) {
-	CCGB_list = insert(CCGB_list, CCGB[i], size(CCGB_list));
-      }
+      list CCGB_list = idealToList(CCGB);
       check_validity(CCGB_list, Modcgs);
     } else {
       check_validity(list(), Modcgs);
@@ -294,20 +291,29 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
     } else {
       check_validity(list(), Modcgs);
     }
+
+      int contain_flag = 1;
+ 
+      for (i = 1; i <= size(RGB); i++) {
+	if (! idealContains(G_beginning, RGB[i])) {
+	  contain_flag = 0;
+	  break;
+	}
+      }
+      if (contain_flag) {
+	fprintf(out, "RGB is a subset of CGB!");
+      } else {
+	fprintf(out, "RGB is not a subset of CGB!");
+      }
   }
   
-  int contain_flag = 1;
- 
-  for (i = 1; i <= size(RGB); i++) {
-    if (! idealContains(G_beginning, RGB[i])) {
-      contain_flag = 0;
-      break;
-    }
-  }
-  if (contain_flag) {
-    fprintf(out, "RGB is a subset of CGB!");
-  } else {
-    fprintf(out, "RGB is not a subset of CGB!");
+
+
+  if (sim_option[5] > 0) {
+    list CGS_rebuilt = buildCGS(CCGB_list);
+    fprintf(out, newline + "================ Reconstruct CGS from CCGB ================");
+    fprintf(out, "%s" + newline, StringModCGS_mod(CGS_rebuilt));
+    fprintf(out, "Number of branches: %s" +newline, size(CGS_rebuilt));
   }
 
   close(out);

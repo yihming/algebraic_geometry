@@ -938,6 +938,21 @@ proc listContains(list l, poly f) {
   return (0);
 }
 
+proc idealContains(ideal I, poly f) {
+  if (size(I) == 0) {
+    return (0);
+  }
+
+  int i;
+  for (i = 1; i <= size(I); i++) {
+    if (I[i] == f) {
+      return (1);
+    }
+  }
+
+  return (0);
+}
+
 proc listLookUp(list l, poly f) {
   if (size(l) == 0) {
     return (-1);
@@ -998,23 +1013,6 @@ proc listEquals(list l1, list l2) {
   }
 
   return (1);
-}
-
-// Obsolete.
-proc sortCGB(ideal G) {
-  // Basering is @RP.
-  
-  list sort_res;
-  sort_res = sort(G, size(G)..1);
-  
-  ideal G_sorted = sort_res[1];
-  
-  setring @R;
-  def G_forprint = imap(@RP, G_sorted);
-  fprintf(out, "Sorted CGB is: %s", G_forprint);
-  setring @RP;
-
-  return (G_sorted);
 }
 
 proc set_global_objects() {
@@ -1765,3 +1763,216 @@ proc showRGB(ideal G, link out) {
   }
   fprintf(out, "]."+newline);
 }
+
+proc simplifyPoly(poly g, ideal E) {
+  // Basering is @RP.
+  poly g_nonzero = 0;
+  poly g_zero = 0;
+
+  while (g != 0) {
+    poly lc_g = leadcoef_U(g);
+    if (checkNull(lc_g, E, list(1))) {
+      g_zero = g_zero + lm_X(g);
+    } else {
+      poly f = reduce(lm_X(g), groebner(radical(E)));
+      g_nonzero = g_nonzero + f;
+      g_zero = g_zero + lm_X(g) - f;
+    }
+    g = g - lm_X(g);
+  }
+
+  return (g_nonzero, g_zero);
+}
+
+proc buildLCUFactors(list G_tuple) {
+  // Basering is @RP.
+  if (size(G_tuple) == 0) {
+    return (ideal());
+  }
+
+  poly lc_prod = 1;
+  int i;
+  for (i = 1; i <= size(G_tuple); i++) {
+    if (G_tuple[i][1] != 0) {
+      lc_prod = lc_prod * leadcoef_U(G_tuple[i][1]);
+    }
+  }
+
+  ideal LC_factors = factorize(lc_prod, 1);
+  return (LC_factors);
+}
+
+proc updateNonNullList(list N, ideal I) {
+  // Basering is @RP.
+  if (size(I) == 0) {
+    return (N);
+  }
+
+  poly N_prod = 1;
+  int i;
+  if (size(N) != 0) {
+    for (i = 1; i <= size(N); i++) {
+      N_prod = N_prod * N[i];
+    }
+  }
+
+  if (size(I) > 0) {
+    for (i = 1; i <= size(I); i++) {
+      N_prod = N_prod * I[i];
+    }
+  }
+
+  ideal N_new_factors = factorize(N_prod, 1);
+  list N_new;
+  if (size(N_new_factors) == 0) {
+    N_new = list(1);
+  } else {
+    for (i = 1; i <= size(N_new_factors); i++) {
+      N_new = insert(N_new, N_new_factors[i], size(N_new));
+    }
+  }
+
+  return (N_new);
+
+}
+
+proc removeRedundancy(list G_tuple) {
+  // Basering is @RP.
+  if (size(G_tuple) == 0) {
+    return (list());
+  }
+
+  int i;
+  list G_tuple_new;
+  for (i = 1; i <= size(G_tuple); i++) {
+    if (G_tuple[i][1] != 0) {
+      G_tuple_new = insert(G_tuple_new, G_tuple[i], size(G_tuple_new));
+    }
+  }
+
+  return (G_tuple_new);
+}
+
+proc sortPolyAsce(list G_tuple) {
+  // Basering is @RP.
+  if (size(G_tuple) <= 1) {
+    return (G_tuple);
+  }
+
+  // Bubble sort.
+  int i;
+  int swapped = 1;
+  int n = size(G_tuple);
+  list tmp;
+
+  while (swapped == 1) {
+    swapped = 0;
+    for (i = 1; i <= n - 1; i++) {
+      if (!lesspoly(G_tuple[i][1], G_tuple[i+1][1])) {
+	tmp = G_tuple[i];
+	G_tuple[i] = G_tuple[i+1];
+	G_tuple[i+1] = tmp;
+	swapped = 1;
+      }
+    }
+    n = n - 1;
+  }
+
+  return (G_tuple);
+}
+
+proc removeLPPXRedundancy(list G_tuple) {
+  // Basering is @RP.
+  // G is sorted in an ascending order.
+
+  if (size(G_tuple) <= 1) {
+    return (G_tuple);
+  }
+
+  int i, j;
+  for (i = 1; i <= size(G_tuple); i++) {
+    for (j = i+1; j <= size(G_tuple); j++) {
+      if (lppX(G_tuple[j][1]) / lppX(G_tuple[i][1]) != 0) {
+	G_tuple = delete(G_tuple, j);
+	continue;
+      }
+    }
+  }
+
+  return (G_tuple);
+}
+
+proc getMDBasis(list G_tuple) {
+  // Basering is @RP.
+  G_tuple = sortPolyAsce(G_tuple);
+  G_tuple = removeLPPXRedundancy(G_tuple);
+
+  return (G_tuple);
+}
+
+proc buildCGS_rec(ideal E, list N, list G_tuple, list CGS) {
+  // Basering is @RP.
+  if (size(G_tuple) == 0) {return (CGS);}
+
+  // Simplify G_tuple due to E.
+  int i;
+  for (i = 1; i <= size(G_tuple); i++) {
+    if (G_tuple[i][1] != 0) {
+      poly g = G_tuple[i][1];
+      poly g_nonzero, g_zero;
+      (g_nonzero, g_zero) = simplifyPoly(g, E);
+      G_tuple[i][1] = g_nonzero;
+      G_tuple[i][2] = G_tuple[i][2] + g_zero;
+    }
+  }
+  G_tuple = removeRedundancy(G_tuple);
+
+  list mdbasis = getMDBasis(G_tuple);
+
+  ideal LC_factors = buildLCUFactors(mdbasis);
+
+  list N_branch = updateNonNullList(N, LC_factors);
+
+  // Add new branch.
+  if (Check_Consistence_CGB(E, N)) {
+    CGS = insert(CGS, list(E, N_branch, mdbasis + G_tuple), size(CGS));
+  }
+  
+  list N_lc = N;
+  for (i = 1; i <= size(LC_factors); i++) {
+    poly lc_factor = LC_factors[i];
+    CGS = buildCGS_rec(E+ideal(lc_factor), N_lc, G_tuple, CGS);
+    N_lc = insert(N_lc, lc_factor, size(N_lc));
+  }
+  
+  return (CGS);
+}
+
+proc buildCGS(list MCGB) {
+  // Basering is @R.
+  if (size(MCGB) == 0) {
+    return (list());
+  }
+
+  // Switch to @RP.
+  setring @RP;
+  if (defined(MCGB)) {kill MCGB;}
+  def MCGB = imap(@R, MCGB);
+  if (defined(CGS)) {kill CGS;}
+  list CGS;
+
+  int i;
+  list MCGB_tuple;
+  for (i = 1; i<= size(MCGB); i++) {
+    MCGB_tuple = insert(MCGB_tuple, list(MCGB[i], 0), size(MCGB_tuple));
+  }
+
+  CGS = buildCGS_rec(ideal(), list(1), MCGB_tuple, CGS);
+
+  // Switch back to @R.
+  setring @R;
+  if (defined(CGS)) {kill CGS;}
+  def CGS = imap(@RP, CGS);
+  return (CGS);
+}
+

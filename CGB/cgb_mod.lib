@@ -697,21 +697,9 @@ proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
   ideal MixIdeals = MPolys + newMEqu;
   //GB = groebner(MPolys + newMEqu + ideal(Auxiliary[1] * Auxiliary[2]));
 
-  // This is the part to see if the computation only on non-zero part can terminate soon.
-  //ideal U = std(ideal(Auxiliary[1] - 1, Auxiliary[2]));
-  //ideal V = std(ideal(Auxiliary[1], Auxiliary[2] - 1));
-
-  //if (size(MixIdeals) > 0) {
-  //for (i = 1; i <= size(MixIdeals); i++) {
-  //  MixIdeals[i] = reduce(MixIdeals[i], U) * Auxiliary[1];
-  //    }
-  //  }
-  // End of this part.
-
   GB = std(MixIdeals);
-
   tempP = Trivial_Poly(GB);
-  
+
   if (tempP != 0)
   {
     Modcgs = Modcgs + list(list(newEqu, newDisEqu, list(tempP)));
@@ -879,7 +867,7 @@ proc cgb_mod(ideal Polys, ideal Equ, list DisEqu, link out)
 
   option(redSB);
 
-  set_global_rings(ordering);
+  set_global_rings();
 
   // Base ring is R[A, X, U] now.
   // Set Variable List.

@@ -311,6 +311,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
 
   if (sim_option[5] > 0) {
     list CGS_rebuilt = buildCGS(CCGB_list);
+    //list CGS_rebuilt = buildCGS(M_least);
     fprintf(out, newline + "================ Reconstruct CGS from CCGB ================");
     fprintf(out, "%s" + newline, StringModCGS_mod(CGS_rebuilt));
     fprintf(out, "Number of branches: %s" +newline, size(CGS_rebuilt));

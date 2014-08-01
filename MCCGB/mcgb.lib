@@ -1935,7 +1935,7 @@ proc buildCGS_rec(ideal E, list N, list G_tuple, list CGS) {
 
   // Add new branch.
   if (Check_Consistence_CGB(E, N)) {
-    CGS = insert(CGS, list(E, N_branch, mdbasis + G_tuple), size(CGS));
+    CGS = insert(CGS, list(E, N_branch, mdbasis), size(CGS));
   }
   
   list N_lc = N;

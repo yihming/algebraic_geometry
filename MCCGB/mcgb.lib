@@ -1768,10 +1768,12 @@ proc simplifyPoly(poly g, ideal E) {
   // Basering is @RP.
   poly g_nonzero = 0;
   poly g_zero = 0;
+  ideal E_rad = radical(E);
 
   while (g != 0) {
     poly lc_g = leadcoef_U(g);
-    if (checkNull(lc_g, E, list(1))) {
+    if (!Check_Consistence_CGB(E_rad, list(lc_g))) {
+      // lc_g is determined to be 0.
       g_zero = g_zero + lm_X(g);
     } else {
       poly f = reduce(lm_X(g), groebner(radical(E)));
@@ -1914,6 +1916,10 @@ proc buildCGS_rec(ideal E, list N, list G_tuple, list CGS) {
   // Basering is @RP.
   if (size(G_tuple) == 0) {return (CGS);}
 
+  if (!Check_Consistence_CGB(E, N)) {
+    return (CGS);
+  }
+
   // Simplify G_tuple due to E.
   int i;
   for (i = 1; i <= size(G_tuple); i++) {
@@ -1934,9 +1940,7 @@ proc buildCGS_rec(ideal E, list N, list G_tuple, list CGS) {
   list N_branch = updateNonNullList(N, LC_factors);
 
   // Add new branch.
-  if (Check_Consistence_CGB(E, N)) {
-    CGS = insert(CGS, list(E, N_branch, mdbasis), size(CGS));
-  }
+  CGS = insert(CGS, list(E, N_branch, mdbasis), size(CGS));
   
   list N_lc = N;
   for (i = 1; i <= size(LC_factors); i++) {

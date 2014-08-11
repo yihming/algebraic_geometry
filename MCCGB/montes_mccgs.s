@@ -2,7 +2,7 @@
 LIB "simulation.lib"		;
 
 // The output file name.
-link out = "montes_mccgs.mp";
+link out = "montes_mccgs_gradelex.mp";
 
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
@@ -16,10 +16,10 @@ int sim_times = 15		;
 // opt2 -- 1 if running Algorithm 2; 0 otherwise.
 // opt3 -- 1 if running Algorithm 3; 0 otherwise.
 // opt4 -- 1 if running checking the CGBness of RGB; 0 otherwise.
-intvec sim_option = 1, 1, 1, 1	;
+intvec sim_option = 1, 1, 1, 1, 0	;
 
 // degree reversed lex order.
-ring r = (0, b, c, d), (x, y), dp ;
+ring r = (0, b, c, d), (x, y), Dp ;
 	
 ideal polys = x2 + by2 + 2cxy + dx, 2x + 2cy + d, 2by + 2cx;
 ideal null_ideal = 0		;

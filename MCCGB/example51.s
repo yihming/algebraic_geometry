@@ -1,8 +1,8 @@
-// Example 8.4 in Weispfenning's CCGB paper, 2003.
+// Example 5.1 in D. Kapur, Y. Sun and D. Wang, "An Efficient Method for Computing Comprehensive Groebner Bases", ISSAC 2011.
 LIB "simulation.lib"		;
 
 // The output file name.
-link out = "weispfenning_4_gradelex.mp"	;
+link out = "example51_gradelex.mp";
 
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
@@ -19,12 +19,11 @@ int sim_times = 15		;
 intvec sim_option = 1, 1, 1, 1, 0	;
 
 // lex order.
-ring r = (0, v, u), (y, x), Dp;
-	
-ideal polys = y + u*x + v, u*y + x + v;
+ring r = (0, a, b, c), (x, y), Dp;
 
-ideal null_ideal = 0  ;
+ideal polys = ax-b, by-a, cx2-y, cy2-x;
+ideal null_ideal = 0		;
 list nonnull_list = list()	;
-
+	
 simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
-
+//simulate_CGB(null_ideal, nonnull_list, polys, sim_times, out, debug_mode) ;

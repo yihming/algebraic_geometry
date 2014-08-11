@@ -1,8 +1,8 @@
-// Example 8.4 in Weispfenning's CCGB paper, 2003.
+LIB "random.lib";
 LIB "simulation.lib"		;
 
 // The output file name.
-link out = "weispfenning_4_gradelex.mp"	;
+link out = "higher.mp";
 
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
@@ -17,14 +17,16 @@ int sim_times = 15		;
 // opt3 -- 1 if running Algorithm 3; 0 otherwise.
 // opt4 -- 1 if running checking the CGBness of RGB; 0 otherwise.
 intvec sim_option = 1, 1, 1, 1, 0	;
-
-// lex order.
-ring r = (0, v, u), (y, x), Dp;
 	
-ideal polys = y + u*x + v, u*y + x + v;
+ring r = (0, u, v), (x, y, z), Dp;
 
-ideal null_ideal = 0  ;
+ideal I1 = uvx, ux2y, ux2, yz;
+ideal I2 = ux, vx, u2z, yz;
+
+ideal polys = randomid(I1, 2, 3) + randomid(I2, 1, 3);
+
+	
+ideal null_ideal = 0		;
 list nonnull_list = list()	;
 
 simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
-

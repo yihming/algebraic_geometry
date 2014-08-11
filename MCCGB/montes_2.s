@@ -2,7 +2,7 @@
 LIB "simulation.lib"		;
 
 // The output file name.
-link out = "montes_2.mp";
+link out = "montes_2_gradelex.mp";
 
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
@@ -16,9 +16,9 @@ int sim_times = 15		;
 // opt2 -- 1 if running Algorithm 2; 0 otherwise.
 // opt3 -- 1 if running Algorithm 3; 0 otherwise.
 // opt4 -- 1 if running checking the CGBness of RGB; 0 otherwise.
-intvec sim_option = 1, 1, 1, 1	;
+intvec sim_option = 1, 1, 1, 1, 0	;
 	
-ring r = (0, u), x, lp;
+ring r = (0, u), x, Dp;
 
 ideal polys = u2x + u, ux2 + x;
 ideal null_ideal = 0		;

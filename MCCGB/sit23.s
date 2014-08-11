@@ -2,7 +2,7 @@
 LIB "simulation.lib"		;
 
 // The output file name.
-link out = "sit23.mp";
+link out = "sit23_gradelex.mp";
 
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
@@ -16,10 +16,10 @@ int sim_times = 20		;
 // opt2 -- 1 if running Algorithm 2; 0 otherwise.
 // opt3 -- 1 if running Algorithm 3; 0 otherwise.
 // opt4 -- 1 if running checking the CGBness of RGB; 0 otherwise.
-intvec sim_option = 1, 1, 1, 1	;
+intvec sim_option = 1, 1, 1, 1,0	;
 
 // degree reversed lex order.
-ring r = (0, x), (z1, z2), dp;
+ring r = (0, x), (z1, z2), Dp;
 
 //ideal I = ux, uy, uz, vx, vy, vz;
 

@@ -1381,6 +1381,80 @@ proc sortPolyDesc(ideal I) {
   return (I);
 }
 
+proc sortIdealAsce(ideal I) {
+  // Basering is @R.
+  def BR = basering;
+  setring @RP;
+  def I = imap(@R, I);
+  
+  if (size(I) <= 1) {
+    setring BR;
+    return (I);
+  }
+
+  // Bubble sort.
+  int i;
+  int swapped = 1;
+  int n = size(I);
+  poly tmp;
+  
+  while (swapped == 1) {
+    swapped = 0;
+    for (i = 1; i <= n-1; i++) {
+      if (!lesspoly(I[i], I[i+1])) {
+	tmp = I[i];
+	I[i] = I[i+1];
+	I[i+1] = tmp;
+	swapped = 1;
+      }
+    }
+
+    n = n - 1;
+  }
+
+  setring BR;
+  def I_res = imap(@RP, I);
+
+  return (I_res);
+}
+
+proc sortListAsce(list L) {
+  // Basering is @R.
+  def BR = basering;
+  setring @RP;
+  def L = imap(@R, L);
+  
+  if (size(L) <= 1) {
+    setring BR;
+    return (L);
+  }
+
+  // Bubble sort.
+  int i;
+  int swapped = 1;
+  int n = size(L);
+  poly tmp;
+  
+  while (swapped == 1) {
+    swapped = 0;
+    for (i = 1; i <= n-1; i++) {
+      if (!lesspoly(L[i], L[i+1])) {
+	tmp = L[i];
+	L[i] = L[i+1];
+	L[i+1] = tmp;
+	swapped = 1;
+      }
+    }
+
+    n = n - 1;
+  }
+
+  setring BR;
+  def L_res = imap(@RP, L);
+
+  return (L_res);
+}
+
 proc idealExcludePoly(ideal M, poly f) {
   // Basering is @RP.
   if (size(M) == 0) {

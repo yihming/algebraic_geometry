@@ -762,6 +762,7 @@ proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
     }
   }
 
+
   return(CGB);
 }
 

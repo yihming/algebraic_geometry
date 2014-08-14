@@ -212,6 +212,8 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   list Modcgs;
   
   (G_beginning, Modcgs) = cgb_mod(F, E, N, out);
+  set_global_rings_mcgb();
+  G_beginning = sortIdealAsce(G_beginning);
 
   fprintf(out, "%s" + newline, StringModCGS_mod(Modcgs));
   fprintf(out, "%s" + newline, StringCGB(G_beginning));
@@ -235,6 +237,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   
     // Print all MCGBs got from KSWCGB.
     for (i = 1; i <= size(M_list); i++) {
+      M_list[i] = sortListAsce(M_list[i]);
       fprintf(out, "---------------------" + newline);
       fprintf(out, "M_%s" + newline, string(i));
       showMCGB(M_list[i], out);
@@ -250,6 +253,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
     (M_least, Modcgs_least) = mcgbMain(E, N, F);
 
     // Print the least one among all MCGBs got from KSWCGB.
+    M_least = sortListAsce(M_least);
     showMCGB(M_least, out);
     fprintf(out, newline + "Size is: %s" + newline, string(size(M_least)));
   
@@ -264,6 +268,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
     (CCGB, CGS_ccgb) = ccgbMain(E, N, F);
   
     // Print the canonical CGB of the given ideal.
+    CCGB = sortIdealAsce(CCGB);
     showCCGB(CCGB, out);
     fprintf(out, newline + "Size is: %s." + newline, string(size(CCGB)));
     if (size(CCGB) != 0) {
@@ -280,6 +285,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
     ideal RGB = getRGB(F);
 
     // Print the RGB of the given ideal.
+    RGB = sortIdealAsce(RGB);
     showRGB(RGB, out);
     fprintf(out, newline + "Size is: %s." + newline, string(size(RGB)));
     if (size(RGB) != 0) {
@@ -300,21 +306,30 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
 	  break;
 	}
       }
+      /*
       if (contain_flag) {
 	fprintf(out, "RGB is a subset of CGB!");
       } else {
 	fprintf(out, "RGB is not a subset of CGB!");
       }
+      */
   }
   
 
 
   if (sim_option[5] > 0) {
-    list CGS_rebuilt = buildCGS(CCGB_list);
-    //list CGS_rebuilt = buildCGS(M_least);
+    //list CGS_rebuilt = buildCGS(CCGB_list);
+    for (i = 1; i <= size(M_list); i++) {
+      list CGS_rebuilt = buildCGS(M_list[i]);
+      fprintf(out, newline + "================ Reconstruct CGS from CCGB ================");
+      fprintf(out, "%s" + newline, StringModCGS_mod(CGS_rebuilt));
+      fprintf(out, "Number of branches: %s" +newline, size(CGS_rebuilt));
+    }
+    /*
     fprintf(out, newline + "================ Reconstruct CGS from CCGB ================");
     fprintf(out, "%s" + newline, StringModCGS_mod(CGS_rebuilt));
     fprintf(out, "Number of branches: %s" +newline, size(CGS_rebuilt));
+    */
   }
 
   close(out);

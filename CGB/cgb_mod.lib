@@ -742,10 +742,10 @@ proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
   list tempDisEqu;
 
   // randomize the order of LeadCoeffFactors.
-  //LeadCoeffFactors = randomize(LeadCoeffFactors);
+  LeadCoeffFactors = randomize(LeadCoeffFactors);
 
   // sort LeadCoefFactors.
-  LeadCoeffFactors = sortLCAsce(LeadCoeffFactors);
+  //LeadCoeffFactors = sortLCAsce(LeadCoeffFactors);
 
   for (i = 1; i <= size(LeadCoeffFactors); i++)
   {

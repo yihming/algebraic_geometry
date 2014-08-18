@@ -1,7 +1,7 @@
 LIB "simulation.lib"		;
 
 // The output file name.
-link out = "sit21_gradelex.mp";
+link out = "sit21_lex.mp";
 
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
@@ -18,7 +18,7 @@ int sim_times = 20		;
 intvec sim_option = 1, 1, 1, 1,0	;
 
 // lex order.
-ring r = (0, a, b), (z1, z2, z3), Dp;
+ring r = (0, a, b), (z1, z2, z3), lp;
 
 ideal polys = (-a+b)*z1 + a *z2 + (a^2-1)*z3,
 	b * z1 + (a^2+1)*z2 + a^3 * z3 ;

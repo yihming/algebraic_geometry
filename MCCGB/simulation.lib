@@ -225,12 +225,14 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
     fprintf(out, "================ Algorithm 1 =====================" + newline);
     int sim_cnt = 1;
     list M_list;
+    list CGS_list;
 
     while (sim_cnt <= sim_times) {
       list M, Modcgs_new;
       (M, Modcgs_new) = mcgbRandMain(E, N, F);
       if (size(M_list) == 0 || !listContainsList(M_list, M)) {
 	M_list = insert(M_list, M, size(M_list));
+	CGS_list = insert(CGS_list, Modcgs_new, size(CGS_list));
       }
       sim_cnt = sim_cnt + 1;
     }
@@ -243,6 +245,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
       showMCGB(M_list[i], out);
       fprintf(out, "Size is: %s." + newline, string(size(M_list[i])));
       check_validity(M_list[i], Modcgs);
+      fprintf(out, "%s" + newline, StringModCGS_mod(CGS_list[i]));
     }
   }
   
@@ -258,6 +261,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
     fprintf(out, newline + "Size is: %s" + newline, string(size(M_least)));
   
     check_validity(M_least, Modcgs);
+    //fprintf(out, "%s" + newline, StringModCGS_mod(Modcgs_least));
   }
 
   if (sim_option[3] > 0) {
@@ -277,6 +281,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
     } else {
       check_validity(list(), Modcgs);
     }
+    fprintf(out, "%s" + newline, StringModCGS_mod(CGS_ccgb));
   }
   
   if (sim_option[4] > 0) {
@@ -306,30 +311,24 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
 	  break;
 	}
       }
-      /*
+      
       if (contain_flag) {
 	fprintf(out, "RGB is a subset of CGB!");
       } else {
 	fprintf(out, "RGB is not a subset of CGB!");
       }
-      */
+      
   }
   
 
 
   if (sim_option[5] > 0) {
-    //list CGS_rebuilt = buildCGS(CCGB_list);
-    for (i = 1; i <= size(M_list); i++) {
-      list CGS_rebuilt = buildCGS(M_list[i]);
-      fprintf(out, newline + "================ Reconstruct CGS from CCGB ================");
-      fprintf(out, "%s" + newline, StringModCGS_mod(CGS_rebuilt));
-      fprintf(out, "Number of branches: %s" +newline, size(CGS_rebuilt));
-    }
-    /*
+    list CGS_rebuilt = buildCGS(CCGB_list);
+    
     fprintf(out, newline + "================ Reconstruct CGS from CCGB ================");
     fprintf(out, "%s" + newline, StringModCGS_mod(CGS_rebuilt));
     fprintf(out, "Number of branches: %s" +newline, size(CGS_rebuilt));
-    */
+    
   }
 
   close(out);

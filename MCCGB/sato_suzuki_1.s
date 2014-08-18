@@ -1,7 +1,7 @@
 LIB "simulation.lib"		;
 
 // The output file name.
-link out = "sato_suzuki_1_gradelex.mp";
+link out = "sato_suzuki_1_lex.mp";
 
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
@@ -18,7 +18,7 @@ int sim_times = 15		;
 intvec sim_option = 1, 1, 1, 1, 0	;
 
 // lex order.
-ring r = (0, a, b), (x, y, z), Dp;
+ring r = (0, a, b), (x, y, z), lp;
 
 ideal polys = x^3 - a, y^4 - b, x + y - z;
 ideal null_ideal = 0		;

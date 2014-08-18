@@ -2,14 +2,14 @@
 LIB "simulation.lib"		;
 
 // The output file name.
-link out = "example51_gradelex.mp";
+link out = "example51_lex.mp";
 
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
 int debug_mode = 0;
 
 // Times of running Algorithm 1 to generate different MCGBs.
-int sim_times = 15		;
+int sim_times = 20		;
 
 // sim_option = [opt1, opt2, opt3, opt4], where
 // opt1 -- 1 if running Algorithm 1; 0 otherwise.
@@ -19,7 +19,7 @@ int sim_times = 15		;
 intvec sim_option = 1, 1, 1, 1, 0	;
 
 // lex order.
-ring r = (0, a, b, c), (x, y), Dp;
+ring r = (0, a, b, c), (x, y), lp;
 
 ideal polys = ax-b, by-a, cx2-y, cy2-x;
 ideal null_ideal = 0		;

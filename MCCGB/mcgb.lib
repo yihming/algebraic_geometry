@@ -124,59 +124,6 @@ proc redRepN(ideal E, list N, poly c) {
   }
 }
 
-/*
-proc redRepN(ideal E, list N, poly c) {
-  // Basering is @RP.
-
-  // reduce c by radical(E).
-  ideal E_rad = radical(E);
-  poly c_red = reduce(c, groebner(E_rad));
-
-  ideal E1 = radical(E_rad + ideal(c_red));
-  
-  poly h = 1;
-  if (size(N) > 0) {
-    int i; 
-    for (i = 1; i <= size(N); i++) {
-      h = h * N[i];
-    }
-  }
-
-  printf("Comes to quotient.");
-  show(E1);
-  show(h);
-  ideal E_res = quotient(E1, ideal(h));
-  printf("Leaves quotient.");
-
-  // Modification: reduce h by E_res.
-  h = reduce(h, groebner(E_res));
-  list N_res = getNSquareFreeFromProd(h);
-  
-  return (E_res, N_res);
-}
-
-
-proc redRepN(ideal E, list N, poly c) {
-  // Basering is @RP.
-  // reduce c by radical(E).
-  poly c_red = reduce(c, groebner(radical(E)));
-
-  ideal E1 = radical(idealUnion(E, ideal(c_red)));
- 
-  poly h = 1;
-  if (size(N) > 0) {
-    int i;
-    for (i = 1; i <= size(N); i++) {
-      h = h * N[i];
-    }
-  }
-
-  ideal res_E = ideal_exclude(E1, ideal(h));
-  
-  return (res_E, N);
-}
-*/
-
 proc redRepNN(ideal E, list N, poly c) {
   // Basering is @RP.
 
@@ -190,59 +137,6 @@ proc redRepNN(ideal E, list N, poly c) {
     return (ideal(1), list(0));
   }
 }
-
-/*
-proc redRepNN(ideal E, list N, poly c) {
-  // Basering is @RP.
-  int i;
-
-  ideal E_rad = radical(E);
-
-  poly h = 1;
-  if (size(N) > 0) {
-    for (i = 1; i <= size(N); i++) {
-      h = h * N[i];
-    }
-  }
-
-  poly h1 = reduce(h * c, groebner(E_rad));
-  // Quotient function here may not terminate.
-  printf("Comes to quotient.");
-  show(E_rad);
-  show(h1);
-  ideal E_res = quotient(E_rad, ideal(h1));
-  printf("Leaves quotient.");
-
-  h1 = reduce(h1, groebner(E_res));
-  list N_res = getNSquareFreeFromProd(h1);
-
-  return (E_res, N_res);
-  
-}
-
-
-proc redRepNN(ideal E, list N, poly c) {
-  // Basering is @RP.
-  // E is radical.
-  poly c_red = reduce(c, groebner(E));
-
-  int i;
-  poly N_prod = 1;
-
-  if (size(N) > 0) {
-    for (i = 1; i <= size(N); i++) {
-      N_prod = N_prod * N[i];
-    }
-  }
-
-  poly h1 = N_prod * c_red;
-  ideal newE = ideal_exclude(E, groebner(ideal(h1)));
-  list newN = getNSquareFreeFromProd(h1);
-
-  return (newE, newN);
-}
-*/
-
 
 proc splitBranch(ideal E, list N, poly c) {
   // Basering is @RP.
@@ -269,6 +163,21 @@ proc splitBranch(ideal E, list N, poly c) {
 
 proc checkNull(poly c, ideal E, list N) {
   // Basering is @RP.
+  ideal E_res;
+  list N_res;
+  (E_res, N_res) = redRepN(E, N, c);
+
+  if (E_res[1] == 1 && N_res[1] == 0) {
+    return (0);
+  } else {
+    return (1);
+  }
+}
+
+
+/*
+proc checkNull(poly c, ideal E, list N) {
+  // Basering is @RP.
 
   ideal E_rad = radical(E);
   if (reduce(c, groebner(E_rad)) == 0) {
@@ -277,6 +186,7 @@ proc checkNull(poly c, ideal E, list N) {
     return (0);
   }
 }
+*/
 
 /*
 proc checkNull(poly c, ideal E, list N) {

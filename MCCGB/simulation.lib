@@ -245,7 +245,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
       showMCGB(M_list[i], out);
       fprintf(out, "Size is: %s." + newline, string(size(M_list[i])));
       check_validity(M_list[i], Modcgs);
-      fprintf(out, "%s" + newline, StringModCGS_mod(CGS_list[i]));
+      //fprintf(out, "%s" + newline, StringModCGS_mod(CGS_list[i]));
     }
   }
   
@@ -281,7 +281,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
     } else {
       check_validity(list(), Modcgs);
     }
-    fprintf(out, "%s" + newline, StringModCGS_mod(CGS_ccgb));
+    //fprintf(out, "%s" + newline, StringModCGS_mod(CGS_ccgb));
   }
   
   if (sim_option[4] > 0) {

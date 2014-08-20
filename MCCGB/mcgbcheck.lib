@@ -97,7 +97,7 @@ proc check_comprehensive(list M, list CGS) {
 	  if (size(N_cur) == 0) {
 	    N_cur = list(1);
 	  }
-	  //(E_cur, N_cur) = makeRRepInBranch(CGS[i][1], CGS[i][2]);
+
 	  list G_branch = CGS[i][3];
 	  int is_essential;
 	  list DontCare;

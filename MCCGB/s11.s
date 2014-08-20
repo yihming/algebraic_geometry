@@ -2,7 +2,7 @@
 LIB "simulation.lib";
 
 // The output file name.
-link out = "s11.mp";
+link out = "s11_diff_cgs.mp";
 
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
@@ -30,7 +30,7 @@ ideal polys = (r*d3*d4-r+Z-r2^2*d3*d4+r2^2-d3^3*d4+d3^2*d4^2-d3*d4^3+d3*d4)*t^4
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
 	
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
-//simulate_CGB(null_ideal, nonnull_list, polys, sim_times, out, debug_mode) ;
+//simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate_CGB(null_ideal, nonnull_list, polys, sim_times, out, debug_mode) ;
 //simulate_LeastMCGB(null_ideal, nonnull_list, polys, sim_times, out, debug_mode) ;
 //simulate_CCGB(null_ideal, nonnull_list, polys, sim_times, out, debug_mode) ;

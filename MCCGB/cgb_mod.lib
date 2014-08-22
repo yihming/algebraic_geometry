@@ -709,7 +709,7 @@ proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
   // End of this part.
 
   GB = std(MixIdeals);
-
+  
   tempP = Trivial_Poly(GB);
   
   if (tempP != 0)
@@ -734,15 +734,18 @@ proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
 
     if (Check_Consistence_CGB(newEqu, newDisEqu + list(tempP)))
     {
+
       Modcgs = Modcgs + list(list(newEqu, newDisEqu + list(tempP), list(MGr[i])));
       CGB = CGB + Remove_Aux(MGr[i]);
     }
     newEqu = groebner(newEqu + tempP);
+
   }
 
   //major branch
   if (Check_Consistence_CGB(newEqu, newDisEqu + LeadCoeffFactors))
   {
+    
     Modcgs = Modcgs + list(list(newEqu, newDisEqu + LeadCoeffFactors, MDBasis));
     for (i = 1; i <= size(MDBasis); i++)
     {

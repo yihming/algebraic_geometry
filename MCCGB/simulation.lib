@@ -2,6 +2,8 @@ LIB "mcgb.lib";
 LIB "mcgbcheck.lib";
 
 proc simulate_CGB(ideal E, list N, ideal F, int sim_times, link out, int debug_mode) {
+  system("--no-warn", 1);
+
   def BR = basering;
 
   exportto(Top, out);
@@ -37,6 +39,7 @@ proc simulate_CGB(ideal E, list N, ideal F, int sim_times, link out, int debug_m
   int sim_cnt = 1;
   list G_list;
   list CGS_list;
+  list size_list;
   
   while (sim_cnt <= sim_times) {
     ideal G;
@@ -45,9 +48,10 @@ proc simulate_CGB(ideal E, list N, ideal F, int sim_times, link out, int debug_m
     (G, Modcgs) = cgb_mod(F, E, N, out);
     list G_L = idealToList(G);
 
-    if (!listContainsList(G_list, G_L)) {
+    if (!listContainsList(G_list, G_L) || !listContains(size_list, size(Modcgs))) {
       G_list = insert(G_list, G_L, size(G_list));
       CGS_list = insert(CGS_list, Modcgs, size(CGS_list));
+      size_list = insert(size_list, size(Modcgs), size(size_list));
     }
     sim_cnt = sim_cnt + 1;
   }
@@ -59,7 +63,7 @@ proc simulate_CGB(ideal E, list N, ideal F, int sim_times, link out, int debug_m
     fprintf(out, "%s" + newline, StringCGB(G_list[i]));
     fprintf(out, newline + "Size is: %s." + newline, string(size(G_list[i])));
   }
-  
+  printf("%s", string(size(CGS_list)));
   close(out);
 }
 

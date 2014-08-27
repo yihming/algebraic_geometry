@@ -714,7 +714,7 @@ proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
   
   if (tempP != 0)
   {
-    Modcgs = Modcgs + list(list(newEqu, newDisEqu, list(tempP)));
+    Modcgs = Modcgs + list(list(newEqu, newDisEqu, list(tempP), ideal(tempP)));
     return(ideal(Remove_Aux(tempP)));
   }
 
@@ -734,8 +734,7 @@ proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
 
     if (Check_Consistence_CGB(newEqu, newDisEqu + list(tempP)))
     {
-
-      Modcgs = Modcgs + list(list(newEqu, newDisEqu + list(tempP), list(MGr[i])));
+      Modcgs = Modcgs + list(list(newEqu, newDisEqu + list(tempP), list(MGr[i]), GB));
       CGB = CGB + Remove_Aux(MGr[i]);
     }
     newEqu = groebner(newEqu + tempP);
@@ -745,8 +744,7 @@ proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
   //major branch
   if (Check_Consistence_CGB(newEqu, newDisEqu + LeadCoeffFactors))
   {
-    
-    Modcgs = Modcgs + list(list(newEqu, newDisEqu + LeadCoeffFactors, MDBasis));
+    Modcgs = Modcgs + list(list(newEqu, newDisEqu + LeadCoeffFactors, MDBasis, GB));
     for (i = 1; i <= size(MDBasis); i++)
     {
       CGB = CGB + Remove_Aux(MDBasis[i]);
@@ -969,7 +967,7 @@ proc cgb_mod(ideal Polys, ideal Equ, list DisEqu, link out)
 }
 
 proc remove_aux_from_modcgs(list modcgs) {
-  // Base ring is R[U][A, X].
+  // Basering is AXU.
   ideal U = groebner(ideal(Auxiliary[1] - 1, Auxiliary[2]));
   ideal V = groebner(ideal(Auxiliary[1], Auxiliary[2] - 1));
   int i, j;
@@ -986,6 +984,10 @@ proc remove_aux_from_modcgs(list modcgs) {
         l = p1, p0;
 	modcgs[i][3][j] = l;
       }
+    }
+
+    if (size(modcgs[i][4]) > 0) {
+      modcgs[i][4] = idealToMod(modcgs[i][4]);
     }
   }
 
@@ -1009,8 +1011,94 @@ proc StringCGB(cgb)
   return(Str);
 }
 
+proc idealToMod(ideal RGB) {
+  // Basering is @AXU.
+  ideal U = groebner(ideal(Auxiliary[1] - 1, Auxiliary[2]));
+  ideal V = groebner(ideal(Auxiliary[1], Auxiliary[2] - 1));
+  
+  list RGB_list;
+  poly f1, f0;
+  int i;
 
-proc StringModCGS_mod(list modcgs)
+  if (size(RGB) > 0) {
+    for (i = 1; i <= size(RGB); i++) {
+      f1 = reduce(RGB[i], U);
+      f0 = reduce(RGB[i], V);
+      if (f1 != 0 && f1 + f0 != 0) {
+	list p_list = insert(p_list, f1, size(p_list));
+	p_list = insert(p_list, f0, size(p_list));
+	RGB_list = insert(RGB_list, p_list, size(RGB_list));
+      }
+    }
+  }
+
+  return (RGB_list);
+}
+
+proc getModRGB(ideal F, ideal E) {
+  // Basering is R[A, X, U].
+  option(redSB);
+  ideal I;
+  int i;
+  if (size(F) > 0) {
+    for (i = 1; i <= size(F); i++) {
+      I = I + F[i] * Auxiliary[1];
+    }
+  }
+
+  if (size(E) > 0) {
+    for (i = 1; i <= size(E); i++) {
+      I = I + E[i] * (Auxiliary[1] - Auxiliary[2]);
+    }
+  }
+  
+  def RGB = std(I);
+
+  return (idealToMod(RGB));
+}
+
+static proc getNonzeroPart(list g_list, ideal E) {
+  // Basering is @AXU.
+  //set_global_rings_mcgb();
+  poly g = g_list[1];
+  poly g_nonzero = 0;
+  poly g_zero = 0;
+  ideal E_rad = radical(E);
+
+  while (g != 0) {
+    poly lc_g = leadcoef_U(g);
+    if (!Check_Consistence_CGB(E_rad, list(lc_g))) {
+      // lc_g is determined to be 0.
+      g_zero = g_zero + lm_X(g);
+    } else {
+      poly f = reduce(lm_X(g), groebner(radical(E)));
+      g_nonzero = g_nonzero + f;
+      g_zero = g_zero + lm_X(g) - f;
+    }
+    g = g - lm_X(g);
+  }
+
+  return (g_nonzero);
+}
+
+static proc removeRedundantPoly(list M, ideal E) {
+  // Basering is AXU.
+  if (size(M) == 0) {
+    return (M);
+  }
+
+  int i;
+  list M_new;
+  for (i = 1; i <= size(M); i++) {
+    if (getNonzeroPart(M[i], E) != 0) {
+      M_new = insert(M_new, M[i], size(M_new));
+    }
+  }
+
+  return (M_new);
+}
+
+proc StringModCGS_mod(ideal F, list modcgs)
 {
   // BR is R[U][X].
   def BR = basering;
@@ -1019,11 +1107,12 @@ proc StringModCGS_mod(list modcgs)
   def modcgs = imap(BR, modcgs);
   // Switch to R[A, X, U].
   setring(@AXU);
+  def F = imap(BR, F);
   def modcgs = imap(BR, modcgs);
 
   string Str = newline + "Module Comprehensive Groebner Systems: " + newline + newline;
-  //ideal U = groebner(ideal(Auxiliary[1] - 1, Auxiliary[2]));
-  //ideal V = groebner(ideal(Auxiliary[1], Auxiliary[2] - 1));
+  list RGB_list;
+  ideal RGB_KSW;
   int i, j;
 
   // Show by branch.
@@ -1046,9 +1135,27 @@ proc StringModCGS_mod(list modcgs)
         Str = Str + string(modcgs[i][2][j]) + "!=0,";
       }
     }
-    Str = Str + newline + "Module Groebner basis: " + newline;
+
+    // Show the complete RGB of the current branch in KSW algorithm.
+    Str = Str + newline + "RGB from KSW:" + newline;
+    list RGB_purified;
+    if (size(modcgs[i][4]) > 0) {
+      RGB_purified = removeRedundantPoly(modcgs[i][4], modcgs[i][1]);
+      setring(@RUA);
+      def RGB_purified = imap(@AXU, RGB_purified);
+      for (j = 1; j <= size(RGB_purified); j++) {
+	Str = Str + "[" + string(RGB_purified[j][1])
+	  + "  ,  " + string(RGB_purified[j][2]) + "]" + newline;
+      }
+      setring(@AXU);
+    } else {
+      Str = Str + "[   ]." + newline;
+    }
 
    // Show Groebner Bases.
+
+    Str = Str + newline + "Module Groebner basis: " + newline;
+
    setring(@RUA);
    if (size(modcgs[i][3]) == 0) {
      Str = Str + "[  ]." + newline + newline;
@@ -1059,9 +1166,26 @@ proc StringModCGS_mod(list modcgs)
      }
      Str = Str + "[" + string(modcgs[i][3][size(modcgs[i][3])][1])
 	  + " , " + string(modcgs[i][3][size(modcgs[i][3])][2]) + "]."
-	  + newline + newline;
+	  + newline;
    }
    setring(@AXU);
+
+    // Show the complete RGB computed by F and E of the current branch.
+    Str = Str + newline + "RGB computed separately:" + newline;
+    RGB_list = getModRGB(F, modcgs[i][1]);
+    if (size(RGB_list) > 0) {
+      setring(@RUA);
+      def RGB_list = imap(@AXU, RGB_list);
+      for (j = 1; j <= size(RGB_list); j++) {
+	Str = Str + "[" + string(RGB_list[j][1])
+	  + "  ,  " + string(RGB_list[j][2]) + "]" + newline;
+      }
+      Str = Str + newline;
+      setring(@AXU);
+    } else {
+      Str = Str + "[  ]." + newline;
+    }
+    Str = Str + newline;
 	
   }
 

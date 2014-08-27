@@ -2,7 +2,7 @@
 LIB "simulation.lib";
 
 // The output file name.
-link out = "s11_simple_grlex.mp";
+link out = "s11_simple_lex.mp";
 
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
@@ -19,7 +19,7 @@ int sim_times = 20	;
 intvec sim_option = 1, 1, 1, 1, 0	;
 
 // degree reversed lex order.
-ring R = (0, a, b), (x), dp;
+ring R = (0, a, b), (x), lp;
 
 //ideal polys = (a3+a2b+ab2+b3)*x2 + (a2+b2+1)*x + (a-b)*(b+2) ;
 ideal polys = (a3-b3)*x2 + (a2+b2+1)*x + (ab+2a-b2-2b) ;

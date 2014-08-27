@@ -30,6 +30,5 @@ ideal polys = (u-v)*x + vx + (u+v)*z,
 
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-
 simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	

@@ -24,6 +24,5 @@ ring r = (0, v, u), (z, y, x), Dp;
 ideal polys = u*y + x, v*z + x + 1;
 ideal null_ideal = 0  ;
 list nonnull_list = list()	;
-
 simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 

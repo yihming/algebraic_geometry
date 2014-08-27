@@ -2,7 +2,7 @@
 LIB "simulation.lib"		;
 
 // The output file name.
-link out = "montes_1_lex.mp";
+link out = "montes_1_grlex.mp";
 
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
@@ -19,7 +19,7 @@ int sim_times = 15		;
 intvec sim_option = 1, 1, 1, 1, 0	;
 
 // lex order.
-ring r = (0, a, b, c, d), (x, y), lp;
+ring r = (0, a, b, c, d), (x, y), dp;
 
 ideal polys = ax + b, cx + d;
 ideal null_ideal = 0		;

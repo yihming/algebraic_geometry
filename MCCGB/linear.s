@@ -2,7 +2,7 @@
 LIB "simulation.lib"		;
 
 // The output file name.
-link out = "linear_lex.mp";
+link out = "linear_grlex.mp";
 
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
@@ -18,7 +18,7 @@ int sim_times = 15		;
 // opt4 -- 1 if running checking the CGBness of RGB; 0 otherwise.
 intvec sim_option = 1, 1, 1, 1, 0	;
 	
-ring r = (0, u, v), (x, y, z), lp;
+ring r = (0, u, v), (x, y, z), dp;
 
 //ideal I = ux, uy, uz, vx, vy, vz;
 

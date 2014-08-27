@@ -850,14 +850,14 @@ proc set_global_rings() {
   def br_list = ringlist(BR);
   
   // Make the ordering of parameters consistent with variables.
-  //string ord_var = br_list[3][1][1];
-  //br_list[1][3][1][1] = ord_var;
+  string ord_var = br_list[3][1][1];
 
   // Extend R[U][X] to R[U][A, X] where A is the set of auxiliary variables.
   def @RUA = ring(extend_ring_with_aux(br_list));
 
   // Get R[U].
   def Rax = ringlist(@RUA);
+  Rax[1][3][1][1]=  ord_var;
   def @U = ring(Rax[1]);
 
   // Get R[A, X, U] with auxiliary variables.

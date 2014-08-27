@@ -155,7 +155,7 @@ proc check_minimal(list M, list CGS) {
 }
 
 proc check_validity(list M, list CGS) {
-  // Basering is @RP.
+  // Basering is @R.
   if (defined(debug_mode) && debug_mode == 1) {
     fprintf(out, newline + "============================");
     fprintf(out, "Now check whether M is comprehensive and minimal:");

@@ -218,11 +218,9 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   (G_beginning, Modcgs) = cgb_mod(F, E, N, out);
   set_global_rings_mcgb();
   G_beginning = sortIdealAsce(G_beginning);
-
   fprintf(out, "%s" + newline, StringModCGS_mod(Modcgs));
   fprintf(out, "%s" + newline, StringCGB(G_beginning));
   fprintf(out, newline + "Size is: %s." + newline, string(size(G_beginning)));
-
     
   // Algorithm 1.
   if (sim_option[1] > 0){
@@ -242,6 +240,8 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
     }
   
     // Print all MCGBs got from KSWCGB.
+    ideal MCGB_simpl;
+    list CGS_dull;
     for (i = 1; i <= size(M_list); i++) {
       M_list[i] = sortListAsce(M_list[i]);
       fprintf(out, "---------------------" + newline);
@@ -249,6 +249,12 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
       showMCGB(M_list[i], out);
       fprintf(out, "Size is: %s." + newline, string(size(M_list[i])));
       check_validity(M_list[i], Modcgs);
+
+      // Simplify it.
+      fprintf(out, newline + "simplify M_%s:", string(i));
+      (MCGB_simpl, CGS_dull) = makeReduced(M_list[i], CGS_list[i], out);
+      showMCGB(idealToList(MCGB_simpl), out);
+      check_validity(idealToList(MCGB_simpl), Modcgs);
       //fprintf(out, "%s" + newline, StringModCGS_mod(CGS_list[i]));
     }
   }

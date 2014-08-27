@@ -1,7 +1,7 @@
 LIB "simulation.lib"		;
 
 // The output file name.
-link out = "higher_3_gradelex.mp";
+link out = "higher_3_lex.mp";
 
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
@@ -17,7 +17,7 @@ int sim_times = 15		;
 // opt4 -- 1 if running checking the CGBness of RGB; 0 otherwise.
 intvec sim_option = 1, 1, 1, 1, 0	;
 	
-ring r = (0, u, v), (x, y, z), Dp;
+ring r = (0, u, v), (x, y, z), lp;
 
 ideal polys = (u)*x2y+(2u)*x2+3*yz+(-2uv)*x, 
 (3u)*x2+3*yz+(-3uv)*x, 

@@ -2,7 +2,7 @@
 LIB "simulation.lib";
 
 // The output file name.
-link out = "s11_simple.mp";
+link out = "s11_simple_grlex.mp";
 
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
@@ -16,13 +16,13 @@ int sim_times = 20	;
 // opt2 -- 1 if running Algorithm 2; 0 otherwise.
 // opt3 -- 1 if running Algorithm 3; 0 otherwise.
 // opt4 -- 1 if running checking the CGBness of RGB; 0 otherwise.
-intvec sim_option = 0, 1, 0, 0, 0	;
+intvec sim_option = 1, 1, 1, 1, 0	;
 
 // degree reversed lex order.
 ring R = (0, a, b), (x), dp;
 
-//ideal polys = (a2+b2+ab)*x2 + ax + a+1 ;
-ideal polys = (a2+b2+1)*x2 + (a+b+1)*x + b + 2	;
+//ideal polys = (a3+a2b+ab2+b3)*x2 + (a2+b2+1)*x + (a-b)*(b+2) ;
+ideal polys = (a3-b3)*x2 + (a2+b2+1)*x + (ab+2a-b2-2b) ;
 	
 ideal null_ideal = 0		;
 list nonnull_list = list()	;

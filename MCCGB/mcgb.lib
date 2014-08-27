@@ -1,4 +1,4 @@
-LIB "poly.lib";
+IB "poly.lib";
 LIB "primdec.lib";
 LIB "qhmoduli.lib";
 LIB "teachstd.lib";
@@ -15,6 +15,9 @@ proc set_global_rings_mcgb() {
   def @R = basering;
 
   def Rx = ringlist(BR);
+  string ord_var = Rx[3][1][1];
+  Rx[1][3][1][1] = ord_var;
+
   def @P = ring(Rx[1]);
   
   Rx[1] = 0;
@@ -43,14 +46,15 @@ proc idealToList(ideal G) {
 }
 
 proc listToIdeal(list L) {
+  // Basering is @RP.
   if (size(L) == 0) {
     return (ideal());
   }
 
   int i;
-  ideal G = 0;
+  ideal G;
   for (i = 1; i <= size(L); i++) {
-    G = G + ideal(L[i]);
+    G = G + L[i];
   }
 
   return (G);
@@ -1962,5 +1966,78 @@ proc buildCGS(list MCGB) {
   if (defined(CGS)) {kill CGS;}
   def CGS = imap(@RP, CGS);
   return (CGS);
+}
+
+proc makeReduced(list M, list CGS, out) {
+  // Basering is @R.
+  if (size(M) <= 1) {
+    return (M);
+  }
+  
+  def BR = basering;
+  setring @RP;
+  
+  def M = imap(@R, M);
+  def CGS = imap(@R, CGS);
+  def G = listToIdeal(M);
+  def CGB = G;
+  exportto(Top, CGB);
+  list CGS_red = makeRRep(CGS);
+  
+  int i, j;
+  for (i = 1; i <= size(G); i++) {
+    poly cur_g = G[i];
+    if (defined(debug_mode) && debug_mode == 1) {
+      fprintf(out, "Now check g_%s = %s:", string(i), cur_g);
+    }
+    int is_essential;
+    list BL;
+    list CGS_new;
+    
+    ideal MRem_ideal;
+    for (j = 1; j <= size(M); j++) {
+      if (M[j] != cur_g) {
+	MRem_ideal = MRem_ideal + M[j];
+      }
+    }
+
+    poly g_red = reduce(cur_g, MRem_ideal);
+    g_red = monic(g_red);
+
+    if (g_red == 0 || g_red == cur_g) {
+      (is_essential, BL) = checkEssential(cur_g, M, CGS_red);
+      if (!is_essential) {
+	CGS_red = updateCGS(CGS_red, cur_g, BL);
+	M = deletePolyFromList(M, cur_g);
+      }
+    } else {
+      int success;
+      (success, CGS_new) = trySubstitute(cur_g, g_red, M, CGS_red);
+
+      if (success == -1) {
+	// cur_g is already non-essential.
+	CGS_red = CGS_new;
+	M = deletePolyFromList(M, cur_g);
+      } else {
+	if (success == 1) {
+	  // cur_g is essential
+	  // and when replaced by g_red, M is still a CGB.
+	  CGS_red = CGS_new;
+	  M = substPolyInList(M, cur_g, g_red);
+	}
+	// Otherwise, cur_g is kept in M.
+      }
+    }
+  } // End of for.
+
+  ideal M_ideal;
+  M_ideal = listToIdeal(M);
+
+  // Switch back to @R.
+  setring BR;
+  def M_simpl = imap(@RP, M_ideal);
+  def CGSRed = imap(@RP, CGS_red);
+
+  return (M_simpl, CGSRed);
 }
 

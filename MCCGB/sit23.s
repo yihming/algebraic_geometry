@@ -2,7 +2,7 @@
 LIB "simulation.lib"		;
 
 // The output file name.
-link out = "sit23_lex.mp";
+link out = "sit23_grlex.mp";
 
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
@@ -19,7 +19,7 @@ int sim_times = 20		;
 intvec sim_option = 1, 1, 1, 1,0	;
 
 // degree reversed lex order.
-ring r = (0, x), (z1, z2), lp;
+ring r = (0, x), (z1, z2), dp;
 
 //ideal I = ux, uy, uz, vx, vy, vz;
 

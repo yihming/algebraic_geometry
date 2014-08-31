@@ -1172,20 +1172,32 @@ proc StringModCGS_mod(ideal F, list modcgs)
 
     // Show the complete RGB computed by F and E of the current branch.
    
-   //    Str = Str + newline + "RGB computed separately:" + newline;
-   // RGB_list = getModRGB(F, modcgs[i][1]);
-   // if (size(RGB_list) > 0) {
-   //   setring(@RUA);
-   //   def RGB_list = imap(@AXU, RGB_list);
-   //   for (j = 1; j <= size(RGB_list); j++) {
-   //	Str = Str + "[" + string(RGB_list[j][1])
-   //	  + "  ,  " + string(RGB_list[j][2]) + "]" + newline;
-   //   }
-   //   Str = Str + newline;
-   //   setring(@AXU);
-   // } else {
-   //   Str = Str + "[  ]." + newline;
-   //}
+   /*    Str = Str + newline + "RGB computed separately:" + newline;
+    RGB_list = getModRGB(F, modcgs[i][1]);
+    if (size(RGB_list) > 0) {
+      setring(@RUA);
+      def RGB_list = imap(@AXU, RGB_list);
+      for (j = 1; j <= size(RGB_list); j++) {
+   	Str = Str + "[" + string(RGB_list[j][1])
+   	  + "  ,  " + string(RGB_list[j][2]) + "]" + newline;
+      }
+      Str = Str + newline;
+      setring(@AXU);
+    } else {
+      Str = Str + "[  ]." + newline;
+   }*/
+    Str = Str + newline;
+
+    // Show the set of LPP in GB under specialization.
+    Str = Str + "LPP Set of Module Groebner Basis under specialization:" + newline;
+    if (size(modcgs[i][3]) == 0) {
+      Str = Str + "[  ]." + newline;
+    } else {
+      for (j = 1; j <= size(modcgs[i][3]); j++) {
+	Str = Str + "[ " +  string(lppX(modcgs[i][3][j][1]))
+	  + " ]" + newline;
+      }
+    }
     Str = Str + newline;
    	
   } // Endfor.

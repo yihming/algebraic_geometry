@@ -294,6 +294,36 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
       check_validity(list(), Modcgs);
     }
     //fprintf(out, "%s" + newline, StringModCGS_mod(F, CGS_ccgb));
+
+    // Compare CCGB with M_list.
+    fprintf(out, "=================================");
+    fprintf(out, "Compare MCGBs with CCGB:" + newline);
+    if (size(M_list) > 0) {
+      int i, j;
+      for (i = 1; i <= size(M_list); i++) {
+	fprintf(out, "Consider M_%s:", string(i));
+	fprintf(out, "M_%s" + newline, string(i));
+	showMCGB(M_list[i], out);
+	fprintf(out, "Size is: %s." + newline, string(size(M_list[i])));
+	fprintf(out, "CCGB"+newline);
+	showCCGB(CCGB, out);
+	fprintf(out, newline + "Size is: %s." + newline, string(size(CCGB)));
+	fprintf(out, "Polys in M_%s but not in CCGB:", string(i));
+	for (j = 1; j <= size(M_list[i]); j++) {
+	  if (!listContains(CCGB_list, M_list[i][j])) {
+	    fprintf(out, "%s,", M_list[i][j]);
+	  }
+	}
+	fprintf(out, newline);
+	fprintf(out, "Polys in CCGB but not in M_%s:", string(i));
+	for (j = 1; j <= size(CCGB); j++) {
+	  if (!listContains(M_list[i], CCGB[j])) {
+	    fprintf(out, "%s,", CCGB[j]);
+	  }
+	}
+	fprintf(out, newline + "--------------------" + newline);
+      }
+    }
   }
   
   if (sim_option[4] > 0) {

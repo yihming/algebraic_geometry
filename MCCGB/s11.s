@@ -2,7 +2,7 @@
 LIB "simulation.lib";
 
 // The output file name.
-link out = "s11.mp";
+link out = "s11_grlex.mp";
 
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
@@ -16,7 +16,7 @@ int sim_times = 15	;
 // opt2 -- 1 if running Algorithm 2; 0 otherwise.
 // opt3 -- 1 if running Algorithm 3; 0 otherwise.
 // opt4 -- 1 if running checking the CGBness of RGB; 0 otherwise.
-intvec sim_option = 1, 1, 0, 0, 0	;
+intvec sim_option = 1, 0, 1, 1, 0	;
 
 // degree reversed lex order.
 ring R = (0, r, Z, r2, d3, d4), (t), dp;

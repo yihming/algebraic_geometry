@@ -165,7 +165,10 @@ proc splitBranch(ideal E, list N, poly c) {
 }
 
 
-proc checkNull(poly c, ideal E, list N) {
+proc checkNull(poly c, ideal E, list N) 
+"Check whether c is determined to be 0 under (E, N).
+"
+{
   // Basering is @RP.
   ideal E_res;
   list N_res;
@@ -174,7 +177,15 @@ proc checkNull(poly c, ideal E, list N) {
   if (E_res[1] == 1 && N_res[1] == 0) {
     return (0);
   } else {
-    return (1);
+    // Now need to check if (E, N x {c}) is consistent.
+    (E_res, N_res) = redRepNN(E, N, c);
+    if (E_res[1] == 1) {
+      // c is determined to be 0 under (E, N).
+      return (1);
+    } else {
+     // c is not determined under (E, N).
+      return (0);
+    }
   }
 }
 
@@ -224,7 +235,11 @@ proc checkNullRRep(poly c, ideal E, list N) {
 }
 */
 
-proc checkNonNull(poly c, ideal E, list N) {
+proc checkNonNull(poly c, ideal E, list N) 
+"
+Check whether c id determined to be non-zero under (E, N).
+"
+{
   // Basering is @RP.
   ideal E0;
   list N0;
@@ -1971,7 +1986,7 @@ proc buildCGS(list MCGB) {
 proc makeReduced(list M, list CGS, out) {
   // Basering is @R.
   if (size(M) <= 1) {
-    return (M);
+    return (listToIdeal(M), CGS);
   }
   
   def BR = basering;

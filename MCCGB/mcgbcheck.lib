@@ -1,19 +1,5 @@
 LIB "mcgb.lib";
 
-proc listContains(poly f, list l) {
-  if (size(l) == 0) {
-    return (0);
-  } else {
-    int i;
-    for (i = 1; i <= size(l); i++) {
-      if (f == l[i] || -f == l[i]) {
-	return (1);
-      }
-    }
-    return (0);
-  }
-}
-
 proc show_list_to_file(list l, link out) {
   int i;
   if (size(l) == 0) {
@@ -55,7 +41,7 @@ proc list_diff(list L1, list L2) {
   int i;
   list res;
   for (i = 1; i <= size(L1); i++) {
-    if (!listContains(L1[i], L2)) {
+    if (!listContains(L2, L1[i])) {
       res = insert(res, L1[i], size(res));
     }
   }
@@ -90,7 +76,7 @@ proc check_comprehensive(list M, list CGS) {
       for (j = 1; j <= size(CGS[i][3]); j++) {
 	poly f = monic(CGS[i][3][j][1] + CGS[i][3][j][2]);
 
-	if (!listContains(f, M)) {
+	if (!listContains(M, f)) {
 	  poly pp_f = lppX(CGS[i][3][j][1]);
 	  ideal E_cur = CGS[i][1];
 	  list N_cur = CGS[i][2];
@@ -184,7 +170,7 @@ proc check_validity(list M, list CGS) {
 	fprintf(out, newline + "M is not minimal.");
       }
       fprintf(out, "It is comprehensive, but not minimal.");
-      return (0);
+      return (-1);
     }
   } else {
     // M is not comprehensive.

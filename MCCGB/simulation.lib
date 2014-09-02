@@ -251,16 +251,26 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
       check_validity(M_list[i], Modcgs);
 
       // Simplify it.
-      /*
+      
       fprintf(out, newline + "simplify M_%s:", string(i));
       (MCGB_simpl, CGS_dull) = makeReduced(M_list[i], CGS_list[i], out);
       showMCGB(idealToList(MCGB_simpl), out);
       check_validity(idealToList(MCGB_simpl), Modcgs);
-      */
+      int valid = check_validity(idealToList(MCGB_simpl), Modcgs);
+      if (valid == -1) {
+	fprintf("temp", "C not M: %s"+newline, string(out));
+      } else {
+	if (valid == 0) {
+	  fprintf("temp", "not C: %s"+newline, string(out));
+	}
+      }
+      
       //fprintf(out, "%s" + newline, StringModCGS_mod(F, CGS_list[i]));
     }
+
+    fprintf("temp", "========================"+newline);
   }
-  
+
   if (sim_option[2] > 0) {
     // Algorithm 2.
     fprintf(out, newline + "======================= Algorithm 2 ================" + newline);

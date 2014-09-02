@@ -781,13 +781,13 @@ list nonnull_list = list()	;
 simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 print("=========== weispfenning_4 finished ==============" + newline) ;	
 
-// s11_simple.s:
-print("=========== s11_simple starts ==============") ;
+// quadratic.s:
+print("=========== quadratic starts ==============") ;
 	// lex order.
 print("------ lex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
 ring R = (0, a, b), (x), lp;
-out = "s11_simple_lex.mp";
+out = "quadratic_lex.mp";
 ideal polys = (a3-b3)*x2 + (a2+b2+1)*x + (ab+2a-b2-2b) ;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
@@ -796,7 +796,7 @@ simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option
 print("------ grlex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
 ring R = (0, a, b), (x), dp;
-out = "s11_simple_grlex.mp"		     ;
+out = "quadratic_grlex.mp"		     ;
 ideal polys = (a3-b3)*x2 + (a2+b2+1)*x + (ab+2a-b2-2b) ;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
@@ -805,12 +805,12 @@ simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option
 print("------ glex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
 ring R = (0, a, b), (x), Dp;
-out = "s11_simple_gradelex.mp"		     ;
+out = "quadratic_gradelex.mp"		     ;
 ideal polys = (a3-b3)*x2 + (a2+b2+1)*x + (ab+2a-b2-2b) ;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
 simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
-print("=========== s11_simple finished ==============" + newline) ;
+print("=========== quadratic finished ==============" + newline) ;
 
 // wibmer_11.s:
 print("=========== wibmer_11 starts ==============") ;

@@ -2,7 +2,7 @@
 LIB "simulation.lib"		;
 
 // The output file name.
-link out = "montes_wibmer_5_gradelex.mp";
+link out = "montes_wibmer_5_grlex.mp";
 
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
@@ -16,10 +16,10 @@ int sim_times = 15		;
 // opt2 -- 1 if running Algorithm 2; 0 otherwise.
 // opt3 -- 1 if running Algorithm 3; 0 otherwise.
 // opt4 -- 1 if running checking the CGBness of RGB; 0 otherwise.
-intvec sim_option = 1, 1, 1, 1, 0	;
+intvec sim_option = 0, 1, 0, 1, 0	;
 
 // degree reversed lex order.
-ring r = (0, a, b), (x(2), x(3), y(2), y(3)), Dp;
+ring r = (0, a, b), (x(2), x(3), y(2), y(3)), dp;
 	
 ideal polys = (a-1)*y(2) - b*(x(2)-1), (a-1)*(x(2)+1)+b*y(2),
 	      (a+1)*y(3) - b*(x(3)+1), (a+1)*(x(3)-1)+b*y(3),

@@ -1,7 +1,7 @@
 LIB "simulation.lib"		;
 
 // The output file name.
-link out = "bad_test_lex.mp";
+link out = "bad_test_grlex.mp";
 
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
@@ -17,7 +17,7 @@ int sim_times = 20		;
 // opt4 -- 1 if running checking the CGBness of RGB; 0 otherwise.
 intvec sim_option = 1,0,1,1,0	;
 	
-ring r = (0, a, b), (x, y, u, v), lp;
+ring r = (0, a, b), (x, y, u, v), dp;
 
 ideal polys = (a-1)*u - b*(x-1), (a-1)*(x+1)+bu,
 	(a+1)*v - b*(y+1), (a+1)*(y-1) + bv ;

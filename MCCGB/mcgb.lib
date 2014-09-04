@@ -404,7 +404,7 @@ proc delEquivPolyFromList(list L, poly f) {
   return (L);
 }
 
-proc getCandidatePolys(poly pp, list M, ideal E) {
+proc getCandidatePolys(poly pp, list M, ideal E, list N) {
   if (size(M) == 0) {
     return (list());
   }
@@ -415,10 +415,12 @@ proc getCandidatePolys(poly pp, list M, ideal E) {
     poly cur_g = M[i];
     while (cur_g != 0) {
       if (lppX(cur_g) == pp) {
-	if (reduce(leadcoef_U(cur_g), E) != 0) {
+	// Only consider the coef of pp in M[i].
+	if (!checkNull(leadcoef_U(cur_g), E, N)) {
+	  // This coef is not determined to be 0 under (E, N).
 	  G_can = insert(G_can, M[i], size(G_can));
+	  break;
 	}
-	break;
       }
       cur_g = cur_g - lm_X(cur_g);
     }
@@ -658,7 +660,7 @@ proc getCoefOfPP(poly f, poly pp) {
 proc checkEssentialInBranch(poly f, poly pf, list MRem, ideal E, list N, list G_branch, list BL) {
   // Basering is @RP.
   MRem = listAsceOrd(MRem);
-  list G_can = getCandidatePolys(pf, MRem, E);
+  list G_can = getCandidatePolys(pf, MRem, E, N);
   if (size(G_can) == 0) {
     list branch = E, N, list(0);
     BL = insert(BL, branch, size(BL));
@@ -709,7 +711,11 @@ proc checkEssentialInBranch(poly f, poly pf, list MRem, ideal E, list N, list G_
 
 proc checkEssentialInBranchRandom(poly f, poly pf, list MRem, ideal E, list N, list G_branch, list BL) {
   // Basering is @RP.
-  list G_can = getCandidatePolys(pf, MRem, E);
+  if (defined(debug_mode) && debug_mode == 1) {
+    fprintf(out, newline + "Come to locally closed set (<%s>, {%s}):", E, N);
+  }
+
+  list G_can = getCandidatePolys(pf, MRem, E, N);
   if (size(G_can) == 0) {
     list branch = E, N, list(0);
     BL = insert(BL, branch, size(BL));
@@ -783,6 +789,7 @@ proc checkEssential(poly f, list M, list modcgs) {
       for (j = 1; j <= size(modcgs[i][3]); j++) {
 	if (equivalent(f, modcgs[i][3][j][1] + modcgs[i][3][j][2])) {
 	  pf = lppX(modcgs[i][3][j][1]);
+	  break;
 	}
       }
       int is_essential;
@@ -825,11 +832,7 @@ proc checkEssentialRandom(poly f, list M, list modcgs) {
 	}
       }
       int is_essential;
-      //list MRem = deletePolyFromList(M, f);
-      list MRem = M;
-      for (j = 1; j <= size(modcgs[i][3]); j++) {
-	MRem = delEquivPolyFromList(MRem, modcgs[i][3][j][1] + modcgs[i][3][j][2]);
-      }
+      list MRem = deletePolyFromList(M, f);
       ideal E_cur = modcgs[i][1];
       list N_cur = modcgs[i][2];
       list G_cur = modcgs[i][3];
@@ -1086,7 +1089,7 @@ proc mcgbRandMain(ideal E, list N, ideal F) {
     }
     int is_essential;
     list BL;
-    (is_essential, BL) = checkEssential(cur_f, M, modcgsRed);
+    (is_essential, BL) = checkEssentialRandom(cur_f, M, modcgsRed);
     if (is_essential == 0) {
       
       list modcgs1;
@@ -1494,7 +1497,7 @@ proc getEssentialOnlyInBranchByHC(poly f, poly pp_f, list higher_coefs, poly g, 
 proc getEssentialOnlyInBranch(poly f, poly pp_f, list MRem, ideal E, list N, list G_branch, list BL) {
   // Basering is @RP.
   MRem = listAsceOrd(MRem);
-  list G_can = getCandidatePolys(pp_f, MRem, E);
+  list G_can = getCandidatePolys(pp_f, MRem, E, N);
   
   if (size(G_can) == 0) {
     list branch = E, N, G_branch;

@@ -59,7 +59,7 @@ proc simulate_CGB(ideal E, list N, ideal F, int sim_times, link out, int debug_m
   // Print all CGBs got by the KSW algorithm.
   for (i = 1; i <= size(G_list); i++) {
     fprintf(out, "-----------CGS and CGB %s ------------" + newline, string(i));
-    fprintf(out, "%s" + newline, StringModCGS_mod(F, CGS_list[i]));
+    fprintf(out, "%s" + newline, StringModCGS_mod(F, CGS_list[i], 0));
     fprintf(out, "%s" + newline, StringCGB(G_list[i]));
     fprintf(out, newline + "Size is: %s." + newline, string(size(G_list[i])));
   }
@@ -221,7 +221,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
 
   set_global_rings_mcgb();
   G_beginning = sortIdealAsce(G_beginning);
-  fprintf(out, "%s" + newline, StringModCGS_mod(F, Modcgs));
+  fprintf(out, "%s" + newline, StringModCGS_mod(F, Modcgs, 1));
   fprintf(out, "%s" + newline, StringCGB(G_beginning));
   fprintf(out, newline + "Size is: %s." + newline, string(size(G_beginning)));
     
@@ -252,14 +252,17 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
       showMCGB(M_list[i], out);
       fprintf(out, "Size is: %s." + newline, string(size(M_list[i])));
       check_validity(M_list[i], Modcgs);
+      check_validity(M_list[i], CGS_list[i]);
+      printf("----------------------------");
 
       // Simplify it.
+      
       printf("Simplify starts:");
       fprintf(out, newline + "simplify M_%s:", string(i));
       (MCGB_simpl, CGS_dull) = makeReduced(M_list[i], CGS_list[i], out);
       showMCGB(idealToList(MCGB_simpl), out);
-      check_validity(idealToList(MCGB_simpl), Modcgs);
-      int valid = check_validity(idealToList(MCGB_simpl), Modcgs);
+      check_validity(idealToList(MCGB_simpl), CGS_list[i]);
+      int valid = check_validity(idealToList(MCGB_simpl), CGS_list[i]);
       if (valid == -1) {
 	fprintf("temp", "C not M: %s"+newline, string(out));
       } else {
@@ -268,7 +271,8 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
 	}
       }
       printf("Simplify ends.");
-      //fprintf(out, "%s" + newline, StringModCGS_mod(F, CGS_list[i]));
+      
+      //fprintf(out, "%s" + newline, StringModCGS_mod(F, CGS_list[i], 0));
     }
 
     fprintf("temp", "========================"+newline);
@@ -286,7 +290,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
     fprintf(out, newline + "Size is: %s" + newline, string(size(M_least)));
   
     check_validity(M_least, Modcgs);
-    //fprintf(out, "%s" + newline, StringModCGS_mod(F, Modcgs_least));
+    //fprintf(out, "%s" + newline, StringModCGS_mod(F, Modcgs_least, 0));
   }
 
   if (sim_option[3] > 0) {
@@ -306,7 +310,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
     } else {
       check_validity(list(), Modcgs);
     }
-    //fprintf(out, "%s" + newline, StringModCGS_mod(F, CGS_ccgb));
+    //fprintf(out, "%s" + newline, StringModCGS_mod(F, CGS_ccgb, 0));
 
     // Compare CCGB with M_list.
     fprintf(out, "=================================");
@@ -381,7 +385,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
     list CGS_rebuilt = buildCGS(CCGB_list);
     
     fprintf(out, newline + "================ Reconstruct CGS from CCGB ================");
-    fprintf(out, "%s" + newline, StringModCGS_mod(F, CGS_rebuilt));
+    fprintf(out, "%s" + newline, StringModCGS_mod(F, CGS_rebuilt, 0));
     fprintf(out, "Number of branches: %s" +newline, size(CGS_rebuilt));
     
   }

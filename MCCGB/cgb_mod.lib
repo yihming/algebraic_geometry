@@ -1098,7 +1098,7 @@ static proc removeRedundantPoly(list M, ideal E) {
   return (M_new);
 }
 
-proc StringModCGS_mod(ideal F, list modcgs)
+proc StringModCGS_mod(ideal F, list modcgs, int has_rgb)
 {
   // BR is R[U][X].
   def BR = basering;
@@ -1137,19 +1137,21 @@ proc StringModCGS_mod(ideal F, list modcgs)
     }
 
     // Show the complete RGB of the current branch in KSW algorithm.
-    Str = Str + newline + "RGB from KSW:" + newline;
-    list RGB_purified;
-    if (size(modcgs[i][4]) > 0) {
-      RGB_purified = removeRedundantPoly(modcgs[i][4], modcgs[i][1]);
-      setring(@RUA);
-      def RGB_purified = imap(@AXU, RGB_purified);
-      for (j = 1; j <= size(RGB_purified); j++) {
-	Str = Str + "[" + string(RGB_purified[j][1])
-	  + "  ,  " + string(RGB_purified[j][2]) + "]" + newline;
+    if (has_rgb) {
+      Str = Str + newline + "RGB from KSW:" + newline;
+      list RGB_purified;
+      if (size(modcgs[i][4]) > 0) {
+	RGB_purified = removeRedundantPoly(modcgs[i][4], modcgs[i][1]);
+	setring(@RUA);
+	def RGB_purified = imap(@AXU, RGB_purified);
+	for (j = 1; j <= size(RGB_purified); j++) {
+	  Str = Str + "[" + string(RGB_purified[j][1])
+	    + "  ,  " + string(RGB_purified[j][2]) + "]" + newline;
+	}
+	setring(@AXU);
+      } else {
+	Str = Str + "[   ]." + newline;
       }
-      setring(@AXU);
-    } else {
-      Str = Str + "[   ]." + newline;
     }
 
    // Show Groebner Bases.

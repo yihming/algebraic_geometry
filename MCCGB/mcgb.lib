@@ -947,6 +947,13 @@ proc listEquals(list l1, list l2) {
   return (1);
 }
 
+proc idealEquals(ideal E1, ideal E2) {
+  list L1 = idealToList(E1);
+  list L2 = idealToList(E2);
+
+  return (listEquals(L1, L2));
+}
+
 proc set_global_objects() {
   // Basering is @R.
   def BR = basering;

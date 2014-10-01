@@ -189,6 +189,108 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   exportto(Top, debug_mode);
   open(out);
 
+  int i, j;
+
+  // Print the ring configuration.
+  fprintf(out, "The given ring is:");
+  fprintf(out, "%s" + newline, BR);
+
+  // Print the given parametric ideal.
+  fprintf(out, "F = {");
+  if (size(F) > 0) {
+    for (i = 1; i < size(F); i++) {
+      fprintf(out, "%s, ", F[i]);
+    }
+    fprintf(out, "%s" + newline + "}." + newline, F[size(F)]);
+  } else {
+    fprintf(out, newline + "}." + newline);
+  }
+
+  // Print the given parameter space.
+  fprintf(out, "E = {%s}." + newline, E);
+  fprintf(out, "N = {%s}." + newline, string(N));
+
+  // KSWCGB and KSWCGS.
+  ideal G_beginning;
+  list Modcgs;
+
+  (G_beginning, Modcgs) = cgb_mod(F, E, N, out);
+  exportto(Top, G_beginning);
+  exportto(Top, Modcgs);
+
+  set_global_rings_mcgb();
+  G_beginning = sortIdealAsce(G_beginning);
+
+  // Generate MCGBs.
+  int sim_cnt = 1;
+  list M_list;
+  list CGS_list;
+
+  while (sim_cnt <= sim_times) {
+    list M, Modcgs_new;
+    (M, Modcgs_new) = mcgbRandMain(E, N, F);
+    if (size(M_list) == 0 || !listContainsList(M_list, M)) {
+      M_list = insert(M_list, M, size(M_list));
+      CGS_list = insert(CGS_list, Modcgs_new, size(CGS_list));
+    }
+    sim_cnt = sim_cnt + 1;
+  }
+
+  // MCGBs are stored in M_list.
+
+  // Generate CCGB.
+  ideal CCGB;
+  list CGS_ccgb;
+  (CCGB, CGS_ccgb) = ccgbMain(E, N, F);
+
+  // Generate RGB.
+  ideal RGB = getRGB(F);
+
+  // Sort polynomials in MCGBs and CCGB w.r.t. the ordering.
+  ideal all_polys = CCGB;
+
+  if (size(RGB) > 0) {
+    for (i = 1; i <= size(RGB); i++) {
+      if (!idealContains(all_polys, RGB[i])) {
+	all_polys = all_polys + RGB[i];
+      }
+    }
+  }
+
+  for (i = 1; i <= size(M_list); i++) {
+    for (j = 1; j <= size(M_list[i]); j++) {
+      if (!idealContains(all_polys, M_list[i][j])) {
+	all_polys = all_polys + M_list[i][j];
+      }
+    }
+  }
+  
+  all_polys = sortIdealAsce(all_polys);
+  exportto(Top, all_polys);
+
+  // Print RGB and/or CCGB.
+  if (idealEquals(CCGB, RGB)) {
+    // RGB is the CCGB.
+    fprintf(out, newline + "RGB is the CCGB." + newline);
+    showCCGB(CCGB, all_polys, out);
+    fprintf(out, "Size is: %s." + newline, string(size(CCGB)));
+    check_validity(CCGB, Modcgs);
+
+  } else {
+    // RGB is not the CCGB.
+    fprintf(out, newline + "RGB is not the CCGB." + newline);
+    
+  }
+}
+/*
+proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode, intvec sim_option) {
+  def BR = basering;
+  system("--no-warn", 1);
+
+  exportto(Top, out);
+  exportto(Top, debug_mode);
+  open(out);
+
   int i;
   fprintf(out, newline+"+++++++++++++++++++++++++++++++++++++++"+newline);
 
@@ -252,30 +354,11 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
       showMCGB(M_list[i], out);
       fprintf(out, "Size is: %s." + newline, string(size(M_list[i])));
       check_validity(M_list[i], Modcgs);
-      check_validity(M_list[i], CGS_list[i]);
-      printf("----------------------------");
 
       // Simplify it.
-      
-      printf("Simplify starts:");
-      fprintf(out, newline + "simplify M_%s:", string(i));
-      (MCGB_simpl, CGS_dull) = makeReduced(M_list[i], CGS_list[i], out);
-      showMCGB(idealToList(MCGB_simpl), out);
-      check_validity(idealToList(MCGB_simpl), CGS_list[i]);
-      int valid = check_validity(idealToList(MCGB_simpl), CGS_list[i]);
-      if (valid == -1) {
-	fprintf("temp", "C not M: %s"+newline, string(out));
-      } else {
-	if (valid == 0) {
-	  fprintf("temp", "not C: %s"+newline, string(out));
-	}
-      }
-      printf("Simplify ends.");
-      
       //fprintf(out, "%s" + newline, StringModCGS_mod(F, CGS_list[i], 0));
     }
-
-    fprintf("temp", "========================"+newline);
+    
   }
 
   if (sim_option[2] > 0) {
@@ -392,6 +475,8 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
 
   close(out);
 }
+
+*/
 
 proc simulate_homog(ideal E, list N, ideal F, string var_name, int sim_times, link out, int debug_mode) {
   def BR = basering;

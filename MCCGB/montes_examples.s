@@ -80,6 +80,7 @@ print("=========== s11 starts ==============") ;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
 ring R = (0, r, Z, r2, d3, d4), (t), dp;
 out = "s11_grlex.mp";
+sim_times = 10	    ;
 ideal polys = (r*d3*d4-r+Z-r2^2*d3*d4+r2^2-d3^3*d4+d3^2*d4^2-d3*d4^3+d3*d4)*t^4
 	+ (-2*r*r2*d4+2*r2^3*d4+2*r2*d3^2*d4-4*r2*d3*d4^2+2*r2*d4^3+2*r2*d4)*t^3
 	+ (-2*r+2*Z+4*r2^2*d4^2+2*r2^2-2*d3^2*d4^2+4*d4^2)*t^2
@@ -96,6 +97,7 @@ print("=========== s12 starts ==============") ;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
 ring R = (0,a,b,l2,l3),(c3,s3,c1,s1), dp;
 out = "s12_grlex.mp"		      ;
+sim_times = 20			      ;
 ideal polys=a-l3*c3-l2*c1,b-l3*s3-l2*s1,c1^2+s1^2-1,c3^2+s3^2-1;;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
@@ -253,7 +255,7 @@ list nonnull_list = list()	;
 simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 
 print("=========== s59 finished ==============" + newline) ;
-
+/*
 // montes_nine_points_circle.s:
 print("=========== montes_nine_points_circle starts ==============") ;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -270,12 +272,12 @@ list nonnull_list = list()	;
 simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 
 print("=========== montes_nine_points_circle finished ==============" + newline) ;
-
+*/
 // sato_suzuki_3.s:
 print("=========== sato_suzuki_3 starts ==============") ;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
 ring R = (0, a, b, c, d), (x(1), x(2), y(1), y(2), s), Dp;
-out = "sato_suzuki_3_gradelex.mp"	
+out = "sato_suzuki_3_gradelex.mp"			 ;
 ideal polys = a*x(1)^2 + b * y(1), c*y(2)^2 + d * x(2), (x(1) - x(2))^2 + (y(1) - y(2))^2 - s,
 	      4*a*c*x(1)*y(2) - b*d, 2*a*x(1)*y(1) - 2*a*x(1)*y(2) - b*x(1) + b*x(2);
 ideal null_ideal = 0		;

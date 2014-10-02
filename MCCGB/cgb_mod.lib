@@ -45,6 +45,7 @@ KEYWORDS: comprehensive Gr\"obner system, comprehensive Gr\"obner basis
 ";
 
 LIB "ring.lib";
+LIB "mcgb.lib";
 	
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -994,19 +995,25 @@ proc remove_aux_from_modcgs(list modcgs) {
   return(modcgs);
 }
 
-proc StringCGB(cgb)
+proc StringCGB(cgb, list global_polys)
 {
   // The type of cgb is either a list or an ideal.
+  if (typeof(cgb) != "ideal" && typeof(cgb) != "list") {
+    ERROR("StringCGB: cgb is not an ideal or a list!");
+  }
 
   string Str = newline + "Comprehensive Groebner Basis: " + newline + newline;
   //ideal Factors;
   int i, j;
+  int idx;
 
   for (i = 1; i < size(cgb); i++)
   {
-    Str = Str + string(cgb[i]) + "," + newline;
+    idx = listLookUp(global_polys, cgb[i]);
+    Str = Str + "f_" + string(idx) + " = " + string(cgb[i]) + "," + newline;
   }
-  Str = Str + string(cgb[size(cgb)]) + "." + newline + newline;
+  idx = listLookUp(global_polys, cgb[size(cgb)]);
+  Str = Str + "f_" + string(idx) + " = " + string(cgb[size(cgb)]) + "." + newline + newline;
   
   return(Str);
 }

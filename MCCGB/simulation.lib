@@ -230,13 +230,12 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
     list M, Modcgs_new;
     (M, Modcgs_new) = mcgbRandMain(E, N, F);
     if (size(M_list) == 0 || !listContainsList(M_list, M)) {
+      M = sortListAsce(M);
       M_list = insert(M_list, M, size(M_list));
       CGS_list = insert(CGS_list, Modcgs_new, size(CGS_list));
     }
     sim_cnt = sim_cnt + 1;
   }
-
-  // MCGBs are stored in M_list.
 
   // Generate CCGB.
   ideal CCGB;
@@ -246,41 +245,91 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   // Generate RGB.
   ideal RGB = getRGB(F);
 
-  // Sort polynomials in MCGBs and CCGB w.r.t. the ordering.
-  ideal all_polys = CCGB;
+  // Sort polynomials in KSWCGB, RGB and CCGB w.r.t. the ordering.
+  list all_polys = idealToList(CCGB);
 
   if (size(RGB) > 0) {
     for (i = 1; i <= size(RGB); i++) {
-      if (!idealContains(all_polys, RGB[i])) {
-	all_polys = all_polys + RGB[i];
+      if (!listContains(all_polys, RGB[i])) {
+	all_polys = insert(all_polys, RGB[i], size(all_polys));
       }
     }
   }
 
-  for (i = 1; i <= size(M_list); i++) {
-    for (j = 1; j <= size(M_list[i]); j++) {
-      if (!idealContains(all_polys, M_list[i][j])) {
-	all_polys = all_polys + M_list[i][j];
+  if (size(G_beginning) > 0) {
+    for (i = 1; i <= size(G_beginning); i++) {
+      if (!listContains(all_polys, G_beginning[i])) {
+	all_polys = insert(all_polys, G_beginning[i], size(all_polys));
       }
     }
   }
   
-  all_polys = sortIdealAsce(all_polys);
+  all_polys = sortListAsce(all_polys);
   exportto(Top, all_polys);
 
   // Print RGB and/or CCGB.
+  fprintf(out, "=============================" + newline);
   if (idealEquals(CCGB, RGB)) {
     // RGB is the CCGB.
     fprintf(out, newline + "RGB is the CCGB." + newline);
+    fprintf(out, "----------------------------" + newline);
     showCCGB(CCGB, all_polys, out);
     fprintf(out, "Size is: %s." + newline, string(size(CCGB)));
-    check_validity(CCGB, Modcgs);
+    if (size(CCGB) != 0) {
+      check_validity(idealToList(CCGB), Modcgs);
+    } else {
+      check_validity(list(), Modcgs);
+    }
 
   } else {
     // RGB is not the CCGB.
+
+    // Show RGB.
     fprintf(out, newline + "RGB is not the CCGB." + newline);
-    
+    fprintf(out, "--------------------------------" + newline);
+    showRGB(RGB, all_polys, out);
+    fprintf(out, newline + "Size is : %s." + newline, string(size(RGB)));
+    if (size(RGB) != 0) {
+      check_validity(idealToList(RGB), Modcgs);
+    } else {
+      check_validity(list(), Modcgs);
+    }
+
+    // Show CCGB.
+    fprintf(out, newline + "------------------------------" + newline);
+    showCCGB(CCGB, all_polys, out);
+    fprintf(out, newline + "Size is: %s." + newline, string(size(CCGB)));
+    if (size(CCGB) > 0) {
+      check_validity(idealToList(CCGB), Modcgs);
+    } else {
+      check_validity(list(), Modcgs);
+    }
   }
+
+  // Print MCGBs.
+  if (size(M_list) > 1) {
+    M_list = sortMCGBs(M_list);
+  }
+
+  if (size(M_list) > 0) {
+    for (i = 1; i <= size(M_list); i++) {
+      fprintf(out, "--------------------------" + newline);
+      fprintf(out, "M_%s" + newline, string(i));
+      showMCGB(M_list[i], all_polys, out);
+      fprintf(out, "Size is: %s." + newline, string(size(M_list[i])));
+      check_validity(M_list[i], Modcgs);
+    }
+  }
+
+  // Print the KSWCGS and KSWCGB.
+  fprintf(out, "==================================" + newline);
+  fprintf(out, "%s" + newline, StringCGB(G_beginning, all_polys));
+  fprintf(out, newline + "Size is: %s." + newline, string(size(G_beginning)));
+  fprintf(out, "--------------------------------------" + newline);
+  fprintf(out, "%s" + newline, StringModCGS_mod(F, Modcgs, 1));
+ 
+
+  close(out);
 }
 /*
 proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode, intvec sim_option) {

@@ -5,7 +5,7 @@ LIB "simulation.lib";
 link out;
 
 int debug_mode = 0;
-int sim_times = 20;
+int sim_times = 25;
 
 intvec sim_option = 1, 0, 1, 1, 0;
 

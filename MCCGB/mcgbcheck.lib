@@ -100,6 +100,7 @@ proc check_comprehensive(list M, list CGS) {
 }
 
 proc check_minimal(list M, list CGS) {
+  // Basering is @R.
   if (size(CGS) == 0) {
     if (defined(debug_mode) && debug_mode == 1) {
       fprintf(out, "CGS is empty.");
@@ -180,5 +181,19 @@ proc check_validity(list M, list CGS) {
     fprintf(out, "It is not comprehensive.");
     return (0);
   }
+}
+
+proc check_faithful(poly f, ideal I) {
+  // Basering is @R.
+    def BR = basering;
+    setring @RP;
+    def f = imap(BR, f);
+    def I = imap(BR, I);
+    if (reduce(f, groebner(I)) == 0) {
+      return (1);
+    } else {
+      return (0);
+    }
+
 }
 

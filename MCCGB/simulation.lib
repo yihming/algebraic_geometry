@@ -215,11 +215,12 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   list Modcgs;
 
   (G_beginning, Modcgs) = cgb_mod(F, E, N, out);
-  exportto(Top, G_beginning);
-  exportto(Top, Modcgs);
 
   set_global_rings_mcgb();
-  G_beginning = sortIdealAsce(G_beginning);
+  G_beginning = purifyCGB(G_beginning);
+
+  exportto(Top, G_beginning);
+  exportto(Top, Modcgs);
 
   // Generate MCGBs.
   int sim_cnt = 1;

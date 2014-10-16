@@ -8,7 +8,13 @@ proc set_global_rings_mcgb() {
   // Basering is K[U][X].
 
   if (defined(@R)) {
-    kill @R; kill @P; kill @RP;
+    kill @R;
+  }
+  if (defined(@P)) {
+    kill @P;
+  }
+  if (defined(@RP)) {
+    kill @RP;
   }
 
   def BR = basering;
@@ -298,6 +304,40 @@ proc makeRRep(list modcgs) {
   return (modcgsRed);
 }
 
+proc purifyCGB(ideal G) {
+  // basering is @R.
+  if (size(G) <= 1) {
+    return (G);
+  }
+
+  G = sortIdealAsce(G);
+  
+  def BR = basering;
+  setring @RP;
+  
+  def G = imap(BR, G);
+  list gen_polys = idealToList(G);
+  int i = 1;
+  int j;
+
+  while (i < size(gen_polys)) {
+    j = i + 1;
+    while (j <= size(gen_polys)) {
+      if (isParametricMultiple(gen_polys[j], gen_polys[i])) {
+	gen_polys = delete(gen_polys, j);
+      } else {
+	j = j + 1;
+      }
+    }
+    i = i + 1;
+  }
+
+  ideal G_res = listToIdeal(gen_polys);
+  setring BR;
+  def G_res = imap(@RP, G_res);
+  return (G_res);
+}
+
 proc appearsInBranch(poly f, list branch) {
   // Basering is @RP.
   f = f / leadcoef(f);
@@ -312,9 +352,39 @@ proc appearsInBranch(poly f, list branch) {
   for (i = 1; i <= size(branch[3]); i++) {
     poly g = branch[3][i][1] + branch[3][i][2];
     g = g / leadcoef(g);
-    if (g == f) {
+    if (isParametricMultiple(g, f)) {
       return (1);
     } 
+  }
+
+  return (0);
+}
+
+proc isParametricMultiple(poly g, poly f) 
+"
+True if g = c*f, where c belongs to ring @P.
+"
+{
+  int flag = 0;
+  if (nameof(basering) != "@RP") {
+    def BR = basering;
+    setring @RP;
+    flag = 1;
+    def g = imap(BR, g);
+    def f = imap(BR, f);
+  }
+
+  poly h = g / f;
+
+  if ((g == h * f) && (lppX(h) == 1)) {
+    if (flag) {
+      setring BR;
+    }
+    return (1);
+  }
+
+  if (flag) {
+    setring BR;
   }
 
   return (0);
@@ -1023,6 +1093,8 @@ proc mcgbMain(ideal E, list N, ideal F) {
 
   set_global_objects();
 
+  G = purifyCGB(G);
+
   // Switch to @RP.
   setring(@RP);
   def G = imap(@R, G);
@@ -1086,6 +1158,8 @@ proc mcgbRandMain(ideal E, list N, ideal F) {
 
   set_global_rings_mcgb();
   set_global_objects();
+
+  G = purifyCGB(G);
 
   // Switch to @RP.
   setring(@RP);
@@ -1722,6 +1796,8 @@ proc ccgbMain(ideal E, list N, ideal F) {
 
   set_global_rings_mcgb();
   set_global_objects();
+
+  G = purifyCGB(G);
 
   // Switch to @RP.
   setring @RP;

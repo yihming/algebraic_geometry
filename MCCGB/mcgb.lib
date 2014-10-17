@@ -445,7 +445,7 @@ proc lm_X(poly P) {
 }
 
 proc deletePolyFromList(list L, poly f) {
-  // Basering is @RP.
+  
   if (size(L) == 0) {
     return (list());
   }
@@ -1919,7 +1919,7 @@ proc showMCGB(list M, list global_polys, link out) {
     }
     if (idx == -1) {show(M[i]);ERROR("weird");}
     idx = listLookUp(global_polys, M[size(M)]);
-    fprintf(out, "f_%s = %s." + newline, string(idx), M[size(M)]);
+    fprintf(out, "f_%s = %s;" + newline, string(idx), M[size(M)]);
   }
   fprintf(out, "]."+newline);
 }
@@ -1940,10 +1940,10 @@ proc showCCGB(G, list global_polys, link out) {
     int idx;
     for (i = 1; i < size(G); i++) {
       idx = listLookUp(global_polys, G[i]);
-      fprintf(out, "f_%s = %s", string(idx), G[i]);
+      fprintf(out, "f_%s = %s,", string(idx), G[i]);
     }
     idx = listLookUp(global_polys, G[size(G)]);
-    fprintf(out, "f_%s = %s." + newline, string(idx), G[size(G)]);
+    fprintf(out, "f_%s = %s;" + newline, string(idx), G[size(G)]);
   }
   fprintf(out, "]."+newline);
 }
@@ -1960,10 +1960,10 @@ proc showRGB(ideal G, list global_polys, link out) {
     int idx;
     for (i = 1; i < size(G); i++) {
       idx = listLookUp(global_polys, G[i]);
-      fprintf(out, "f_%s = %s", string(idx), G[i]);
+      fprintf(out, "f_%s = %s,", string(idx), G[i]);
     }
     idx = listLookUp(global_polys, G[size(G)]);
-    fprintf(out, "f_%s = %s." + newline, string(idx), G[size(G)]);
+    fprintf(out, "f_%s = %s;" + newline, string(idx), G[size(G)]);
   }
   fprintf(out, "]."+newline);
 }
@@ -2194,6 +2194,7 @@ proc makeMCGBReduced(list M, list Modcgs) {
   def BR = basering;
   setring @RP;
   def M = imap(BR, M);
+  M = sortSetDesc(M);
   def Modcgs = imap(BR, Modcgs);
 
   list M_res = M;

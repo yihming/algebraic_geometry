@@ -1013,7 +1013,7 @@ proc StringCGB(cgb, list global_polys)
     Str = Str + "f_" + string(idx) + " = " + string(cgb[i]) + "," + newline;
   }
   idx = listLookUp(global_polys, cgb[size(cgb)]);
-  Str = Str + "f_" + string(idx) + " = " + string(cgb[size(cgb)]) + "." + newline + newline;
+  Str = Str + "f_" + string(idx) + " = " + string(cgb[size(cgb)]) + ";" + newline + newline;
   
   return(Str);
 }

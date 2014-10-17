@@ -310,7 +310,7 @@ proc purifyCGB(ideal G) {
     return (G);
   }
 
-  G = sortIdealAsce(G);
+  G = sortSetAsce(G);
   
   def BR = basering;
   setring @RP;
@@ -1098,7 +1098,7 @@ proc mcgbMain(ideal E, list N, ideal F) {
   // Switch to @RP.
   setring(@RP);
   def G = imap(@R, G);
-  G = sortPolyDesc(G);
+  G = sortSetDesc(G);
 
   def CGB = G;
   exportto(Top, CGB);
@@ -1417,8 +1417,11 @@ M1 and M2 are sorted in ascending order.
 
 }
 
-proc sortPolyDesc(ideal I) {
-  // Basering is @RP.
+proc sortSetDesc(I) {
+  if (typeof(I) != "ideal" && typeof(I) != "list") {
+    ERROR("sortSetDesc: I must be either an ideal or a list!");
+  }
+
   if (size(I) <= 1) {
     return (I);
   }
@@ -1445,47 +1448,12 @@ proc sortPolyDesc(ideal I) {
   return (I);
 }
 
-// Must be replaced by sortSetAsce.
-proc sortIdealAsce(ideal I) {
+proc sortSetAsce(L) {
   // Basering is @R.
-  def BR = basering;
-  setring @RP;
-  def I = imap(@R, I);
-  
-  if (size(I) <= 1) {
-    setring BR;
-    return (I);
+  if (typeof(L) != "ideal" && typeof(L) != "list") {
+    ERROR("sortSetAsce: L must be either an ideal or a list!");
   }
 
-  // Bubble sort.
-  int i;
-  int swapped = 1;
-  int n = size(I);
-  poly tmp;
-  
-  while (swapped == 1) {
-    swapped = 0;
-    for (i = 1; i <= n-1; i++) {
-      if (!lesspoly(I[i], I[i+1])) {
-	tmp = I[i];
-	I[i] = I[i+1];
-	I[i+1] = tmp;
-	swapped = 1;
-      }
-    }
-
-    n = n - 1;
-  }
-
-  setring BR;
-  def I_res = imap(@RP, I);
-
-  return (I_res);
-}
-
-// Must be replaced by sortSetAsce.
-proc sortListAsce(list L) {
-  // Basering is @R.
   def BR = basering;
   setring @RP;
   def L = imap(@R, L);
@@ -1521,11 +1489,20 @@ proc sortListAsce(list L) {
   return (L_res);
 }
 
-proc sortMCGBs(list MCGBs) {
+proc sortMCGBs(list MCGBs, list M_norms) {
   // Basering is @R.
+  if (size(MCGBs) != size(M_norms)) {
+    ERROR("sortMCGBs: sizes of MCGBs and M_norms must be equal!");
+  }
+
+  if (size(M_norms) <= 1) {
+    return (MCGBs, M_norms);
+  }
+  
   def BR = basering;
   setring @RP;
   def MCGBs = imap(@R, MCGBs);
+  def M_norms = imap(@R, M_norms);
 
   if (size(MCGBs) <= 1) {
     setring BR;
@@ -1535,27 +1512,55 @@ proc sortMCGBs(list MCGBs) {
   // Bubble sort.
   int i;
   int swapped = 1;
-  int n = size(MCGBs);
+  int n = size(M_norms);
   list M_tmp;
 
   while (swapped == 1) {
     swapped = 0;
     for (i = 1; i <= n - 1; i++) {
-      if (!lessSet(MCGBs[i], MCGBs[i+1])) {
-	M_tmp = MCGBs[i];
-	MCGBs[i] = MCGBs[i+1];
-	MCGBs[i+1] = M_tmp;
-	swapped = 1;
+      int cmp_res = lessSet(M_norms[i], M_norms[i+1]);
+      if (!cmp_res) {
+	if (cmp_res == 2) {
+	  // M_norms[i] == M_norms[i+1].
+	  if (lessSet(MCGBs[i], MCGBs[i+1]) == 1) {
+	    // MCGBs[i] > MCGBs[i+1].
+	    (MCGBs[i], MCGBs[i+1]) = swapSets(MCGBs[i], MCGBs[i+1]);
+	    (M_norms[i], M_norms[i+1]) = swapSets(M_norms[i], M_norms[i+1]);
+	    swapped = 1;
+	  }
+	} else {
+	  // M_norms[i] > M_norms[i+1].
+	  (MCGBs[i], MCGBs[i+1]) = swapSets(MCGBs[i], MCGBs[i+1]);
+	  (M_norms[i], M_norms[i+1]) = swapSets(M_norms[i], M_norms[i+1]);
+	  swapped = 1;
+	}
       }
-    }
+    } // End for.
 
     n = n - 1;
   }
 
   setring BR;
   def MCGBs_res = imap(@RP, MCGBs);
+  def M_norms_res = imap(@RP, M_norms);
   
-  return (MCGBs_res);
+  return (MCGBs_res, M_norms_res);
+}
+
+proc swapSets(L1, L2) {
+  if (typeof(L1) != "ideal" && typeof(L1) != "list") {
+    ERROR("swapSets: L1 must be either an ideal or a list!");
+  }
+
+  if (typeof(L2) != "ideal" && typeof(L2) != "list") {
+    ERROR("swapSets: L2 must be either an ideal or a list!");
+  }
+
+  if (typeof(L1) != typeof(L2)) {
+    ERROR("swapSets: L1 and L2 must have the same type!");
+  }
+
+  return (L2, L1);
 }
 
 proc idealExcludePoly(ideal M, poly f) {
@@ -1802,7 +1807,7 @@ proc ccgbMain(ideal E, list N, ideal F) {
   // Switch to @RP.
   setring @RP;
   def G = imap(@R, G);
-  G = sortPolyDesc(G);
+  G = sortSetDesc(G);
   def CGB = G;
   exportto(Top, CGB);
   def modcgs = imap(@R, modcgs);
@@ -1909,7 +1914,7 @@ proc showMCGB(list M, list global_polys, link out) {
     int idx;
     for (i = 1; i < size(M); i++) {
       idx = listLookUp(global_polys, M[i]);
-      if (idx == -1) {show(M[i]);ERROR("weird");}
+      if (idx == -1) {show(M[i]);ERROR("This polynomial is not numbered!");}
       fprintf(out, "f_%s = %s,", string(idx), M[i]);
     }
     if (idx == -1) {show(M[i]);ERROR("weird");}
@@ -1925,7 +1930,7 @@ proc showCCGB(G, list global_polys, link out) {
     ERROR("showCCGB: G is not an ideal or a list!");
   }
 
-  G = sortIdealAsce(G);
+  G = sortSetAsce(G);
 
   int i;
   fprintf(out, "C = [" + newline);
@@ -1945,7 +1950,7 @@ proc showCCGB(G, list global_polys, link out) {
 
 proc showRGB(ideal G, list global_polys, link out) {
   // basering is @R.
-  G = sortIdealAsce(G);
+  G = sortSetAsce(G);
   
   int i;
   fprintf(out, "RGB = [" + newline);
@@ -2179,37 +2184,35 @@ proc buildCGS(list MCGB) {
   return (CGS);
 }
 
-/*
-proc makeReduced(list M, list CGS, out) {
-  // Basering is @R.
+proc makeMCGBReduced(list M, list Modcgs) {
+  // basering is @R.
   if (size(M) <= 1) {
-    return (listToIdeal(M), CGS);
+    return (M);
   }
-  
+
+  // Switch to @RP.
   def BR = basering;
   setring @RP;
-  
-  def M = imap(@R, M);
-  def CGS = imap(@R, CGS);
-  def G = listToIdeal(M);
-  def CGB = G;
-  exportto(Top, CGB);
-  list CGS_red = makeRRep(CGS);
-  
+  def M = imap(BR, M);
+  def Modcgs = imap(BR, Modcgs);
+
+  list M_res = M;
   int i, j;
-  for (i = 1; i <= size(G); i++) {
-    poly cur_g = G[i];
+
+  for (i = 1; i <= size(M); i++) {
+    poly cur_g = M[i];
     if (defined(debug_mode) && debug_mode == 1) {
       fprintf(out, "Now check g_%s = %s:", string(i), cur_g);
     }
+
     int is_essential;
     list BL;
-    list CGS_new;
-    
+    list modcgs_new;
+
     ideal MRem_ideal;
-    for (j = 1; j <= size(M); j++) {
-      if (M[j] != cur_g) {
-	MRem_ideal = MRem_ideal + M[j];
+    for (j = 1; j <= size(M_res); j++) {
+      if (M_res[j] != cur_g) {
+	MRem_ideal = MRem_ideal + M_res[j];
       }
     }
 
@@ -2217,39 +2220,34 @@ proc makeReduced(list M, list CGS, out) {
     g_red = monic(g_red);
 
     if (g_red == 0 || g_red == cur_g) {
-      (is_essential, BL) = checkEssential(cur_g, M, CGS_red);
+      (is_essential, BL) = checkEssential(cur_g, M_res, Modcgs);
       if (!is_essential) {
-	CGS_red = updateCGS(CGS_red, cur_g, BL);
-	M = deletePolyFromList(M, cur_g);
+	Modcgs = updateCGS(Modcgs, cur_g, BL);
+	M_res = deletePolyFromList(M_res, cur_g);
       }
     } else {
       int success;
-      (success, CGS_new) = trySubstitute(cur_g, g_red, M, CGS_red);
+      (success, modcgs_new) = trySubstitute(cur_g, g_red, M_res, Modcgs);
 
       if (success == -1) {
 	// cur_g is already non-essential.
-	CGS_red = CGS_new;
-	M = deletePolyFromList(M, cur_g);
+	Modcgs = modcgs_new;
+	M_res = deletePolyFromList(M_res, cur_g);
       } else {
 	if (success == 1) {
-	  // cur_g is essential
+	  // cur_g is essential,
 	  // and when replaced by g_red, M is still a CGB.
-	  CGS_red = CGS_new;
-	  M = substPolyInList(M, cur_g, g_red);
+	  Modcgs = modcgs_new;
+	  M_res = substPolyInList(M_res, cur_g, g_red);
 	}
-	// Otherwise, cur_g is kept in M.
+	// Otherwise, cur_g is kept in M_res.
       }
     }
-  } // End of for.
+  } // End for.
 
-  ideal M_ideal;
-  M_ideal = listToIdeal(M);
-
-  // Switch back to @R.
+  // Switch back to basering.
   setring BR;
-  def M_simpl = imap(@RP, M_ideal);
-  def CGSRed = imap(@RP, CGS_red);
-
-  return (M_simpl, CGSRed);
+  def M_res = imap(@RP, M_res);
+  
+  return (M_res);
 }
-*/

@@ -1449,17 +1449,22 @@ proc sortSetDesc(I) {
 }
 
 proc sortSetAsce(L) {
-  // Basering is @R.
   if (typeof(L) != "ideal" && typeof(L) != "list") {
     ERROR("sortSetAsce: L must be either an ideal or a list!");
   }
 
-  def BR = basering;
-  setring @RP;
-  def L = imap(@R, L);
+  int flag = 0;
+  if (nameof(basering) != "@RP") {
+    def BR = basering;
+    setring @RP;
+    def L = imap(BR, L);
+    flag = 1;
+  }
   
   if (size(L) <= 1) {
-    setring BR;
+    if (flag) {
+      setring BR;
+    }
     return (L);
   }
 
@@ -1483,10 +1488,13 @@ proc sortSetAsce(L) {
     n = n - 1;
   }
 
-  setring BR;
-  def L_res = imap(@RP, L);
-
-  return (L_res);
+  if (flag) {
+    setring BR;
+    def L_res = imap(@RP, L);
+    return (L_res);
+  } else {
+    return (L);
+  }
 }
 
 proc sortMCGBs(list MCGBs, list M_norms) {

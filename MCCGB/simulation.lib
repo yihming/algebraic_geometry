@@ -1,5 +1,6 @@
 LIB "mcgb.lib";
 LIB "mcgbcheck.lib";
+LIB "buchtrace.lib";
 
 proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode, intvec sim_option) {
   def BR = basering;

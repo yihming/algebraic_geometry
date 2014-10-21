@@ -43,20 +43,34 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   exportto(Top, G_beginning);
   exportto(Top, Modcgs);
 
+  // Generate RGB.
+  ideal RGB = getRGB(F);
+
   // Generate MCGBs.
   int sim_cnt = 1;
   list M_list;
   list M_norm_list;
+  list M_split_list;
+  list M_split_norm_list;
 
   while (sim_cnt <= sim_times) {
-    list M, M_norm, Modcgs_new;
+    list M, M_norm, M_split, M_split_norm, Modcgs_new;
     (M, Modcgs_new) = mcgbRandMain(E, N, F);
     if (size(M_list) == 0 || !listContainsList(M_list, M)) {
       M = sortSetAsce(M);
       M_list = insert(M_list, M, size(M_list));
-      M_norm = makeMCGBReduced(M, Modcgs_new);
+      /*
+      M_norm = makeCGBReduced(M, Modcgs_new);
       M_norm = sortSetAsce(M_norm);
       M_norm_list = insert(M_norm_list, M_norm, size(M_norm_list));
+      */
+      M_split = splitCGB(M, RGB, splitCriterion);
+      M_split_list = insert(M_split_list, M_split, size(M_split_list));
+
+      list Modcgs_split = buildCGS(M_split);
+      M_split_norm = makeCGBReduced(M_split, Modcgs_split);
+      M_split_norm = sortSetAsce(M_split_norm);
+      M_split_norm_list = insert(M_split_norm_list, M_split_norm, size(M_split_norm_list));
     }
     sim_cnt = sim_cnt + 1;
   }
@@ -65,9 +79,6 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   ideal CCGB;
   list CGS_ccgb;
   (CCGB, CGS_ccgb) = ccgbMain(E, N, F);
-
-  // Generate RGB.
-  ideal RGB = getRGB(F);
 
   // Sort polynomials in KSWCGB, RGB, MCGBs, and CCGB w.r.t. the ordering.
   list all_polys = idealToList(CCGB);
@@ -156,7 +167,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
 
   // Print MCGBs.
   if (size(M_list) > 1) {
-    (M_list, M_norm_list) = sortMCGBs(M_list, M_norm_list);
+    (M_list, M_split_list) = sortMCGBs(M_list, M_split_list);
   }
 
   if (size(M_list) > 0) {
@@ -167,10 +178,25 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
       fprintf(out, "Size is: %s." + newline, string(size(M_list[i])));
       check_validity(M_list[i], Modcgs);
       
+      /*
       fprintf(out, newline + "Normal form of M_%s :", string(i));
       showMCGB(M_norm_list[i], all_polys, out);
       fprintf(out, "Size is: %s." + newline, string(size(M_norm_list[i])));
       check_validity(M_norm_list[i], Modcgs);
+      */
+
+      fprintf(out, newline + "Split form of M_%s :", string(i));
+      showMCGB(M_split_list[i], all_polys, out);
+      fprintf(out, "Size is : %s." + newline, string(size(M_split_list[i])));
+      int valid = check_validity(M_split_list[i], Modcgs);
+      printf(">>%s<<", string(valid));
+      
+      fprintf(out, newline + "Normal form of Split form of M_%s :", string(i));
+      showMCGB(M_split_norm_list[i], all_polys, out);
+      fprintf(out, "Size is : %s." + newline, string(size(M_split_norm_list[i])));
+      valid = check_validity(M_split_norm_list[i], Modcgs);
+      printf("<<%s>>", string(valid));
+      
     }
   }
 

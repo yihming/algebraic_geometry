@@ -40,22 +40,36 @@ proc traceReduction(poly f, ideal RGB) {
 
 }
 
+
 proc getCriticalIdeal(poly f, ideal G) {
   // Basering is @RP.
   list quos;
   poly rem;
-  
+
   (quos, rem) = traceReduction(f, G);
   
-  if (rem !=0) {
+  if (rem != 0) {
+    return (ideal());
+  }
+
+  list L_poly, L_quo;
+  int i;
+  for (i = 1; i <= size(quos); i++) {
+    if (quos[i] != 0) {
+      L_poly = insert(L_poly, G[i], size(L_poly));
+      L_quo = insert(L_quo, quos[i], size(L_quo));
+    }
+  }
+
+  if (size(L_poly) == 1 && L_quo[1] == 1) {
     return (ideal());
   }
 
   ideal I_res;
   int i;
   poly gen_poly;
-  for (i = 1; i <= size(G); i++) {
-    gen_poly = quos[i] * leadcoef_U(G[i]);
+  for (i = 1; i <= size(L_poly); i++) {
+    gen_poly = L_quo[i] * leadcoef_U(L_poly[i]);
     I_res = I_res + gen_poly;
   }
 

@@ -1010,10 +1010,10 @@ proc StringCGB(cgb, list global_polys)
   for (i = 1; i < size(cgb); i++)
   {
     idx = listLookUp(global_polys, cgb[i]);
-    Str = Str + "f_" + string(idx) + " = " + string(cgb[i]) + "," + newline;
+    Str = Str + "/* f_" + string(idx) + " = */ " + string(cgb[i]) + "," + newline;
   }
   idx = listLookUp(global_polys, cgb[size(cgb)]);
-  Str = Str + "f_" + string(idx) + " = " + string(cgb[size(cgb)]) + ";" + newline + newline;
+  Str = Str + "/* f_" + string(idx) + " = */ " + string(cgb[size(cgb)]) + ";" + newline + newline;
   
   return(Str);
 }

@@ -1,9 +1,11 @@
-IB "poly.lib";
+LIB "poly.lib";
 LIB "primdec.lib";
 LIB "qhmoduli.lib";
 LIB "teachstd.lib";
 
 LIB "cgb_mod.lib";
+LIB "buchtrace.lib";
+
 proc set_global_rings_mcgb() {
   // Basering is K[U][X].
 
@@ -1340,6 +1342,7 @@ proc monic(poly f) {
 }
 
 proc lesscoef(poly coef_f, coef_g) {
+  // basering is @RP.
   if (coef_f == 0 && coef_g == 0) {
     return (2);
   }
@@ -1923,11 +1926,11 @@ proc showMCGB(list M, list global_polys, link out) {
     for (i = 1; i < size(M); i++) {
       idx = listLookUp(global_polys, M[i]);
       if (idx == -1) {show(M[i]);ERROR("This polynomial is not numbered!");}
-      fprintf(out, "f_%s = %s,", string(idx), M[i]);
+      fprintf(out, "/* f_%s = */ %s,", string(idx), M[i]);
     }
     if (idx == -1) {show(M[i]);ERROR("weird");}
     idx = listLookUp(global_polys, M[size(M)]);
-    fprintf(out, "f_%s = %s;" + newline, string(idx), M[size(M)]);
+    fprintf(out, "/* f_%s = */ %s;" + newline, string(idx), M[size(M)]);
   }
   fprintf(out, "]."+newline);
 }
@@ -1948,10 +1951,10 @@ proc showCCGB(G, list global_polys, link out) {
     int idx;
     for (i = 1; i < size(G); i++) {
       idx = listLookUp(global_polys, G[i]);
-      fprintf(out, "f_%s = %s,", string(idx), G[i]);
+      fprintf(out, "/* f_%s = */ %s,", string(idx), G[i]);
     }
     idx = listLookUp(global_polys, G[size(G)]);
-    fprintf(out, "f_%s = %s;" + newline, string(idx), G[size(G)]);
+    fprintf(out, "/* f_%s = */ %s;" + newline, string(idx), G[size(G)]);
   }
   fprintf(out, "]."+newline);
 }
@@ -1968,10 +1971,10 @@ proc showRGB(ideal G, list global_polys, link out) {
     int idx;
     for (i = 1; i < size(G); i++) {
       idx = listLookUp(global_polys, G[i]);
-      fprintf(out, "f_%s = %s,", string(idx), G[i]);
+      fprintf(out, "/* f_%s = */ %s,", string(idx), G[i]);
     }
     idx = listLookUp(global_polys, G[size(G)]);
-    fprintf(out, "f_%s = %s;" + newline, string(idx), G[size(G)]);
+    fprintf(out, "/* f_%s = */ %s;" + newline, string(idx), G[size(G)]);
   }
   fprintf(out, "]."+newline);
 }
@@ -2192,7 +2195,7 @@ proc buildCGS(list MCGB) {
   return (CGS);
 }
 
-proc makeMCGBReduced(list M, list Modcgs) {
+proc makeCGBReduced(list M, list Modcgs) {
   // basering is @R.
   if (size(M) <= 1) {
     return (M);
@@ -2258,5 +2261,107 @@ proc makeMCGBReduced(list M, list Modcgs) {
   setring BR;
   def M_res = imap(@RP, M_res);
   
+  return (M_res);
+}
+
+proc getSplitPolys(poly f, ideal RGB) {
+  // Basering is @R.
+  int flag = 0;
+  if (nameof(basering) != "@RP") {
+    def BR = basering;
+    setring @RP;
+    def f = imap(BR, f);
+    def RGB = imap(BR, RGB);
+    flag = 1;
+  }
+
+  list quos;
+  poly rem;
+  (quos, rem) = traceReduction(f, RGB);
+  int i;
+  list L_poly, L_quo;
+
+  for (i = 1; i <= size(quos); i++) {
+    if (quos[i] != 0) {
+      L_poly = insert(L_poly, RGB[i], size(L_poly));
+      L_quo = insert(L_quo, quos[i], size(L_quo));
+    }
+  }
+
+  if (size(L_poly) == 1 && L_quo[1] == 1) {
+    L_poly = list();
+    L_quo = list();
+  }
+
+  if (flag) {
+    setring BR;
+    def L_poly = imap(@RP, L_poly);
+    def L_quo = imap(@RP, L_quo);
+  }
+
+  return (L_poly, L_quo);
+}
+
+proc splitCriterion(poly f, list L_poly, ideal I) {
+  // Basering is @RP.
+  if (size(L_poly) > 0) {
+    ideal I_rad = radical(I);
+    if (I_rad[1] == 1) {
+      return (1);
+    } else {
+      if (simplifyPoly(f, I_rad) == 0) {
+	return (1);
+      }
+    }
+
+  }
+
+  return (0);
+}
+
+proc splitCGB(list M, ideal RGB, proc func) {
+  // Basering is @R.
+  if (size(M) == 0) {
+    return (M);
+  }
+
+  M = sortSetDesc(M);
+  RGB = sortSetAsce(RGB);
+  def BR = basering;
+
+  setring @RP;
+  def M = imap(BR, M);
+  def RGB = imap(BR, RGB);
+
+  int cnt, i;
+  int flag;
+  list L_poly, L_quo;
+  ideal I;
+  
+  cnt = 1;
+  while (cnt <= size(M)) {
+    flag = 0;
+    (L_poly, L_quo) = getSplitPolys(M[cnt], RGB);
+    I = getCriticalIdeal(M[cnt], RGB);
+
+    if (size(L_poly) > 0 && func(M[cnt], L_poly, I)) {
+      M = delete(M, cnt);
+      for (i = 1; i <= size(L_poly); i++) {
+	if (!listContains(M, L_poly[i])) {
+	  M = insert(M, L_poly[i], size(M));
+	}
+      }
+      flag = 1;
+    }
+    
+    if (!flag) {
+      cnt = cnt + 1;
+    }
+
+  }
+  M = sortSetAsce(M);
+
+  setring BR;
+  def M_res = imap(@RP, M);
   return (M_res);
 }

@@ -1,6 +1,7 @@
 LIB "mcgb.lib";
 
 proc traceReduction(poly f, ideal RGB) {
+  // basering is @RP.
   if (size(RGB) == 0) {
     return (list(), 0);
   }

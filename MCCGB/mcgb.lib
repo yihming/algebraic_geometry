@@ -2239,6 +2239,9 @@ proc makeCGBReduced(list M, list Modcgs) {
       }
     } else {
       int success;
+      print(cur_g);
+      print(g_red);
+      print("--------------" + newline);
       (success, modcgs_new) = trySubstitute(cur_g, g_red, M_res, Modcgs);
 
       if (success == -1) {
@@ -2303,7 +2306,10 @@ proc getSplitPolys(poly f, ideal RGB) {
 }
 
 proc splitCriterion(poly f, list L_poly, ideal I) {
-  // Basering is @RP.
+  if (nameof(basering) != "@RP") {
+    ERROR("splitCriterion: The operation must be performed in Ring @RP!");
+  }
+
   if (size(L_poly) > 0) {
     ideal I_rad = radical(I);
     if (I_rad[1] == 1) {
@@ -2325,13 +2331,17 @@ proc splitCGB(list M, ideal RGB, proc func) {
     return (M);
   }
 
+  int ring_flag = 0;
+  if (nameof(basering) != "@RP") {
+    def BR = basering;
+    setring @RP;
+    def M = imap(BR, M);
+    def RGB = imap(BR, RGB);
+    ring_flag = 1;
+  }
+
   M = sortSetDesc(M);
   RGB = sortSetAsce(RGB);
-  def BR = basering;
-
-  setring @RP;
-  def M = imap(BR, M);
-  def RGB = imap(BR, RGB);
 
   int cnt, i;
   int flag;
@@ -2361,7 +2371,12 @@ proc splitCGB(list M, ideal RGB, proc func) {
   }
   M = sortSetAsce(M);
 
-  setring BR;
-  def M_res = imap(@RP, M);
-  return (M_res);
+  if (ring_flag) {
+    setring BR;
+    def M_res = imap(@RP, M);
+    return (M_res);
+  } else {
+    return (M);
+  }
+
 }

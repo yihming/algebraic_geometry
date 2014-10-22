@@ -59,11 +59,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
     if (size(M_list) == 0 || !listContainsList(M_list, M)) {
       M = sortSetAsce(M);
       M_list = insert(M_list, M, size(M_list));
-      /*
-      M_norm = makeCGBReduced(M, Modcgs_new);
-      M_norm = sortSetAsce(M_norm);
-      M_norm_list = insert(M_norm_list, M_norm, size(M_norm_list));
-      */
+
       M_split = splitCGB(M, RGB, splitCriterion);
       M_split_list = insert(M_split_list, M_split, size(M_split_list));
 

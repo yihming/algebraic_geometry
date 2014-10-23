@@ -1642,7 +1642,6 @@ proc getEssentialOnlyInBranchByHC(poly f, poly pp_f, list higher_coefs, poly g, 
   if (size(higher_coefs) == 0) {
     // g covers f in (E, N).
     G_branch = deletePolyFromG(G_branch, f);
-    // Issue: the function below must make the non-zero part monic.
     G_branch = insertPolyIntoG(G_branch, g, E, N);
     BL = insert(BL, list(E, N, G_branch), size(BL));
 
@@ -2154,8 +2153,10 @@ proc buildCGS_rec(ideal E, list N, list G_tuple, list CGS) {
 
   list N_branch = updateNonNullList(N, LC_factors);
 
-  // Add new branch.
-  CGS = insert(CGS, list(E, N_branch, mdbasis), size(CGS));
+  // Add new branch if consistent.
+  if (Check_Consistence_CGB(E, N_branch)) {
+    CGS = insert(CGS, list(E, N_branch, mdbasis), size(CGS));
+  }
   
   list N_lc = N;
   for (i = 1; i <= size(LC_factors); i++) {
@@ -2239,9 +2240,6 @@ proc makeCGBReduced(list M, list Modcgs) {
       }
     } else {
       int success;
-      print(cur_g);
-      print(g_red);
-      print("--------------" + newline);
       (success, modcgs_new) = trySubstitute(cur_g, g_red, M_res, Modcgs);
 
       if (success == -1) {

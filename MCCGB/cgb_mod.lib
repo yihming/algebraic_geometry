@@ -230,7 +230,6 @@ proc Check_Consistence_CGB(ideal Equ, list DisEqu)
   // Basering is K[A, X, U].
   Checks[1] = Checks[1] + 1;
 
-
   //trivial checks
   if (!size(Equ))
   {
@@ -261,6 +260,7 @@ proc Check_Consistence_CGB(ideal Equ, list DisEqu)
     if (DE == 0)
     {
       Checks[2] = Checks[2] + 1;
+
       return(0);
     }
   }
@@ -302,6 +302,7 @@ proc Check_Consistence_CGB(ideal Equ, list DisEqu)
       if (tempGB[1] != 1)
       {
         Checks[4] = Checks[4] + 1;
+
 	return(1);
       }
     }

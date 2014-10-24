@@ -189,7 +189,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
       fprintf(out, newline + "Normal form of Split form of M_%s :", string(i));
       showMCGB(M_split_norm_list[i], all_polys, out);
       fprintf(out, "Size is : %s." + newline, string(size(M_split_norm_list[i])));
-      valid = check_validity(M_split_norm_list[i], Modcgs);
+      int valid = check_validity(M_split_norm_list[i], Modcgs);
       printf("<<%s>>", string(valid));
       
     }

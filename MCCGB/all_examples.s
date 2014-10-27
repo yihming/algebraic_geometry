@@ -623,13 +623,13 @@ list nonnull_list = list()	;
 simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 print("=========== test_xyz finished ==============" + newline) ;
 
-// test_zyx.s:
-print("=========== test_zyx starts ==============") ;
+// test_yxz.s:
+print("=========== test_yxz starts ==============") ;
 	// lex order.
 print("------ lex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
 ring R = (0, u, v), (y, x, z), lp;
-out = "test_zyx_lex.mp"		     ;
+out = "test_yxz_lex.mp"		     ;
 ideal polys = (u-v)*x + vx + (u+v)*z,
 	(u+v)*y + (-u+v)*x + (-v)*z;
 ideal null_ideal = 0		;
@@ -643,7 +643,7 @@ ideal polys = (u-v)*x + vx + (u+v)*z,
 	(u+v)*y + (-u+v)*x + (-v)*z;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-out = "test_zyx_grlex.mp"		     ;
+out = "test_yxz_grlex.mp"		     ;
 simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// glex order.
 print("------ glex ---------")	;
@@ -653,9 +653,9 @@ ideal polys = (u-v)*x + vx + (u+v)*z,
 	(u+v)*y + (-u+v)*x + (-v)*z;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-out = "test_zyx_gradelex.mp"		     ;
+out = "test_yxz_gradelex.mp"		     ;
 simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
-print("=========== test_zyx finished ==============" + newline) ;
+print("=========== test_yxz finished ==============" + newline) ;
 
 // weispfenning_1.s:
 print("=========== weispfenning_1 starts ==============") ;
@@ -812,6 +812,39 @@ list nonnull_list = list()	;
 simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 print("=========== quadratic finished ==============" + newline) ;
 
+// ctd.s:
+print("=========== ctd starts ==============") ;
+	// lex order.
+print("---------- lex ------------")  ;
+kill R, @R, @RP, @P, @RUA, @U, @AXU;
+ring R = (0, u, v), (x, y), lp;
+out = "ctd_lex.mp";
+ideal polys = vxy + ux2 + x, uy2 + x2;	
+ideal null_ideal = 0		     ;
+list nonnull_list = list()	     ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+
+	// gradelex order.
+print("----------- gradelex -------------") ;
+kill R, @R, @RP, @P, @RUA, @U, @AXU;
+ring R = (0, u, v), (x, y), Dp;
+out = "ctd_gradelex.mp";
+ideal polys = vxy + ux2 + x, uy2 + x2;	
+ideal null_ideal = 0		     ;
+list nonnull_list = list()	     ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+
+// grlex order.
+print("----------- grlex -------------") ;
+kill R, @R, @RP, @P, @RUA, @U, @AXU;
+ring R = (0, u, v), (x, y), dp;
+out = "ctd_grlex.mp";
+ideal polys = vxy + ux2 + x, uy2 + x2;	
+ideal null_ideal = 0		     ;
+list nonnull_list = list()	     ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;	
+print("=========== ctd ends ==============") ;
+	
 // wibmer_11.s:
 print("=========== wibmer_11 starts ==============") ;
 	// lex order.

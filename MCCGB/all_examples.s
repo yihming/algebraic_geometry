@@ -875,3 +875,14 @@ ideal null_ideal = 0		;
 list nonnull_list = list()	;
 simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 print("=========== wibmer_11 finished ==============" + newline) ;
+
+print("=========== miller-sturmfels starts ==============") ;
+kill R, @R, @RP, @P, @RUA, @U, @AXU;
+ring R = (0, g11, g12, g21, g22), (x1, x2), lp ;
+out = "miller-sturmfels_lex.mp";
+ideal polys = g11^2*x1^2 + 2*g11*g12*x1*x2 + g12^2*x2^2,
+	g21^2*x1^2 + 2 * g21*g22*x1*x2 + g22^2*x2^2 ;	
+ideal null_ideal = 0		;
+list nonnull_list = list()	;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+print("=========== miller-sturmfels finished ==============" + newline) ;

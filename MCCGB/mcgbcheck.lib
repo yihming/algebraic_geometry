@@ -197,3 +197,188 @@ proc check_faithful(poly f, ideal I) {
 
 }
 
+/*
+The part of checking if a finite set of polynomilas is a CGB.
+ */
+
+proc termDivisible(poly p1, poly p2) {
+  if (p2 / p1 == 0) {
+    return (0);
+  }
+
+  return (1);
+}
+
+proc quotientDivision(poly f, ideal I) {
+  int ring_flag = 0;
+  if (nameof(basering) != "@R") {
+    def BR = basering;
+    setring @R;
+    def f = imap(BR, f);
+    def I = imap(BR, I);
+    ring_flag = 1;
+  }
+
+  if (size(I) == 0) {
+    if (ring_flag) {
+      setring BR;
+    }
+    return (0, list(), 0);
+  }
+
+  list quots;
+  int i, j;
+  
+  for (i = 1; i <= size(I); i++) {
+    quots = insert(quots, 0, size(quots));
+  }
+  poly rem = f;
+  poly cur_quo;
+  poly coeff_rem = 1;
+  int reduced = 0;
+
+  while (rem > 0) {
+    reduced = 0;
+    for (i = 1; i <= size(I); i++) {
+      if (termDivisible(leadmonom(I[i]), leadmonom(rem))) {
+	rem = rem * leadcoef(I[i]);
+	coeff_rem = coeff_rem * leadcoef(I[i]);
+	cur_quo = lead(rem) / lead(I[i]);
+	rem = rem - cur_quo * I[i];
+
+	// update quots.
+	for (j = 1; j <= size(I); j++) {
+	  quots[j] = quots[j] * leadcoef(I[i]);
+	}
+	quots[i] = quots[i] + cur_quo;
+	reduced = 1;
+	break;
+      }
+
+    }
+
+    if (!reduced) {
+      break;
+    }
+    
+  }
+
+  if (ring_flag) {
+    setring BR;
+    def coeff_rem = imap(@R, coeff_rem);
+    def quots = imap(@R, quots);
+    def rem = imap(@R, rem);
+  }
+
+  return (coeff_rem, quots, rem);
+}
+
+static proc getSPoly(poly f, poly g) {
+  int ring_flag = 0;
+  if (nameof(basering) != "@RP") {
+    def BR = basering;
+    setring @RP;
+    def f = imap(BR, f);
+    def g = imap(BR, g);
+    ring_flag = 1;
+  }
+
+  poly h;
+  // Yiming: need to be finished.
+  
+  if (ring_flag) {
+    setring BR;
+    def h = imap(@RP, h);
+  }
+
+  return (h);
+}
+
+static proc checkPairRec(poly f, poly g, ideal G, ideal E, list N) {
+  if (!Check_Consistence_CGB(E, N)) {
+    return (1);
+  }
+
+  list L;
+  int i;
+  for (i = 1; i <= size(G); i++) {
+    poly p_nz, p_z;
+    (p_nz, p_z) = simplifyPoly(G[i], E);
+    if (p_nz != 0) {
+      L = insert(L, p_nz, size(L));
+    }
+  }
+
+  ideal G_nz = listToIdeal(L);
+
+  // Reduce S-Poly(f, g) in (E, N).
+  poly h = getSPoly(f, g);
+  poly m, rem;
+  list quots;
+  (m, quots, rem) = quotientDivision(h, G_nz);
+  if (rem != 0) {
+    if (!checkRemNull(rem, E, N)) {
+      return (0);
+    }
+  }
+  ideal N_comp = insert(N, m, size(N));
+  ideal N_comp_factors = getFactorIdeal(N_comp);
+
+  if (size(N_comp_factors) == 1) {
+    E = paramIdealInsert(E, N_comp_factors[1]);
+    return (checkPairRec(f, g, G, E, N));
+  } else {
+    poly factor_used = 1;
+    for (i = 1; i <= size(N_comp_factors); i++) {
+      ideal E_next = paramIdealInsert(E, N_comp_factors[i]);
+      list N_next = insert(N, factor_used, size(N));
+      factor_used = factor_used * N_comp_factors[i];
+      if (!checkPairRec(f, g, G, E_next, N_next)) {
+	return (0);
+      }
+    }
+    return (1);
+  }
+  
+}
+
+static proc checkPair(poly f, poly g, ideal G) {
+  ideal E = 0;
+  list N = 1;
+  if (checkPairRec(f, g, G, E, N)) {
+    return (1);
+  }
+
+  return (0);
+}
+
+proc checkCGBness(ideal G) {
+  if (size(G) <= 1) {
+    return (1);
+  }
+
+  int ring_flag = 0;
+  if (nameof(basering) != "@R") {
+    def BR = basering;
+    setring @R;
+    def G = imap(BR, G);
+    ring_flag = 1;
+  }
+
+  int i, j;
+  for (i = 1; i < size(G); i++) {
+    for (j = i + 1; j <= size(G); j++) {
+      if (!checkPair(G[i], G[j], G)) {
+	if (ring_flag) {
+	  setring BR;
+	}
+        return (0);
+      }
+    }
+  }
+
+  if (ring_flag) {
+    setring BR;
+  }
+  return (1);
+}

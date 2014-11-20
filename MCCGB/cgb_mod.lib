@@ -228,6 +228,43 @@ proc Check_Consistence_CGB(ideal Equ, list DisEqu)
   //show(Equ);
   //printf("N = %s.", DisEqu);
   // Basering is K[A, X, U].
+  if (!defined(Checks)) {
+    list Checks = 0, 0, 0, 0, 0, 0;  
+    export(Checks);
+  }
+
+  if (!defined(VARLIST)) {
+    def BR = basering;
+    setring @R;
+    list VARLIST;
+    int i;
+    for (i = 1; i <= nvars(@R); i++) {
+      VARLIST[i] = var(i);
+    }
+    setring BR;
+    def VARLIST = imap(@R, VARLIST);
+    export(VARLIST);
+  }
+
+  if (!defined(Parameters)) {
+    def BR = basering;
+    setring @U;
+    list Parameters;
+    int i;
+    
+    for (i = 1; i <= nvars(@U); i++) {
+      Parameters[i] = var(i);
+    }
+    setring BR;
+    def Parameters = imap(@U, Parameters);
+    export(Parameters);
+  }
+
+  if (!defined(VMinDPoly)) {
+    poly VMinDPoly = VARLIST[size(VARLIST)];
+    export(VMinDPoly);
+  }
+  
   Checks[1] = Checks[1] + 1;
 
   //trivial checks
@@ -242,7 +279,6 @@ proc Check_Consistence_CGB(ideal Equ, list DisEqu)
     Checks[2] = Checks[2] + 1;
     return(0);
   }
-
 
   if (!size(DisEqu))
   {
@@ -277,16 +313,15 @@ proc Check_Consistence_CGB(ideal Equ, list DisEqu)
   intvec Indvec = indepSet(LM);
 
   list Indvar;
-  for (i = size(Variables) + 3; i <= size(Indvec); i++)
+  for (i = size(VARLIST) + 3; i <= size(Indvec); i++)
   {
     if (Indvec[i] != 0)
     {
-      Indvar = Indvar + list(Parameters[i - size(Variables)-2]);
+      Indvar = Indvar + list(Parameters[i - size(VARLIST)-2]);
     }
   }
 
   ideal tempGB, Spe;
-
 
   if (size(Indvar))
   {
@@ -888,14 +923,14 @@ proc cgb_mod(ideal Polys, ideal Equ, list DisEqu, link out)
   // Set Variable List.
   // Switch to R[U][X].
   setring(BR);
-  list Variables;
+  list VARLIST;
   int i;
   for (i = 1; i <= nvars(BR); i++) {
-    Variables[i] = var(i);
+    VARLIST[i] = var(i);
   }
-  // Switch back to R[A, X, U] and copy Variables.
+  // Switch back to R[A, X, U] and copy VARLIST.
   setring(@AXU);
-  def Variables = imap(BR, Variables);
+  def VARLIST = imap(BR, VARLIST);
 
   // Set Parameter List.
   // Switch to R[U].
@@ -913,10 +948,10 @@ proc cgb_mod(ideal Polys, ideal Equ, list DisEqu, link out)
   Auxiliary[1] = var(1);
   Auxiliary[2] = var(2);
 
-  poly VMinDPoly = Variables[size(Variables)];
+  poly VMinDPoly = VARLIST[size(VARLIST)];
   list Checks = 0, 0, 0, 0, 0, 0;
   list Modcgs;
-  export(Variables, Parameters, Auxiliary, VMinDPoly, Checks, Modcgs);
+  export(VARLIST, Parameters, Auxiliary, VMinDPoly, Checks, Modcgs);
 
   // copy Polys, Equ and DisEqu to R[A, X, U].
   def Polys = imap(BR, Polys);	

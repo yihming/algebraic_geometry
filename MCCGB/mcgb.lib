@@ -315,7 +315,7 @@ proc paramIdealInsert(ideal E, poly f) {
 
   if (ring_flag) {
     setring BR;
-    def E_new = imap(BR, E_new);
+    def E_new = imap(@RP, E_new);
   }
 
   return (E_new);

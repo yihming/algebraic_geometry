@@ -1,3 +1,4 @@
+LIB "grobcov.lib";
 LIB "mcgb.lib";
 
 proc show_list_to_file(list l, link out) {
@@ -209,6 +210,7 @@ proc termDivisible(poly p1, poly p2) {
   return (1);
 }
 
+/*
 proc quotientDivision(poly f, ideal I) {
   int ring_flag = 0;
   if (nameof(basering) != "@R") {
@@ -237,7 +239,7 @@ proc quotientDivision(poly f, ideal I) {
   poly coeff_rem = 1;
   int reduced = 0;
 
-  while (rem > 0) {
+  while (rem != 0) {
     reduced = 0;
     for (i = 1; i <= size(I); i++) {
       if (termDivisible(leadmonom(I[i]), leadmonom(rem))) {
@@ -266,14 +268,45 @@ proc quotientDivision(poly f, ideal I) {
   if (ring_flag) {
     setring BR;
     def coeff_rem = imap(@R, coeff_rem);
-    def quots = imap(@R, quots);
+    if (!defined(quots)) {
+      def quots = imap(@R, quots);
+    }
     def rem = imap(@R, rem);
   }
 
   return (coeff_rem, quots, rem);
 }
+*/
 
-static proc getSPoly(poly f, poly g) {
+proc pseudoDivi(poly f, ideal F) {
+  int ring_flag = 0;
+  if (nameof(basering) != "@R") {
+    def BR = basering;
+    setring @R;
+    def f = imap(BR, f);
+    def F = imap(BR, F);
+    ring_flag = 1;
+  }
+
+  list L = pdivi(f, F);
+
+  if (ring_flag) {
+    setring BR;
+    def L = imap(@R, L);
+  }
+
+  return (L);
+}
+
+proc getSPoly(poly f, poly g) {
+  if (f == 0) {
+    return (g);
+  }
+
+  if (g == 0) {
+    return (f);
+  }
+  
   int ring_flag = 0;
   if (nameof(basering) != "@RP") {
     def BR = basering;
@@ -283,8 +316,8 @@ static proc getSPoly(poly f, poly g) {
     ring_flag = 1;
   }
 
-  poly h;
-  // Yiming: need to be finished.
+  poly teller = lcm(lm_X(f), lm_X(g));
+  poly h = (teller / lm_X(f)) * f - (teller / lm_X(g)) * g;
   
   if (ring_flag) {
     setring BR;
@@ -292,6 +325,24 @@ static proc getSPoly(poly f, poly g) {
   }
 
   return (h);
+}
+
+static proc checkRemNull(poly f, ideal E, list N) {
+  // basering is @RP.
+  if (f == 0) {
+    return (1);
+  }
+
+  while (f != 0) {
+    poly c = leadcoef_U(f);
+    if (!checkNull(c, E, N)) {
+      return (0);
+    } else {
+      f = f - lm_X(f);
+    }
+  }
+
+  return (1);
 }
 
 static proc checkPairRec(poly f, poly g, ideal G, ideal E, list N) {
@@ -310,43 +361,81 @@ static proc checkPairRec(poly f, poly g, ideal G, ideal E, list N) {
   }
 
   ideal G_nz = listToIdeal(L);
+  poly f_nz, f_z;
+  (f_nz, f_z) = simplifyPoly(f, E);
+  poly g_nz, g_z;
+  (g_nz, g_z) = simplifyPoly(g, E);
 
   // Reduce S-Poly(f, g) in (E, N).
-  poly h = getSPoly(f, g);
-  poly m, rem;
-  list quots;
-  (m, quots, rem) = quotientDivision(h, G_nz);
+  if (f_nz != 0) {
+    N = insert(N, leadcoef_U(f_nz), size(N));
+  }
+
+  if (g_nz != 0) {
+    N = insert(N, leadcoef_U(g_nz), size(N));
+  }
+  
+  poly h = getSPoly(f_nz, g_nz);
+
+  list pd_struct = pseudoDivi(h, G_nz);
+  poly rem = pd_struct[1];
+  ideal quots = pd_struct[2];
+  poly m = pd_struct[3];
+  
+  
   if (rem != 0) {
+    printf("Remainder of (%s) and (%s) = %s.", f_nz, g_nz, rem);
+    printf("S-Poly = %s.", h);
+      show(G_nz);
+
+    printf("E = <%s>.", string(E));
+    printf("N = {%s}.", string(N));
+    
     if (!checkRemNull(rem, E, N)) {
       return (0);
     }
   }
-  ideal N_comp = insert(N, m, size(N));
+  list N_comp = insert(N, m, size(N));
   ideal N_comp_factors = getFactorIdeal(N_comp);
 
-  if (size(N_comp_factors) == 1) {
-    E = paramIdealInsert(E, N_comp_factors[1]);
-    return (checkPairRec(f, g, G, E, N));
-  } else {
-    poly factor_used = 1;
-    for (i = 1; i <= size(N_comp_factors); i++) {
-      ideal E_next = paramIdealInsert(E, N_comp_factors[i]);
-      list N_next = insert(N, factor_used, size(N));
-      factor_used = factor_used * N_comp_factors[i];
-      if (!checkPairRec(f, g, G, E_next, N_next)) {
-	return (0);
-      }
+  poly factor_used = 1;
+  for (i = 1; i <= size(N_comp_factors); i++) {
+    ideal E_next = paramIdealInsert(E, N_comp_factors[i]);
+    //list N_next = insert(N, factor_used, size(N));
+    list N_next = factor_used;
+    factor_used = factor_used * N_comp_factors[i];
+    if (!checkPairRec(f, g, G, E_next, N_next)) {
+      return (0);
     }
-    return (1);
   }
   
+  return (1);
+
 }
 
 static proc checkPair(poly f, poly g, ideal G) {
+  int ring_flag = 0;
+  if (nameof(basering) != "@RP") {
+    def BR = basering;
+    setring @RP;
+    def f = imap(BR, f);
+    def g = imap(BR, g);
+    def G = imap(BR, G);
+    ring_flag = 1;
+  }
+  
   ideal E = 0;
   list N = 1;
   if (checkPairRec(f, g, G, E, N)) {
+    if (ring_flag) {
+      setring BR;
+    }
+    
     return (1);
+  }
+
+  if (ring_flag) {
+    setring BR;
   }
 
   return (0);
@@ -368,6 +457,7 @@ proc checkCGBness(ideal G) {
   int i, j;
   for (i = 1; i < size(G); i++) {
     for (j = i + 1; j <= size(G); j++) {
+      printf("Consider %s and %s:", G[i], G[j]);
       if (!checkPair(G[i], G[j], G)) {
 	if (ring_flag) {
 	  setring BR;

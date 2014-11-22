@@ -346,10 +346,20 @@ static proc checkRemNull(poly f, ideal E, list N) {
 }
 
 static proc checkPairRec(poly f, poly g, ideal G, ideal E, list N) {
+  // basering is @RP.
   if (!Check_Consistence_CGB(E, N)) {
     return (1);
   }
 
+  poly f_nz, f_z;
+  (f_nz, f_z) = simplifyPoly(f, E);
+  poly g_nz, g_z;
+  (g_nz, g_z) = simplifyPoly(g, E);
+
+  if (size(g_nz) <= 1 || size(f_nz) <= 1) {
+    return (1);
+  }
+  
   list L;
   int i;
   for (i = 1; i <= size(G); i++) {
@@ -360,20 +370,10 @@ static proc checkPairRec(poly f, poly g, ideal G, ideal E, list N) {
     }
   }
 
+  N = insert(N, leadcoef_U(f_nz), size(N));
+  N = insert(N, leadcoef_U(g_nz), size(N));
+
   ideal G_nz = listToIdeal(L);
-  poly f_nz, f_z;
-  (f_nz, f_z) = simplifyPoly(f, E);
-  poly g_nz, g_z;
-  (g_nz, g_z) = simplifyPoly(g, E);
-
-  // Reduce S-Poly(f, g) in (E, N).
-  if (f_nz != 0) {
-    N = insert(N, leadcoef_U(f_nz), size(N));
-  }
-
-  if (g_nz != 0) {
-    N = insert(N, leadcoef_U(g_nz), size(N));
-  }
   
   poly h = getSPoly(f_nz, g_nz);
 
@@ -384,6 +384,7 @@ static proc checkPairRec(poly f, poly g, ideal G, ideal E, list N) {
   
   
   if (rem != 0) {
+    
     printf("Remainder of (%s) and (%s) = %s.", f_nz, g_nz, rem);
     printf("S-Poly = %s.", h);
       show(G_nz);
@@ -414,6 +415,10 @@ static proc checkPairRec(poly f, poly g, ideal G, ideal E, list N) {
 }
 
 static proc checkPair(poly f, poly g, ideal G) {
+  if (size(f) <= 1 || size(g) <= 1) {
+    return (1);
+  }
+  
   int ring_flag = 0;
   if (nameof(basering) != "@RP") {
     def BR = basering;
@@ -457,7 +462,6 @@ proc checkCGBness(ideal G) {
   int i, j;
   for (i = 1; i < size(G); i++) {
     for (j = i + 1; j <= size(G); j++) {
-      printf("Consider %s and %s:", G[i], G[j]);
       if (!checkPair(G[i], G[j], G)) {
 	if (ring_flag) {
 	  setring BR;

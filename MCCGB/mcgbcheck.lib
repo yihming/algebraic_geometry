@@ -345,7 +345,35 @@ static proc checkRemNull(poly f, ideal E, list N) {
   return (1);
 }
 
-static proc checkPairRec(poly f, poly g, ideal G, ideal E, list N) {
+proc coprimeLPP(poly f, poly g) {
+  if (f == 0 || g == 0) {
+    return (1);
+  }
+
+  int ring_flag = 0;
+  if (nameof(basering) != "@R") {
+    def BR = basering;
+    setring @R;
+    def f = imap(BR, f);
+    def g = imap(BR, g);
+    ring_flag = 1;
+  }
+
+  if (lcm(leadmonom(f), leadmonom(g)) == leadmonom(f) * leadmonom(g)) {
+    if (ring_flag) {
+      setring BR;
+    }
+    return (1);
+  } else {
+    if (ring_flag) {
+      setring BR;
+    }
+    return (0);
+  }
+}
+
+// Set static after debugging.
+proc checkPairRec(poly f, poly g, ideal G, ideal E, list N) {
   // basering is @RP.
   if (!Check_Consistence_CGB(E, N)) {
     return (1);
@@ -356,54 +384,82 @@ static proc checkPairRec(poly f, poly g, ideal G, ideal E, list N) {
   poly g_nz, g_z;
   (g_nz, g_z) = simplifyPoly(g, E);
 
-  if (size(g_nz) <= 1 || size(f_nz) <= 1) {
+  int computation_flag = 1;
+  poly rem, m;
+  ideal quots;
+  int i;
+
+  if (f_nz == 0 || g_nz == 0) {
     return (1);
   }
-  
-  list L;
-  int i;
-  for (i = 1; i <= size(G); i++) {
-    poly p_nz, p_z;
-    (p_nz, p_z) = simplifyPoly(G[i], E);
-    if (p_nz != 0) {
-      L = insert(L, p_nz, size(L));
-    }
+
+  if (size(g_nz) == 1 && size(f_nz) == 1) {
+    return (1);
   }
 
-  N = insert(N, leadcoef_U(f_nz), size(N));
-  N = insert(N, leadcoef_U(g_nz), size(N));
+  if (coprimeLPP(f_nz, g_nz)) {
+    //printf("Co-Prime!");
+    computation_flag = 0;
+    rem = 0;
+    m = 1;
+  }
 
-  ideal G_nz = listToIdeal(L);
-  
-  poly h = getSPoly(f_nz, g_nz);
+  list N_comp = N;
 
-  list pd_struct = pseudoDivi(h, G_nz);
-  poly rem = pd_struct[1];
-  ideal quots = pd_struct[2];
-  poly m = pd_struct[3];
+  if (f_nz != 0) {
+    N_comp = insert(N_comp, leadcoef_U(f_nz), size(N_comp));
+  }
+
+  if (g_nz != 0) {
+    N_comp = insert(N_comp, leadcoef_U(g_nz), size(N_comp));
+  }
+
+  if (computation_flag) {
   
+
+    poly h = getSPoly(f_nz, g_nz);
+
+  
+    list L;
+    int i;
+    for (i = 1; i <= size(G); i++) {
+      poly p_nz, p_z;
+      (p_nz, p_z) = simplifyPoly(G[i], E);
+      if (p_nz != 0) {
+	L = insert(L, p_nz, size(L));
+      }
+    }
+
+    ideal G_nz = listToIdeal(L);
+
+
+    list pd_struct = pseudoDivi(h, G_nz);
+    rem = pd_struct[1];
+    quots = pd_struct[2];
+    m = pd_struct[3];
+  }
+
+  
+    printf("Remainder of (%s) and (%s) = %s.", f_nz, g_nz, rem);
+
+
   
   if (rem != 0) {
-    
-    printf("Remainder of (%s) and (%s) = %s.", f_nz, g_nz, rem);
-    printf("S-Poly = %s.", h);
-      show(G_nz);
-
-    printf("E = <%s>.", string(E));
-    printf("N = {%s}.", string(N));
-    
-    if (!checkRemNull(rem, E, N)) {
+    if (!checkRemNull(rem, E, N_comp)) {
       return (0);
     }
   }
-  list N_comp = insert(N, m, size(N));
+
+  N_comp = insert(N_comp, m, size(N_comp));
   ideal N_comp_factors = getFactorIdeal(N_comp);
+
+  printf("E = <%s>.", string(E));
+  printf("N = {%s}.", string(N_comp_factors));  
 
   poly factor_used = 1;
   for (i = 1; i <= size(N_comp_factors); i++) {
     ideal E_next = paramIdealInsert(E, N_comp_factors[i]);
-    //list N_next = insert(N, factor_used, size(N));
-    list N_next = factor_used;
+    list N_next = insert(N, factor_used, size(N));
     factor_used = factor_used * N_comp_factors[i];
     if (!checkPairRec(f, g, G, E_next, N_next)) {
       return (0);
@@ -414,7 +470,8 @@ static proc checkPairRec(poly f, poly g, ideal G, ideal E, list N) {
 
 }
 
-static proc checkPair(poly f, poly g, ideal G) {
+// Set static after debugging.
+proc checkPair(poly f, poly g, ideal G) {
   if (size(f) <= 1 || size(g) <= 1) {
     return (1);
   }
@@ -462,6 +519,7 @@ proc checkCGBness(ideal G) {
   int i, j;
   for (i = 1; i < size(G); i++) {
     for (j = i + 1; j <= size(G); j++) {
+      printf("Consider G[%s] (of size %s) and G[%s] (of size %s):", string(i), string(size(G[i])), string(j), string(size(G[j])));
       if (!checkPair(G[i], G[j], G)) {
 	if (ring_flag) {
 	  setring BR;

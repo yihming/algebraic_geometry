@@ -51,10 +51,11 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
 
   // Generate RGB.
   ideal RGB = getRGB(F);
-
+  /*
   if (!checkCGBness(RGB)) {
     printf("RGB is not a CGB!");
   }
+  */
 
   // Generate MCGBs.
   int sim_cnt = 1;
@@ -85,9 +86,9 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   list CGS_ccgb;
   (CCGB, CGS_ccgb) = ccgbMain(E, N, F);
 
-  if (!checkCGBness(CCGB)) {
-    printf("CCGB is not a CGB!");
-  }
+  //if (!checkCGBness(CCGB)) {
+  //  printf("CCGB is not a CGB!");
+  //}
   
   // Sort polynomials in KSWCGB, RGB, MCGBs, and CCGB w.r.t. the ordering.
   list all_polys = idealToList(CCGB);
@@ -203,31 +204,31 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
       showMCGB(M_list[i], all_polys, out);
       fprintf(out, "Size is: %s." + newline, string(size(M_list[i])));
       check_validity(M_list[i], Modcgs);
-
+      /*
       if (!checkCGBness(listToIdeal(M_list[i]))) {
 	printf(" is not a CGB!");
       }
-      
+      */
       fprintf(out, newline + "Split form of M_%s :", string(i));
       showMCGB(M_split_list[i], all_polys, out);
       fprintf(out, "Size is : %s." + newline, string(size(M_split_list[i])));
       int valid = check_validity(M_split_list[i], Modcgs);
       printf(">>%s<<", string(valid));      
-
+      /*
       if (!checkCGBness(listToIdeal(M_split_list[i]))) {
 	printf(" is not a CGB!");
       }
-      
+      */
       fprintf(out, newline + "Normal form of Split form of M_%s :", string(i));
       showMCGB(M_split_norm_list[i], all_polys, out);
       fprintf(out, "Size is : %s." + newline, string(size(M_split_norm_list[i])));
       valid = check_validity(M_split_norm_list[i], Modcgs);
       printf("<<%s>>", string(valid));
-
+      /*
       if (!checkCGBness(listToIdeal(M_split_norm_list[i]))) {
 	printf(" is not a CGB!");
       }
-      
+      */
       if (listEquals(idealToList(CCGB), M_split_norm_list[i])) {
 	fprintf(out, "M_%s is reduced to CCGB.", string(i));
 	print("Same as CCGB!");

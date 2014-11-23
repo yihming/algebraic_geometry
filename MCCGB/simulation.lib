@@ -8,7 +8,10 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
 
   exportto(Top, out);
   exportto(Top, debug_mode);
+  link special_out = "special_out.mp";
+  exportto(Top, special_out);
   open(out);
+  open(special_out);
 
   int i, j;
 
@@ -253,4 +256,5 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
  
 
   close(out);
+  close(special_out);
 }

@@ -42,25 +42,30 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
 
   set_global_rings_mcgb();
   G_beginning = purifyCGB(G_beginning);
-
+  /*
   if (!checkCGBness(G_beginning)) {
     printf("G_beginning is not a CGB!");
   } else {
     fprintf(out, "G_beginning is a CGB!");
   }
-  
+  */
   exportto(Top, G_beginning);
   exportto(Top, Modcgs);
 
+  ideal G_min = mcgbGenerate(E, N, F);
+  show(G_min);
+  
   // Generate RGB.
-  ideal RGB = getRGB(F);
   /*
+  ideal RGB = getRGB(F);
+
   if (!checkCGBness(RGB)) {
     printf("RGB is not a CGB!");
   }
   */
 
   // Generate MCGBs.
+  /*
   int sim_cnt = 1;
   list M_list;
   list M_split_list;
@@ -83,19 +88,21 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
     }
     sim_cnt = sim_cnt + 1;
   }
-
+  */
   // Generate CCGB.
+  /*
   ideal CCGB;
   list CGS_ccgb;
   (CCGB, CGS_ccgb) = ccgbMain(E, N, F);
 
-  //if (!checkCGBness(CCGB)) {
-  //  printf("CCGB is not a CGB!");
-  //}
-  
+  if (!checkCGBness(CCGB)) {
+    printf("CCGB is not a CGB!");
+  }
+  */
   // Sort polynomials in KSWCGB, RGB, MCGBs, and CCGB w.r.t. the ordering.
+  /*
   list all_polys = idealToList(CCGB);
-
+  
   // Add polys in RGB to all_polys.
   if (size(RGB) > 0) {
     for (i = 1; i <= size(RGB); i++) {
@@ -104,7 +111,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
       }
     }
   }
-
+  
   // Add polys in KSWCGB to all_polys;
   if (size(G_beginning) > 0) {
     for (i = 1; i <= size(G_beginning); i++) {
@@ -155,8 +162,9 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
 
   all_polys = sortSetAsce(all_polys);
   exportto(Top, all_polys);
-
+  */
   // Print RGB and/or CCGB.
+  /*
   fprintf(out, "=============================" + newline);
   if (idealEquals(CCGB, RGB)) {
     // RGB is the CCGB.
@@ -194,7 +202,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
       check_validity(list(), Modcgs);
     }
   }
-
+  
   // Print MCGBs.
   if (size(M_list) > 1) {
     (M_list, M_split_norm_list) = sortMCGBs(M_list, M_split_norm_list);
@@ -207,31 +215,31 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
       showMCGB(M_list[i], all_polys, out);
       fprintf(out, "Size is: %s." + newline, string(size(M_list[i])));
       check_validity(M_list[i], Modcgs);
-      /*
+      
       if (!checkCGBness(listToIdeal(M_list[i]))) {
 	printf(" is not a CGB!");
       }
-      */
+      
       fprintf(out, newline + "Split form of M_%s :", string(i));
       showMCGB(M_split_list[i], all_polys, out);
       fprintf(out, "Size is : %s." + newline, string(size(M_split_list[i])));
       int valid = check_validity(M_split_list[i], Modcgs);
       printf(">>%s<<", string(valid));      
-      /*
+      
       if (!checkCGBness(listToIdeal(M_split_list[i]))) {
 	printf(" is not a CGB!");
       }
-      */
+      
       fprintf(out, newline + "Normal form of Split form of M_%s :", string(i));
       showMCGB(M_split_norm_list[i], all_polys, out);
       fprintf(out, "Size is : %s." + newline, string(size(M_split_norm_list[i])));
       valid = check_validity(M_split_norm_list[i], Modcgs);
       printf("<<%s>>", string(valid));
-      /*
+      
       if (!checkCGBness(listToIdeal(M_split_norm_list[i]))) {
 	printf(" is not a CGB!");
       }
-      */
+      
       if (listEquals(idealToList(CCGB), M_split_norm_list[i])) {
 	fprintf(out, "M_%s is reduced to CCGB.", string(i));
 	print("Same as CCGB!");
@@ -246,14 +254,15 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
       }
     }
   }
-
+  */
   // Print the KSWCGS and KSWCGB.
+  /*
   fprintf(out, "==================================" + newline);
   fprintf(out, "%s" + newline, StringCGB(G_beginning, all_polys));
   fprintf(out, newline + "Size is: %s." + newline, string(size(G_beginning)));
   fprintf(out, "--------------------------------------" + newline);
   fprintf(out, "%s" + newline, StringModCGS_mod(F, Modcgs, 1));
- 
+  */
 
   close(out);
   close(special_out);

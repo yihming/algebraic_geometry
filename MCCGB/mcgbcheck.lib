@@ -327,7 +327,7 @@ proc getSPoly(poly f, poly g) {
   return (h);
 }
 
-static proc checkRemNull(poly f, ideal E, list N) {
+proc checkRemNull(poly f, ideal E, list N) {
   // basering is @RP.
   if (f == 0) {
     return (1);
@@ -582,10 +582,6 @@ proc checkPairRec(poly f, poly g, ideal G, ideal E, list N) {
     fprintf(special_out, newline + "Remainder specialized to 0!");
   }
 
-  if (!Check_Consistence_CGB(E, N_comp)) {
-    fprintf(special_out, "WRONG!!");
-  }
-  
   poly factor_used = 1;
   for (i = 1; i <= size(N_comp_factors); i++) {
     ideal E_next = paramIdealInsert(E, N_comp_factors[i]);

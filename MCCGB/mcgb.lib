@@ -5,6 +5,7 @@ LIB "teachstd.lib";
 
 LIB "cgb_mod.lib";
 LIB "buchtrace.lib";
+LIB "mcgbcheck.lib";
 
 proc set_global_rings_mcgb() {
   // Basering is K[U][X].
@@ -2129,7 +2130,6 @@ proc showRGB(ideal G, list global_polys, link out) {
   fprintf(out, "]."+newline);
 }
 
-// Yiming: modified.
 proc simplifyPoly(poly g, ideal E) {
   int ring_flag = 0;
   if (nameof(basering) != "@RP") {
@@ -2545,3 +2545,441 @@ proc splitCGB(list M, ideal RGB, proc func) {
 
 }
 
+/*
+  mcgbGenerate algorithm:
+Compute an MCGB directly from the given parametric ideal I.
+ */
+
+proc generalSimplRec(poly f, ideal G, ideal E, list N) {
+  // basering is @RP.
+  if (!Check_Consistence_CGB(E, N)) {
+    return (0);
+  }
+
+  poly f_nz, f_z;
+  (f_nz, f_z) = simplifyPoly(f, E);
+
+  if (f_nz == 0) {
+    return (0);
+  }
+
+  list N_comp = insert(N, leadcoef_U(f_nz), size(N));
+  ideal G_nz = simplifyBasis(G, E);
+
+  poly rem, m;
+  ideal quots;
+  int i;
+
+  list pd_struct = pseudoDivi(f_nz, G_nz);
+  rem = pd_struct[1];
+  quots = pd_struct[2];
+  m = pd_struct[3];
+
+  N_comp = insert(N_comp, m ,size(N_comp));
+
+  string pdivi_res;
+  pdivi_res = "(" + string(m) + ")" + "h = ";
+
+  if (size(quots) == 1) {
+    if (quots[1] != 0) {
+      pdivi_res = pdivi_res + "(" + showParamPoly(quots[1]) + ")" + "G[1]";
+    } else {
+      pdivi_res = pdivi_res + "0";
+    }
+  } else {
+    for (i = 1; i <= size(quots); i++) {
+      if (quots[i] != 0) {
+	pdivi_res = pdivi_res + "(" + showParamPoly(quots[i]) + ")" + "G[" + string(i) + "]) + ";
+      }
+    }
+  } 
+
+  pdivi_res = pdivi_res + " + " + showParamPoly(rem) + ".";
+  
+  if (rem != 0) {
+    if (!checkRemNull(rem, E, N_comp)) {
+      return (f);
+    }
+  }
+
+  ideal N_comp_factors = getFactorIdeal(N_comp);
+
+  poly factor_used = 1;
+  for (i = 1; i <= size(N_comp_factors); i++) {
+    ideal E_next = paramIdealInsert(E, N_comp_factors[i]);
+    list N_next = insert(N, factor_used, size(N));
+    factor_used = factor_used * N_comp_factors[i];
+    if (generalSimplRec(f, G, E_next, N_next) != 0) {
+      return (f);
+    }
+  }
+
+  return (0);
+}
+
+proc generalSimplify(poly f, ideal G, ideal E, list N) {
+  // must work with both @R and @RP.
+  if (size(G) == 0) {
+    return (f);
+  }
+  
+  int ring_flag = 0;
+  if (nameof(basering) != "@RP") {
+    def BR = basering;
+    setring @RP;
+    if (!defined(f)) {
+      def f = imap(BR, f);
+    }
+    def G = imap(BR, G);
+    def E = imap(BR, E);
+    if (!defined(N)) {
+      def N = imap(BR, N);
+    }
+    ring_flag = 1;
+  }
+
+  poly p = generalSimplRec(f, G, E, N);
+
+  if (ring_flag) {
+    setring BR;
+    if (!defined(p)) {
+      def p = imap(@RP, p);
+    }
+  }
+
+  return (p);
+}
+
+proc deletePolyFromIdeal(ideal I, poly f) {
+  if (size(I) == 0) {
+    return (I);
+  }
+
+  int ring_flag = 0;
+  if (nameof(basering) != "@RP") {
+    def BR = basering;
+    setring @RP;
+    def I = imap(BR, I);
+    if (!defined(f)) {
+      def f = imap(BR, f);
+    }
+    ring_flag = 1;
+  }
+
+  ideal J;
+  int i;
+  for (i = 1; i <= size(I); i++) {
+    if (I[i] != f) {
+      J = J + I[i];
+    }
+  }
+
+  if (ring_flag) {
+    setring BR;
+    def J = imap(@RP, J);
+  }
+
+  return (J);
+}
+
+proc simplifyBasis(ideal G, ideal E) {
+  if (size(G) == 0) {
+    return (G);
+  }
+
+  list L;
+  int i;
+  poly f_nonzero, f_zero;
+  for (i = 1; i <= size(G); i++) {
+    (f_nonzero, f_zero) = simplifyPoly(G[i], E);
+    L = insert(L, f_nonzero, size(L));
+  }
+
+  return (listToIdeal(L));
+}
+
+proc faithfulPDivi(poly f_faith, poly f_nz, ideal G_faith, ideal G_nz, ideal E, list N) {
+  list pd_struct_nz = pseudoDivi(f_nz, G_nz);
+  poly rem, m;
+  ideal quots;
+
+  rem = pd_struct_nz[1];
+  quots = pd_struct_nz[2];
+  m = pd_struct_nz[3];
+  N = insert(N, m, size(N));
+
+  if (checkRemNull(rem, E, N)) {
+    return (list(0, quots, m));
+  } else {
+    int i;
+    poly res;
+    for (i = 1; i <= size(quots); i++) {
+      res = res + quots[i] * G_faith[i];
+    }
+    poly rem_faithful = m * f_faith - res;
+    return (list(rem_faithful, quots, m));
+  }
+  
+}
+
+proc deleteTuples(list pairs, poly f) {
+  if (size(pairs) == 0) {
+    return (pairs);
+  }
+
+  int cnt = 1;
+  while (cnt <= size(pairs)) {
+    if (pairs[cnt][1] == f || pairs[cnt][2] == f) {
+      pairs = delete(pairs, cnt);
+    } else {
+      cnt = cnt + 1;
+    }
+  }
+
+  return (pairs);
+}
+
+proc insertTuples(list pairs, ideal G, poly f) {
+  if (size(pairs) == 0) {
+    return (pairs);
+  }
+
+  int i;
+  for (i = 1; i <= size(G); i++) {
+    pairs = insert(pairs, ideal(G[i], f), size(pairs));
+  }
+
+  return (pairs);
+}
+
+proc getFaithfulSPoly(poly f, poly g, poly f_nz, poly g_nz) {
+  if (f_nz == 0) {
+    return (g, g_nz);
+  }
+
+  if (g_nz == 0) {
+    return (f, f_nz);
+  }
+
+  int ring_flag = 0;
+  if (nameof(basering) != "@RP") {
+    def BR = basering;
+    setring @RP;
+    if (!defined(f)) {
+      def f = imap(BR, f);
+    }
+    if (!defined(g)) {
+      def g = imap(BR, g);
+    }
+    if (!defined(f_nz)) {
+      def f_nz = imap(BR, f_nz);
+    }
+    if (!defined(g_nz)) {
+      def g_nz = imap(BR, g_nz);
+    }
+    ring_flag = 1;
+  }
+
+  poly teller = lcm(lm_X(f_nz), lm_X(g_nz));
+  poly h = (teller / lm_X(f_nz)) * f_nz - (teller / lm_X(g_nz)) * g_nz;
+  poly h_faith = (teller / lm_X(f_nz)) * f - (teller / lm_X(g_nz)) * g;
+
+  return (h_faith, h);
+}
+
+proc insertPolyToIdeal(ideal I, poly f) {
+  if (size(I) == 0) {
+    return (ideal(f));
+  }
+
+  int ring_flag = 0;
+  if (nameof(basering) != "@RP") {
+    def BR = basering;
+    setring @RP;
+    def I = imap(BR, I);
+    if (!defined(f)) {
+      def f = imap(BR, f);
+    }
+    ring_flag = 1;
+  }
+
+  ideal J = I + f;
+
+  if (ring_flag) {
+    setring BR;
+    def J = imap(@RP, J);
+  }
+
+  return (J);
+  
+}
+
+proc mcgbGenRec(ideal G, list pairs, ideal E, list N, ideal E_given, list N_given) {
+  // basering is @RP.
+  if (!Check_Consistence_CGB(E, N)) {
+    return (G, pairs);
+  }
+
+  ideal cur_tuple = pairs[1];
+  poly f = cur_tuple[1];
+  poly g = cur_tuple[2];
+
+  poly f_nz, f_z;
+  poly g_nz, g_z;
+  (f_nz, f_z) = simplifyPoly(f, E);
+  (g_nz, g_z) = simplifyPoly(g, E);
+
+  int i;
+
+
+  if (f_nz == 0 && g_nz == 0) {
+    return (G, pairs);
+  }
+
+  if (size(f_nz) == 1 && size(g_nz) == 1) {
+
+    return (G, pairs);
+  }
+
+  if (size(f_nz) == 1 && lppX(f_nz) == 1) {
+    return (G, pairs);
+  }
+
+  if (size(g_nz) == 1 && lppX(g_nz) == 1) {
+
+    return (G, pairs);
+  }
+
+  int computation_flag = 1;
+  poly rem, m;
+  ideal quots;
+  
+  if (coprimeLPP(f_nz, g_nz)) {
+    computation_flag = 0;
+    rem = 0;
+    m = 1;
+  }
+
+  list N_comp = N;
+  if (f_nz != 0) {
+    N_comp = insert(N_comp, leadcoef_U(f_nz), size(N_comp));
+  }
+
+  if (g_nz != 0) {
+    N_comp = insert(N_comp, leadcoef_U(g_nz), size(N_comp));
+  }
+
+  if (computation_flag) {
+    poly h_faith, h;
+    (h_faith, h) = getFaithfulSPoly(f, g, f_nz, g_nz);
+    ideal G_nz = simplifyBasis(G, E);
+
+    list pd_struct = faithfulPDivi(h_faith, h, G, G_nz, E, N_comp);
+    rem = pd_struct[1];
+    quots = pd_struct[2];
+    m = pd_struct[3];
+
+    string pdivi_res;
+    pdivi_res = "(" + string(m) + ")" + "h = ";
+
+    if (size(quots) == 1) {
+      if (quots[1] != 0) {
+	pdivi_res = pdivi_res + "(" + showParamPoly(quots[1]) + ")" + "G[1]";
+      } else {
+	pdivi_res = pdivi_res + "0";
+      }
+    } else {
+      for (i = 1; i <= size(quots); i++) {
+	if (quots[i] != 0) {
+	  pdivi_res = pdivi_res + "(" + showParamPoly(quots[i]) + ")" + "G[" + string(i) + "]) + ";
+	}
+      }
+    } 
+
+    pdivi_res = pdivi_res + " + " + showParamPoly(rem) + ".";
+
+    printf("%s", pdivi_res);
+    
+    N_comp = insert(N_comp, m, size(N_comp));
+  }
+
+  if (rem != 0) {
+    ideal G_tmp = G;
+    for (i = 1; i <= size(G_tmp); i++) {
+      poly p = generalSimplify(G_tmp[i], ideal(rem), E_given, N_given);
+      if (p == 0) {
+	G = deletePolyFromIdeal(G, G_tmp[i]);
+	pairs = deleteTuples(pairs, G_tmp[i]);
+      }
+    }
+
+    pairs = insertTuples(pairs, G, rem);
+    G = insertPolyToIdeal(G, rem);
+  }
+
+  ideal N_comp_factors = getFactorIdeal(N_comp);
+
+  poly factor_used = 1;
+  for (i = 1; i <= size(N_comp_factors); i++) {
+    ideal E_next = paramIdealInsert(E, N_comp_factors[i]);
+    list N_next = insert(N, factor_used, size(N));
+    factor_used = factor_used * N_comp_factors[i];
+    (G, pairs) = mcgbGenRec(G, pairs, E_next, N_next, E_given, N_given);
+  }
+
+  return (G, pairs);
+}
+
+proc mcgbGenerate(ideal E, list N, ideal F) {
+  // basering is @R.
+  set_global_rings();
+  set_global_rings_mcgb();
+  set_global_objects();
+
+  if (size(F) <= 1) {
+    return (F);
+  }
+
+  list L;
+  int i, j;
+  for (i = 1; i <= size(F); i++) {
+    poly p = generalSimplify(F[i], deletePolyFromIdeal(F, F[i]), E, N);
+    if (p != 0) {
+      L = insert(L, F[i], size(L));
+    }
+  }
+
+  ideal G = listToIdeal(L);
+  
+  // Build the list of tuples of G.
+  int i, j;
+  list pairs;
+  for (i = 1; i < size(G); i++) {
+    for (j = i+1; j <= size(G); j++) {
+      ideal tuple = G[i], G[j];
+      pairs = insert(pairs, tuple, size(pairs));
+    }
+  }
+
+  def BR = basering;
+  setring @RP;
+  def G = imap(BR, G);
+  def pairs = imap(BR, pairs);
+  def E = imap(BR, E);
+  if (!defined(N)) {
+    def N = imap(BR, N);
+  }
+  
+  while (size(pairs) > 0) {
+    print(size(pairs));
+    (G, pairs) = mcgbGenRec(G, pairs, E, N, E, N);
+    pairs = delete(pairs, 1);
+    
+  }
+
+  setring BR;
+  def G_res = imap(@RP, G);
+
+  return (G_res);
+  
+}

@@ -2641,6 +2641,7 @@ proc generalSimplRec(poly f, ideal G, ideal E, list N) {
     }
   }
 
+  /*
   ideal N_comp_factors = getFactorIdeal(N_comp);
 
   poly factor_used = 1;
@@ -2648,6 +2649,18 @@ proc generalSimplRec(poly f, ideal G, ideal E, list N) {
     ideal E_next = paramIdealInsert(E, N_comp_factors[i]);
     list N_next = insert(N, factor_used, size(N));
     factor_used = factor_used * N_comp_factors[i];
+    if (generalSimplRec(f, G, E_next, N_next) != 0) {
+      return (f);
+    }
+  }
+  */
+
+  // Without factorization.
+  poly factor_used = 1;
+  for (i = 1; i <= size(N_comp); i++) {
+    ideal E_next = paramIdealInsert(E, N_comp[i]);
+    list N_next = insert(N, factor_used, size(N));
+    factor_used = factor_used * N_comp[i];
     if (generalSimplRec(f, G, E_next, N_next) != 0) {
       return (f);
     }
@@ -2779,10 +2792,10 @@ proc deleteTuples(list pairs, poly f) {
 }
 
 proc insertTuples(list pairs, ideal G, poly f) {
-  if (size(pairs) == 0) {
+  if (size(G) == 0) {
     return (pairs);
   }
-
+  
   int i;
   for (i = 1; i <= size(G); i++) {
     pairs = insert(pairs, ideal(G[i], f), size(pairs));
@@ -2853,6 +2866,88 @@ proc insertPolyToIdeal(ideal I, poly f) {
   
 }
 
+proc factorMultNonnull(list N, poly f) {
+  if (size(N) == 0) {
+    N = insert(N, f, size(N));
+    return (N);
+  }
+
+  int i;
+  for (i = 1; i <= size(N); i++) {
+    N[i] = N[i] * f;
+  }
+
+  return (N);
+}
+
+proc mergeIdeal(ideal I, ideal J) {
+  if (size(I) == 0) {
+    return (J);
+  }
+
+  if (size(J) == 0) {
+    return (I);
+  }
+
+  list L = idealToList(I);
+  int i;
+  for (i = 1; i <= size(J); i++) {
+    L = insert(L, J[i], size(L));
+  }
+
+  return (listToIdeal(L));
+}
+
+proc extendBranchSpec(poly f, poly g, ideal E, list N) {
+  // basering is @RP.
+  
+  int terminate_flag = 0;
+
+  int end_f_flag = 0;
+  int end_g_flag = 0;
+
+  ideal E_tmp;
+  poly m = 1;
+  poly g_tmp = g;
+  
+  while (!end_f_flag) {
+    if (leadmonom(leadcoef_U(f)) == 1 || f == 0) {
+      end_f_flag = 1;
+    }
+    
+    end_g_flag = 0;
+    while (!end_g_flag) {
+      if (leadmonom(leadcoef_U(g_tmp)) == 1 || g_tmp == 0) {
+	end_g_flag = 1;
+      }
+      
+      if (coprimeLPP(f, g_tmp)) {
+	E_tmp = insertPolyToIdeal(E_tmp, leadcoef_U(g_tmp));
+	g_tmp = g_tmp - lm_X(g_tmp);
+      } else {
+	m = m * leadcoef_U(g_tmp) * leadcoef_U(f);
+	terminate_flag = 1;
+	break;
+      }
+    }
+    if (terminate_flag) {
+      break;
+    }
+    E_tmp = ideal(leadcoef_U(f));
+    f = f - lm_X(f);
+    g_tmp = g;
+  }
+  
+  if (!terminate_flag) {
+    return (1, ideal(), list());
+  }
+
+    E = mergeIdeal(E, E_tmp);
+  N = insert(N, m, size(N));
+
+  return (0, E, N);
+}
+
 proc mcgbGenRec(ideal G, list pairs, ideal E, list N, ideal E_given, list N_given) {
   // basering is @RP.
   if (!Check_Consistence_CGB(E, N)) {
@@ -2870,55 +2965,36 @@ proc mcgbGenRec(ideal G, list pairs, ideal E, list N, ideal E_given, list N_give
 
   int i;
   int computation_flag = 1;
+  int split_flag = 1;
   poly rem, m;
   ideal quots;
 
-  /*
-  if (f_nz == 0 && g_nz == 0) {
-    return (G, pairs);
-  }
-
-  if (numParamMonom(f_nz) == 1 && numParamMonom(g_nz) == 1) {
-
-    return (G, pairs);
-  }
-
-  if (numParamMonom(f_nz) == 1 && lppX(f_nz) == 1) {
-    return (G, pairs);
-  }
-
-  if (numParamMonom(g_nz) == 1 && lppX(g_nz) == 1) {
-
-    return (G, pairs);
-  }
-
-  
-  
-  if (coprimeLPP(f_nz, g_nz)) {
-    computation_flag = 0;
-    rem = 0;
-    m = 1;
-  }
-  */
-
-  int opt_flag = optBuchberger(f_nz, g_nz, E, N);
+  ideal E_new;
+  list N_new;
+  int opt_flag;
+  (opt_flag, E_new, N_new) = optBuchberger(f_nz, g_nz, E, N);
   if (opt_flag == 1) {
     return (G, pairs);
   } else {
     if (opt_flag == 2) {
       computation_flag = 0;
+      split_flag = 0;
       rem = 0;
-      m = 1;
+      E = E_new;
+      N = N_new;
     }
   }
 
   list N_comp = N;
-  if (f_nz != 0) {
-    N_comp = insert(N_comp, leadcoef_U(f_nz), size(N_comp));
-  }
 
-  if (g_nz != 0) {
-    N_comp = insert(N_comp, leadcoef_U(g_nz), size(N_comp));
+  if (split_flag) {
+    if (f_nz != 0) {
+      N_comp = insert(N_comp, leadcoef_U(f_nz), size(N_comp));
+    }
+
+    if (g_nz != 0) {
+      N_comp = insert(N_comp, leadcoef_U(g_nz), size(N_comp));
+    }
   }
 
   if (computation_flag) {
@@ -2953,33 +3029,57 @@ proc mcgbGenRec(ideal G, list pairs, ideal E, list N, ideal E_given, list N_give
     //printf("%s", pdivi_res);
     
     N_comp = insert(N_comp, m, size(N_comp));
+    
   }
 
   if (rem != 0) {
-    ideal G_tmp = G;
-    for (i = 1; i <= size(G_tmp); i++) {
-      poly p = generalSimplify(G_tmp[i], ideal(rem), E_given, N_given);
+    ideal G_old = G;
+    G = insertPolyToIdeal(G, rem);
+    ideal G_sub;
+    for (i = 1; i <= size(G_old); i++) {
+      G_sub = deletePolyFromIdeal(G, G_old[i]);
+      poly p = generalSimplify(G_old[i], G_sub, E_given, N_given);
       if (p == 0) {
-	G = deletePolyFromIdeal(G, G_tmp[i]);
-	pairs = deleteTuples(pairs, G_tmp[i]);
+	G = G_sub;
+	pairs = deleteTuples(pairs, G_old[i]);
       }
     }
-
-    pairs = insertTuples(pairs, G, rem);
-    G = insertPolyToIdeal(G, rem);
+    pairs = insertTuples(pairs, deletePolyFromIdeal(G, rem), rem);
   }
 
+  /*
   ideal N_comp_factors = getFactorIdeal(N_comp);
-
+  
   poly factor_used = 1;
   for (i = 1; i <= size(N_comp_factors); i++) {
     ideal E_next = paramIdealInsert(E, N_comp_factors[i]);
     list N_next = insert(N, factor_used, size(N));
+    show(E_next);
+    show(N_next);
     factor_used = factor_used * N_comp_factors[i];
     (G, pairs) = mcgbGenRec(G, pairs, E_next, N_next, E_given, N_given);
   }
 
   return (G, pairs);
+  */
+
+  // Without factorization.
+
+  if (split_flag) {
+    poly factor_used = 1;
+    for (i = 1; i <= size(N_comp); i++) {
+      ideal E_next = paramIdealInsert(E, N_comp[i]);
+      list N_next = insert(N, factor_used, size(N));
+      factor_used = factor_used * N_comp[i];
+      (G, pairs) = mcgbGenRec(G, pairs, E_next, N_next, E_given, N_given);
+    }
+
+    return (G, pairs);
+  } else {
+    (G, pairs) = mcgbGenRec(G, pairs, E, N_comp, E_given, N_given);
+    return (G, pairs);
+  }
+  
 }
 
 proc mcgbGenerate(ideal E, list N, ideal F) {

@@ -56,9 +56,9 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   show(G_min);
   
   // Generate RGB.
-  /*
+  
   ideal RGB = getRGB(F);
-
+  /*
   if (!checkCGBness(RGB)) {
     printf("RGB is not a CGB!");
   }
@@ -90,17 +90,18 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   }
   */
   // Generate CCGB.
-  /*
+  
   ideal CCGB;
   list CGS_ccgb;
   (CCGB, CGS_ccgb) = ccgbMain(E, N, F);
 
+  /*
   if (!checkCGBness(CCGB)) {
     printf("CCGB is not a CGB!");
   }
   */
   // Sort polynomials in KSWCGB, RGB, MCGBs, and CCGB w.r.t. the ordering.
-  /*
+  
   list all_polys = idealToList(CCGB);
   
   // Add polys in RGB to all_polys.
@@ -120,7 +121,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
       }
     }
   }
-
+  /*
   // Add polys in MCGBs to all_polys.
   if (size(M_list) > 0) {
     for (i = 1; i <= size(M_list); i++) {
@@ -164,7 +165,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   exportto(Top, all_polys);
   */
   // Print RGB and/or CCGB.
-  /*
+  
   fprintf(out, "=============================" + newline);
   if (idealEquals(CCGB, RGB)) {
     // RGB is the CCGB.
@@ -202,7 +203,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
       check_validity(list(), Modcgs);
     }
   }
-  
+  /*
   // Print MCGBs.
   if (size(M_list) > 1) {
     (M_list, M_split_norm_list) = sortMCGBs(M_list, M_split_norm_list);
@@ -256,13 +257,13 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   }
   */
   // Print the KSWCGS and KSWCGB.
-  /*
+  
   fprintf(out, "==================================" + newline);
   fprintf(out, "%s" + newline, StringCGB(G_beginning, all_polys));
   fprintf(out, newline + "Size is: %s." + newline, string(size(G_beginning)));
   fprintf(out, "--------------------------------------" + newline);
   fprintf(out, "%s" + newline, StringModCGS_mod(F, Modcgs, 1));
-  */
+  
 
   close(out);
   close(special_out);

@@ -420,6 +420,62 @@ proc numParamMonom(poly f) {
   return (res);
 }
 
+// Return 0 if a complete computation is necessary;
+// 1 if the current case is fine, and no need to go further;
+// 2 if the current case if fine, but have to consider further.
+proc optBuchberger(poly f_nz, poly g_nz, ideal E, list N) {
+  int ring_flag = 0;
+  if (nameof(basering) != "@RP") {
+    def BR = basering;
+    setring @RP;
+    if (!defined(f_nz)) {
+      def f_nz = imap(BR, f_nz);
+    }
+    if (!defined(g_nz)) {
+      def g_nz = imap(BR, g_nz);
+    }
+    def E = imap(BR, E);
+    if (!defined(N)) {
+      def N = imap(BR, N);
+    }
+    ring_flag = 1;
+  }
+
+  if (f_nz == 0 || g_nz == 0) {
+    fprintf(special_out, "E = <%s>,", string(E));
+    fprintf(special_out, "N = {%s}." + newline, string(N));
+    
+    fprintf(special_out, "σ(f) = %s.", showParamPoly(f_nz));
+    fprintf(special_out, "σ(g) = %s." + newline, showParamPoly(g_nz));
+    fprintf(special_out, "At least one poly is specialized to 0!");
+    return (1);
+  }
+
+  if (numParamMonom(g_nz) == 1 && numParamMonom(f_nz) == 1) {
+    fprintf(special_out, "E = <%s>,", string(E));
+    fprintf(special_out, "N = {%s}." + newline, string(N));
+    
+    fprintf(special_out, "σ(f) = %s.", showParamPoly(f_nz));
+    fprintf(special_out, "σ(g) = %s." + newline, showParamPoly(g_nz));
+    fprintf(special_out, "Both are monomials!");
+    return (1);
+  }
+
+  if (numParamMonom(f_nz) == 1 && lppX(f_nz) == 1) {
+    return (1);
+  }
+
+  if (numParamMonom(g_nz) == 1 && lppX(g_nz) == 1) {
+    return (1);
+  }
+
+  if (coprimeLPP(f_nz, g_nz)) {
+    return (2);
+  }
+
+  return (0);
+}
+
 // Set static after debugging.
 proc checkPairRec(poly f, poly g, ideal G, ideal E, list N) {
   // basering is @RP.
@@ -442,6 +498,7 @@ proc checkPairRec(poly f, poly g, ideal G, ideal E, list N) {
   ideal quots;
   int i;
 
+  /*
   if (f_nz == 0 || g_nz == 0) {
     fprintf(special_out, "E = <%s>,", string(E));
     fprintf(special_out, "N = {%s}." + newline, string(N));
@@ -466,6 +523,18 @@ proc checkPairRec(poly f, poly g, ideal G, ideal E, list N) {
     computation_flag = 0;
     rem = 0;
     m = 1;
+  }
+  */
+
+  int opt_flag = optBuchberger(f_nz, g_nz, E, N);
+  if (opt_flag == 1) {
+    return (1);
+  } else {
+    if (opt_flag == 2) {
+      computation_flag = 0;
+      rem = 0;
+      m = 1;
+    }
   }
 
   list N_comp = N;

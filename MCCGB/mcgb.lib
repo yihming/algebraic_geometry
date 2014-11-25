@@ -1401,6 +1401,45 @@ proc monic(poly f) {
   }
 }
 
+proc paramMonic(poly f) {
+  if (f == 0) {
+    return (f);
+  }
+  
+  int ring_flag = 0;
+  if (nameof(basering) != "@RP") {
+    def BR = basering;
+    setring @RP;
+    def f = imap(BR, f);
+    ring_flag = 1;
+  }
+
+  poly g = f / leadcoef(f);
+  if(ring_flag) {
+    setring BR;
+    def g = imap(@RP, g);
+  }
+
+  return (g);
+}
+
+proc makeSetParamMonic(L) {
+  if (typeof(L) != "ideal" && typeof(L) != "list") {
+    ERROR("makeSetParamMonic: L must be either an ideal or a list!");
+  }
+
+  if (size(L) == 0) {
+    return (L);
+  }
+
+  int i;
+  for (i = 1; i <= size(L); i++) {
+    L[i] = paramMonic(L[i]);
+  }
+
+  return (L);
+}
+
 proc makeSetMonic(L) {
   if (typeof(L) != "ideal" && typeof(L) != "list") {
     ERROR("makeSetMonic: L must be either an ideal or a list!");
@@ -2830,34 +2869,47 @@ proc mcgbGenRec(ideal G, list pairs, ideal E, list N, ideal E_given, list N_give
   (g_nz, g_z) = simplifyPoly(g, E);
 
   int i;
+  int computation_flag = 1;
+  poly rem, m;
+  ideal quots;
 
-
+  /*
   if (f_nz == 0 && g_nz == 0) {
     return (G, pairs);
   }
 
-  if (size(f_nz) == 1 && size(g_nz) == 1) {
+  if (numParamMonom(f_nz) == 1 && numParamMonom(g_nz) == 1) {
 
     return (G, pairs);
   }
 
-  if (size(f_nz) == 1 && lppX(f_nz) == 1) {
+  if (numParamMonom(f_nz) == 1 && lppX(f_nz) == 1) {
     return (G, pairs);
   }
 
-  if (size(g_nz) == 1 && lppX(g_nz) == 1) {
+  if (numParamMonom(g_nz) == 1 && lppX(g_nz) == 1) {
 
     return (G, pairs);
   }
 
-  int computation_flag = 1;
-  poly rem, m;
-  ideal quots;
+  
   
   if (coprimeLPP(f_nz, g_nz)) {
     computation_flag = 0;
     rem = 0;
     m = 1;
+  }
+  */
+
+  int opt_flag = optBuchberger(f_nz, g_nz, E, N);
+  if (opt_flag == 1) {
+    return (G, pairs);
+  } else {
+    if (opt_flag == 2) {
+      computation_flag = 0;
+      rem = 0;
+      m = 1;
+    }
   }
 
   list N_comp = N;
@@ -2898,7 +2950,7 @@ proc mcgbGenRec(ideal G, list pairs, ideal E, list N, ideal E_given, list N_give
 
     pdivi_res = pdivi_res + " + " + showParamPoly(rem) + ".";
 
-    printf("%s", pdivi_res);
+    //printf("%s", pdivi_res);
     
     N_comp = insert(N_comp, m, size(N_comp));
   }
@@ -2971,11 +3023,13 @@ proc mcgbGenerate(ideal E, list N, ideal F) {
   }
   
   while (size(pairs) > 0) {
-    print(size(pairs));
+ 
     (G, pairs) = mcgbGenRec(G, pairs, E, N, E, N);
     pairs = delete(pairs, 1);
     
   }
+
+  G = makeSetParamMonic(G);
 
   setring BR;
   def G_res = imap(@RP, G);

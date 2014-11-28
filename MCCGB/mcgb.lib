@@ -2641,7 +2641,7 @@ proc generalSimplRec(poly f, ideal G, ideal E, list N) {
     }
   }
 
-  /*
+  
   ideal N_comp_factors = getFactorIdeal(N_comp);
 
   poly factor_used = 1;
@@ -2653,9 +2653,10 @@ proc generalSimplRec(poly f, ideal G, ideal E, list N) {
       return (f);
     }
   }
-  */
+  
 
   // Without factorization.
+  /*
   poly factor_used = 1;
   for (i = 1; i <= size(N_comp); i++) {
     ideal E_next = paramIdealInsert(E, N_comp[i]);
@@ -2664,7 +2665,7 @@ proc generalSimplRec(poly f, ideal G, ideal E, list N) {
     if (generalSimplRec(f, G, E_next, N_next) != 0) {
       return (f);
     }
-  }
+    }*/
 
   return (0);
 }
@@ -2760,15 +2761,37 @@ proc faithfulPDivi(poly f_faith, poly f_nz, ideal G_faith, ideal G_nz, ideal E, 
   m = pd_struct_nz[3];
   N = insert(N, m, size(N));
 
+  fprintf(special_out, "E = <%s>;", E);
+  fprintf(special_out, "N = {%s}.", string(N));
+
+  fprintf(special_out, "Unfaithful PDIVI:");
+  string pdivi_res;
+  pdivi_res = pdivi_res + showParamPoly(m) + " (" + showParamPoly(f_faith) + ") = ";
+
+  int i;
+  for (i = 1; i <= size(quots); i++) {
+    if (quots[i] != 0) {
+      pdivi_res = pdivi_res + "(" + showParamPoly(quots[i]) + ")G[" + string(i) + "] +";
+    }
+  }
+  pdivi_res = pdivi_res + showParamPoly(rem) + ".";
+
+  fprintf(special_out, pdivi_res + newline);
+
   if (checkRemNull(rem, E, N)) {
+    fprintf(special_out, "UNFAITHFUL REMAINDER equiv 0: %s.", showParamPoly(rem));
     return (list(0, quots, m));
   } else {
+    fprintf(special_out, "UNFAITHFUL REMAINDER not 0: %s.", showParamPoly(rem));
     int i;
     poly res;
     for (i = 1; i <= size(quots); i++) {
       res = res + quots[i] * G_faith[i];
     }
     poly rem_faithful = m * f_faith - res;
+
+    fprintf(special_out, "It's faithful version: %s.", showParamPoly(rem_faithful));
+    
     return (list(rem_faithful, quots, m));
   }
   
@@ -2791,15 +2814,52 @@ proc deleteTuples(list pairs, poly f) {
   return (pairs);
 }
 
+proc insertTuplesSorted(list pairs, list tuples) {
+  // Assume pairs is sorted.
+  if (size(tuples) == 0) {
+    return (pairs);
+  }
+
+  tuples = sortPairs(tuples);
+
+  if (size(pairs) == 0) {
+    return (tuples);
+  }
+
+  int i;
+  int pos = 1;
+  for (i = 1; i <= size(tuples); i++) {
+    while (lesspair(pairs[pos], tuples[i])) {
+      pos = pos + 1;
+      if (pos > size(pairs)) {
+	break;
+      }
+    }
+    if (pos > size(pairs)) {
+      pairs = insert(pairs, tuples[i], size(pairs));
+      pos = size(pairs);
+    } else {
+      pairs = insert(pairs, tuples[i], pos - 1);
+      pos = pos + 1;
+    }
+  }
+
+  return (pairs);
+}
+
 proc insertTuples(list pairs, ideal G, poly f) {
+  
   if (size(G) == 0) {
     return (pairs);
   }
   
   int i;
+  list pair_new_l;
   for (i = 1; i <= size(G); i++) {
-    pairs = insert(pairs, ideal(G[i], f), size(pairs));
+    pair_new_l = insert(pair_new_l, ideal(G[i], f), size(pair_new_l));
   }
+
+  pairs = insertTuplesSorted(pairs, pair_new_l);
 
   return (pairs);
 }
@@ -2948,15 +3008,15 @@ proc extendBranchSpec(poly f, poly g, ideal E, list N) {
   return (0, E, N);
 }
 
-proc mcgbGenRec(ideal G, list pairs, ideal E, list N, ideal E_given, list N_given) {
+proc mcgbGenRec(ideal G, list pairs, ideal cur_pair, ideal E, list N, ideal E_given, list N_given) {
   // basering is @RP.
   if (!Check_Consistence_CGB(E, N)) {
     return (G, pairs);
   }
 
-  ideal cur_tuple = pairs[1];
-  poly f = cur_tuple[1];
-  poly g = cur_tuple[2];
+  // Take the smallest pair.
+  poly f = cur_pair[1];
+  poly g = cur_pair[2];
 
   poly f_nz, f_z;
   poly g_nz, g_z;
@@ -3001,7 +3061,13 @@ proc mcgbGenRec(ideal G, list pairs, ideal E, list N, ideal E_given, list N_give
     poly h_faith, h;
     (h_faith, h) = getFaithfulSPoly(f, g, f_nz, g_nz);
     ideal G_nz = simplifyBasis(G, E);
-
+    
+    fprintf(special_out, "σ(G) = [");
+    for (i = 1; i <= size(G_nz); i++) {
+      fprintf(special_out, "%s,", showParamPoly(G_nz[i]));
+    }
+    fprintf(special_out, "].");
+    
     list pd_struct = faithfulPDivi(h_faith, h, G, G_nz, E, N_comp);
     rem = pd_struct[1];
     quots = pd_struct[2];
@@ -3026,59 +3092,171 @@ proc mcgbGenRec(ideal G, list pairs, ideal E, list N, ideal E_given, list N_give
 
     pdivi_res = pdivi_res + " + " + showParamPoly(rem) + ".";
 
-    //printf("%s", pdivi_res);
-    
+    fprintf(special_out, "%s", pdivi_res);
+
     N_comp = insert(N_comp, m, size(N_comp));
     
   }
 
   if (rem != 0) {
     ideal G_old = G;
+    fprintf(special_out, "INSERTING NEW POLY: %s", showParamPoly(rem));
+    printf("INSERTING NEW POLY: %s", showParamPoly(rem));
     G = insertPolyToIdeal(G, rem);
     ideal G_sub;
     for (i = 1; i <= size(G_old); i++) {
       G_sub = deletePolyFromIdeal(G, G_old[i]);
       poly p = generalSimplify(G_old[i], G_sub, E_given, N_given);
+
       if (p == 0) {
+	fprintf(special_out, "Remove %s from G.", showParamPoly(G_old[i]));
 	G = G_sub;
 	pairs = deleteTuples(pairs, G_old[i]);
       }
+
     }
     pairs = insertTuples(pairs, deletePolyFromIdeal(G, rem), rem);
   }
 
-  /*
-  ideal N_comp_factors = getFactorIdeal(N_comp);
-  
-  poly factor_used = 1;
-  for (i = 1; i <= size(N_comp_factors); i++) {
-    ideal E_next = paramIdealInsert(E, N_comp_factors[i]);
-    list N_next = insert(N, factor_used, size(N));
-    show(E_next);
-    show(N_next);
-    factor_used = factor_used * N_comp_factors[i];
-    (G, pairs) = mcgbGenRec(G, pairs, E_next, N_next, E_given, N_given);
-  }
-
-  return (G, pairs);
-  */
-
   // Without factorization.
 
   if (split_flag) {
+    ideal N_comp_factors = getFactorIdeal(N_comp);
+  
     poly factor_used = 1;
-    for (i = 1; i <= size(N_comp); i++) {
-      ideal E_next = paramIdealInsert(E, N_comp[i]);
+    for (i = 1; i <= size(N_comp_factors); i++) {
+      ideal E_next = paramIdealInsert(E, N_comp_factors[i]);
       list N_next = insert(N, factor_used, size(N));
-      factor_used = factor_used * N_comp[i];
-      (G, pairs) = mcgbGenRec(G, pairs, E_next, N_next, E_given, N_given);
+      factor_used = factor_used * N_comp_factors[i];
+      (G, pairs) = mcgbGenRec(G, pairs, cur_pair, E_next, N_next, E_given, N_given);
     }
-
     return (G, pairs);
   } else {
-    (G, pairs) = mcgbGenRec(G, pairs, E, N_comp, E_given, N_given);
+  
+    (G, pairs) = mcgbGenRec(G, pairs, cur_pair, E, N_comp, E_given, N_given);
     return (G, pairs);
   }
+  
+}
+
+proc deletePair(list pairs, ideal tuple) {
+  if (size(pairs) == 0) {
+    return (pairs);
+  }
+
+  tuple = makePairWell(tuple);
+  
+  int i;
+  for (i = 1; i <= size(pairs); i++) {
+    if (pairs[i][1] == tuple[1] && pairs[i][2] == tuple[2]) {
+      pairs = delete(pairs, i);
+      break;
+    }
+  }
+
+  return (pairs);
+}
+
+proc makePairWell(ideal pair) {
+  if (lesspoly(pair[1], pair[2])) {
+    return (pair);
+  } else {
+    ideal pair_new = pair[2], pair[1];
+    return (pair_new);
+  }
+}
+
+proc lesspair(ideal P1, ideal P2) {
+  P1 = makePairWell(P1);
+  P2 = makePairWell(P2);
+
+  int cmp_l = lesspoly(P1[1], P2[1]);
+  if (cmp_l == 2) {
+    // P1[1] == P2[1].
+    int cmp_r = lesspoly(P1[2], P2[2]);
+    if (cmp_r > 0) {
+      // P1[2] <= P2[2].
+      return (1);
+    } else {
+      return (0);
+    }
+  } else {
+    if (cmp_l == 1) {
+      // P1[1] < P2[1].
+      return (1);
+    } else {
+      // P1[1] > P2[1].
+      return (0);
+    }
+  }
+}
+
+proc sortPairs(list pairs) {
+  if (size(pairs) == 0) {
+    return (pairs);
+  }
+
+  int i;
+  for (i = 1; i <= size(pairs); i++) {
+    pairs[i] = makePairWell(pairs[i]);
+  }
+
+  if (size(pairs) == 1) {
+    return (pairs);
+  }
+  
+  // Bubble sort.
+  int swapped = 1;
+  int n = size(pairs);
+  ideal tmp;
+
+  while (swapped == 1) {
+    swapped = 0;
+    for (i = 1; i <= n - 1; i++) {
+      if (!lesspair(pairs[i], pairs[i+1])) {
+	tmp = pairs[i];
+	pairs[i] = pairs[i+1];
+	pairs[i+1] = tmp;
+	swapped = 1;
+      }
+    }
+
+    n = n - 1;
+  }
+
+  return (pairs);
+}
+
+proc searchIndex(poly f, ideal G) {
+  int idx = -1;
+  if (size(G) == 0) {
+    return (idx);
+  }
+  int i;
+  for (i = 1; i <= size(G); i++) {
+    if (f == G[i]) {
+      idx = i;
+      break;
+    }
+  }
+
+  return (idx);
+}
+
+proc showPairs(list pairs, ideal G) {
+  string res;
+  if (size(pairs) == 0) {
+    return (res);
+  }
+
+  int i;
+  res = res + "Pairs = [" + newline;
+  for (i = 1; i <= size(pairs); i++) {
+    res = res + "    (G[" + string(searchIndex(pairs[i][1], G)) + "], G[" + string(searchIndex(pairs[i][2], G)) + "])," + newline;
+  }
+  res = res + "]." + newline;
+
+  return (res);
   
 }
 
@@ -3108,10 +3286,16 @@ proc mcgbGenerate(ideal E, list N, ideal F) {
   list pairs;
   for (i = 1; i < size(G); i++) {
     for (j = i+1; j <= size(G); j++) {
-      ideal tuple = G[i], G[j];
+      ideal tuple;
+      if (lesspoly(G[i], G[j])) {
+	tuple = G[i], G[j];
+      } else {
+	tuple = G[j], G[i];
+      }
       pairs = insert(pairs, tuple, size(pairs));
     }
   }
+  pairs = sortPairs(pairs);
 
   def BR = basering;
   setring @RP;
@@ -3121,12 +3305,30 @@ proc mcgbGenerate(ideal E, list N, ideal F) {
   if (!defined(N)) {
     def N = imap(BR, N);
   }
-  
+
+  ideal cur_pair;
   while (size(pairs) > 0) {
- 
-    (G, pairs) = mcgbGenRec(G, pairs, E, N, E, N);
-    pairs = delete(pairs, 1);
-    
+    G = sortSetAsce(G);
+    cur_pair = pairs[random(1, size(pairs))];
+    fprintf(special_out, "========================");
+    fprintf(special_out, "G = [");
+    for (i = 1; i <= size(G); i++) {
+      fprintf(special_out, "  G[%s] = %s,", string(i), showParamPoly(G[i]));
+    }
+    fprintf(special_out, "].");
+    fprintf(special_out, "Now consider:");
+    fprintf(special_out, "G[%s] = %s", string(searchIndex(cur_pair[1], G)), showParamPoly(cur_pair[1]));
+    fprintf(special_out, "G[%s] = %s", string(searchIndex(cur_pair[2], G)), showParamPoly(cur_pair[2]));
+    printf("========================");
+    printf("Now consider:");
+    printf("G[%s] = %s", string(searchIndex(cur_pair[1], G)), showParamPoly(cur_pair[1]));
+    printf("G[%s] = %s", string(searchIndex(cur_pair[2], G)), showParamPoly(cur_pair[2]));
+    (G, pairs) = mcgbGenRec(G, pairs, cur_pair, E, N, E, N);
+    pairs = deletePair(pairs, cur_pair);
+    fprintf(special_out, "|G| = %s.", string(size(G)));
+    //fprintf(special_out, "%s", showPairs(pairs, G));
+    printf("|G| = %s.", string(size(G)));
+    printf("|Pairs| = %s.", string(size(pairs)));
   }
 
   G = makeSetParamMonic(G);

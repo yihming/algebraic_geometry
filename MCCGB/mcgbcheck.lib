@@ -687,14 +687,20 @@ proc checkPairRec(poly f, poly g, ideal G, ideal E, list N) {
     fprintf(special_out, newline + "Remainder specialized to 0!");
   }
 
-  poly factor_used = 1;
-  for (i = 1; i <= size(N_comp_factors); i++) {
-    ideal E_next = paramIdealInsert(E, N_comp_factors[i]);
-    fprintf(special_out, newline + "Next, Add %s to E;", string(N_comp_factors[i]));
-    list N_next = insert(N, factor_used, size(N));
-    fprintf(special_out, "Add %s to N.", string(factor_used));
-    factor_used = factor_used * N_comp_factors[i];
-    if (!checkPairRec(f, g, G, E_next, N_next)) {
+  if (split_flag) {
+    poly factor_used = 1;
+    for (i = 1; i <= size(N_comp_factors); i++) {
+      ideal E_next = paramIdealInsert(E, N_comp_factors[i]);
+      fprintf(special_out, newline + "Next, Add %s to E;", string(N_comp_factors[i]));
+      list N_next = insert(N, factor_used, size(N));
+      fprintf(special_out, "Add %s to N.", string(factor_used));
+      factor_used = factor_used * N_comp_factors[i];
+      if (!checkPairRec(f, g, G, E_next, N_next)) {
+	return (0);
+      }
+    }
+  } else {
+    if (!checkPairRec(f, g, G, E, N_comp)) {
       return (0);
     }
   }

@@ -35,13 +35,41 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   fprintf(out, "N = {%s}." + newline, string(N));
 
   // KSWCGB and KSWCGS.
+
   ideal G_beginning;
   list Modcgs;
 
   (G_beginning, Modcgs) = cgb_mod(F, E, N, out);
 
+
   set_global_rings_mcgb();
   G_beginning = purifyCGB(G_beginning);
+  exportto(Top, G_beginning);
+  exportto(Top, Modcgs);
+
+  
+  ideal RGB = getRGB(F);
+
+  fprintf(out, "RGB = [");
+  int i;
+  for (i = 1; i<= size(RGB); i++) {
+    fprintf(out, "%s,", RGB[i]);
+  }
+  fprintf(out, "].");
+    
+        
+  ideal G_min = mcgbGenerate(E, N, RGB);
+  G_min = sortSetAsce(G_min);
+  fprintf(out, "Starting from RGB:");
+  fprintf(out, "G_min = [");
+  int i;
+  for (i = 1; i <= size(G_min); i++) {
+    fprintf(out, "    %s,", G_min[i]);
+  }
+  fprintf(out, "].");
+
+  check_validity(idealToList(G_min), Modcgs);
+    
   /*
   if (!checkCGBness(G_beginning)) {
     printf("G_beginning is not a CGB!");
@@ -51,15 +79,15 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
 
   printf("CGBness checking finished!");
   */
-  exportto(Top, G_beginning);
-  exportto(Top, Modcgs);
 
-  
     ideal CCGB;
-  list CGS_ccgb;
-  (CCGB, CGS_ccgb) = ccgbMain(E, N, F);
-list all_polys = idealToList(CCGB);
-// Show CCGB.
+    list CGS_ccgb;
+    (CCGB, CGS_ccgb) = ccgbMain(E, N, F);
+    
+    list all_polys = idealToList(RGB);
+  
+
+    // Show CCGB.
     fprintf(out, newline + "------------------------------" + newline);
     showCCGB(CCGB, all_polys, out);
     fprintf(out, newline + "Size is: %s." + newline, string(size(CCGB)));
@@ -71,13 +99,13 @@ list all_polys = idealToList(CCGB);
   
   ideal G_min = mcgbGenerate(E, N, CCGB);
   G_min = sortSetAsce(G_min);
-  //show(G_min);
   fprintf(out, "G_min = [");
   int i;
   for (i = 1; i <= size(G_min); i++) {
     fprintf(out, "    %s,", G_min[i]);
   }
   fprintf(out, "].");
+  check_validity(idealToList(G_min), Modcgs);
 
   if (idealEquals(G_min, CCGB)) {
     printf("Both are equal.");
@@ -94,7 +122,7 @@ list all_polys = idealToList(CCGB);
   if (!checkCGBness(RGB)) {
     printf("RGB is not a CGB!");
   }
-  
+  */
 
   // Generate MCGBs.
   
@@ -104,23 +132,24 @@ list all_polys = idealToList(CCGB);
   list M_split_norm_list;
 
   while (sim_cnt <= sim_times) {
-    list M, M_split, M_split_norm, Modcgs_new;
+    //    list M, M_split, M_split_norm, Modcgs_new;
+    list M, Modcgs_new;
     (M, Modcgs_new) = mcgbRandMain(E, N, F);
     if (size(M_list) == 0 || !listContainsList(M_list, M)) {
       M = sortSetAsce(M);
       M_list = insert(M_list, M, size(M_list));
 
-      M_split = splitCGB(M, RGB, splitCriterion);
-      M_split_list = insert(M_split_list, M_split, size(M_split_list));
+      //      M_split = splitCGB(M, RGB, splitCriterion);
+      //      M_split_list = insert(M_split_list, M_split, size(M_split_list));
 
-      list Modcgs_split = buildCGS(M_split);
-      M_split_norm = makeCGBReduced(M_split, Modcgs_split);
-      M_split_norm = sortSetAsce(M_split_norm);
-      M_split_norm_list = insert(M_split_norm_list, M_split_norm, size(M_split_norm_list));
+      //      list Modcgs_split = buildCGS(M_split);
+      //      M_split_norm = makeCGBReduced(M_split, Modcgs_split);
+      //      M_split_norm = sortSetAsce(M_split_norm);
+      //      M_split_norm_list = insert(M_split_norm_list, M_split_norm, size(M_split_norm_list));
     }
     sim_cnt = sim_cnt + 1;
   }
-  */
+  
   // Generate CCGB.
   /*
   ideal CCGB;
@@ -154,7 +183,7 @@ list all_polys = idealToList(CCGB);
       }
     }
   }
-  /*
+  
   // Add polys in MCGBs to all_polys.
   if (size(M_list) > 0) {
     for (i = 1; i <= size(M_list); i++) {
@@ -169,6 +198,7 @@ list all_polys = idealToList(CCGB);
   }
 
   // Add polys in M_split_list to all_polys.
+  /*
   if (size(M_split_list) > 0) {
     for (i = 1; i <= size(M_split_list); i++) {
       if (size(M_split_list[i]) > 0) {
@@ -193,10 +223,10 @@ list all_polys = idealToList(CCGB);
       }
     }
   }
-
+  
   all_polys = sortSetAsce(all_polys);
   exportto(Top, all_polys);
-  */
+  
   // Print RGB and/or CCGB.
   /*
   fprintf(out, "=============================" + newline);
@@ -237,11 +267,13 @@ list all_polys = idealToList(CCGB);
     }
     
   }
-  
+  */
   // Print MCGBs.
+  /*
   if (size(M_list) > 1) {
     (M_list, M_split_norm_list) = sortMCGBs(M_list, M_split_norm_list);
   }
+  */
 
   if (size(M_list) > 0) {
     for (i = 1; i <= size(M_list); i++) {
@@ -250,51 +282,33 @@ list all_polys = idealToList(CCGB);
       showMCGB(M_list[i], all_polys, out);
       fprintf(out, "Size is: %s." + newline, string(size(M_list[i])));
       check_validity(M_list[i], Modcgs);
-      
-      if (!checkCGBness(listToIdeal(M_list[i]))) {
-	printf(" is not a CGB!");
+      G_min = mcgbGenerate(E, N, listToIdeal(M_list[i]));
+      G_min = sortSetAsce(G_min);
+      fprintf(out, "G_min = [");
+      int i;
+      for (i = 1; i <= size(G_min); i++) {
+	fprintf(out, "    %s,", G_min[i]);
       }
-      
-      fprintf(out, newline + "Split form of M_%s :", string(i));
-      showMCGB(M_split_list[i], all_polys, out);
-      fprintf(out, "Size is : %s." + newline, string(size(M_split_list[i])));
-      int valid = check_validity(M_split_list[i], Modcgs);
-      printf(">>%s<<", string(valid));      
-      
-      if (!checkCGBness(listToIdeal(M_split_list[i]))) {
-	printf(" is not a CGB!");
-      }
-      
-      fprintf(out, newline + "Normal form of Split form of M_%s :", string(i));
-      showMCGB(M_split_norm_list[i], all_polys, out);
-      fprintf(out, "Size is : %s." + newline, string(size(M_split_norm_list[i])));
-      valid = check_validity(M_split_norm_list[i], Modcgs);
-      printf("<<%s>>", string(valid));
-      
-      if (!checkCGBness(listToIdeal(M_split_norm_list[i]))) {
-	printf(" is not a CGB!");
-      }
-      
-      if (listEquals(idealToList(CCGB), M_split_norm_list[i])) {
-	fprintf(out, "M_%s is reduced to CCGB.", string(i));
-	print("Same as CCGB!");
-      } else {
-	if (lessSet(M_split_norm_list[i], idealToList(CCGB))) {
-	  fprintf(out, "M_%s is reduced to smaller than CCGB.", string(i));
-	  print("Better than CCGB.");
-	} else {
-	  fprintf(out, "M_%s is reduced to larger than CCGB.", string(i));
-	  print("Worse than CCGB.");
-	}
-      }
+      fprintf(out, "].");
+      check_validity(idealToList(G_min), Modcgs);
     }
   }
-  */
+  
   // Print the KSWCGS and KSWCGB.
   
   fprintf(out, "==================================" + newline);
   fprintf(out, "%s" + newline, StringCGB(G_beginning, all_polys));
   fprintf(out, newline + "Size is: %s." + newline, string(size(G_beginning)));
+  ideal G_min = mcgbGenerate(E, N, G_beginning);
+  fprintf(out, "Starting from KSWCGB:");
+  G_min = sortSetAsce(G_min);
+  fprintf(out, "G_min = [");
+  int i;
+  for (i = 1; i <= size(G_min); i++) {
+    fprintf(out, "    %s,", G_min[i]);
+  }
+  fprintf(out, "].");
+  
   fprintf(out, "--------------------------------------" + newline);
   fprintf(out, "%s" + newline, StringModCGS_mod(F, Modcgs, 1));
   

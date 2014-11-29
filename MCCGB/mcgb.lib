@@ -635,10 +635,10 @@ proc checkEssentialByHC(poly f, poly pf, list higher_coefs, poly g, list G_can, 
     G_branch = insertPolyIntoG(G_branch, g, E, N);
     BL = insert(BL, list(E, N, G_branch), size(BL));
 
-    int idx_g = lookUpIndex(g);
-    int idx_f = lookUpIndex(f);
 
     if (defined(debug_mode) && debug_mode == 1) {
+      int idx_g = lookUpIndex(g);
+      int idx_f = lookUpIndex(f);
       fprintf(out, "{f_%s = %s} covers f_%s = %s in (<%s>, {%s})" + newline, string(idx_g), string(g), string(idx_f), string(f), string(E), string(N));
     }
     return (0, BL);
@@ -689,10 +689,11 @@ proc checkEssentialByHC(poly f, poly pf, list higher_coefs, poly g, list G_can, 
     G_branch = insertPolyIntoG(G_branch, g, E, N);
     BL = insert(BL, list(E, N, G_branch), size(BL));
 
-    int idx_g = lookUpIndex(g);
-    int idx_f = lookUpIndex(f);
+
 
     if (defined(debug_mode) && debug_mode == 1) {
+      int idx_g = lookUpIndex(g);
+      int idx_f = lookUpIndex(f);
       fprintf(out, "{f_%s = %s} covers f_%s = %s in (<%s>, {%s})" + newline, string(idx_g), string(g), string(idx_f), string(f), string(E), string(N));
     }
     return (0, BL);
@@ -707,10 +708,11 @@ proc checkEssentialByHCRandom(poly f, poly pf, list higher_coefs, poly g, list G
     G_branch = insertPolyIntoG(G_branch, g, E, N);
     BL = insert(BL, list(E, N, G_branch), size(BL));
 
-    int idx_g = lookUpIndex(g);
-    int idx_f = lookUpIndex(f);
+
 
     if (defined(debug_mode) && debug_mode == 1) {
+      int idx_g = lookUpIndex(g);
+      int idx_f = lookUpIndex(f);
       fprintf(out, "{f_%s = %s} covers f_%s = %s in (<%s>, {%s})" + newline, string(idx_g), string(g), string(idx_f), string(f), string(E), string(N));
     }
     return (0, BL);
@@ -761,10 +763,11 @@ proc checkEssentialByHCRandom(poly f, poly pf, list higher_coefs, poly g, list G
     G_branch = insertPolyIntoG(G_branch, g, E, N);
     BL = insert(BL, list(E, N, G_branch), size(BL));
 
-    int idx_g = lookUpIndex(g);
-    int idx_f = lookUpIndex(f);
+
 
     if (defined(debug_mode) && debug_mode == 1) {
+      int idx_g = lookUpIndex(g);
+      int idx_f = lookUpIndex(f);
       fprintf(out, "{f_%s = %s} covers f_%s = %s in (<%s>, {%s})" + newline, string(idx_g), string(g), string(idx_f), string(f), string(E), string(N));
     }
     return (0, BL);
@@ -801,9 +804,9 @@ proc checkEssentialInBranch(poly f, poly pf, list MRem, ideal E, list N, list G_
     list branch = E, N, list(0);
     BL = insert(BL, branch, size(BL));
 
-    int idx_f = lookUpIndex(f);
 
     if (defined(debug_mode) && debug_mode == 1) {
+      int idx_f = lookUpIndex(f);
       fprintf(out, "No subsets of M covers f_%s = %s in (<%s>, {%s})" + newline, string(idx_f), string(f), string(E), string(N));
       fprintf(out, "%s is essential due to (<%s>, {%s}).", f, E, N);
     }
@@ -835,8 +838,8 @@ proc checkEssentialInBranch(poly f, poly pf, list MRem, ideal E, list N, list G_
     if (is_essential) {
       return (1, BL);
     } else {
-      int idx_f = lookUpIndex(f);
       if (defined(debug_mode) && debug_mode >= 1) {
+	int idx_f = lookUpIndex(f);
 	fprintf(out, "f_%s = %s is covered in the first sub-branch (<%s>, {%s}).", string(idx_f), f, branches[1][1], branches[1][2]);
 	fprintf(out, "Continue with the other sub-branch (<%s>, {%s}):", branches[2][1], branches[2][2]);
       }
@@ -856,9 +859,9 @@ proc checkEssentialInBranchRandom(poly f, poly pf, list MRem, ideal E, list N, l
     list branch = E, N, list(0);
     BL = insert(BL, branch, size(BL));
 
-    int idx_f = lookUpIndex(f);
 
     if (defined(debug_mode) && debug_mode == 1) {
+      int idx_f = lookUpIndex(f);
       fprintf(out, "No subsets of M covers f_%s = %s in (<%s>, {%s})" + newline, string(idx_f), string(f), string(E), string(N));
       fprintf(out, "%s is essential due to (<%s>, {%s}).", f, E, N);
     }
@@ -891,8 +894,8 @@ proc checkEssentialInBranchRandom(poly f, poly pf, list MRem, ideal E, list N, l
     if (is_essential) {
       return (1, BL);
     } else {
-      int idx_f = lookUpIndex(f);
       if (defined(debug_mode) && debug_mode >= 1) {
+	int idx_f = lookUpIndex(f);
 	fprintf(out, "f_%s = %s is covered in the first sub-branch (<%s>, {%s}).", string(idx_f), f, branches[1][1], branches[1][2]);
 	fprintf(out, "Continue with the other sub-branch (<%s>, {%s}):", branches[2][1], branches[2][2]);
       }
@@ -2169,30 +2172,43 @@ proc showRGB(ideal G, list global_polys, link out) {
   fprintf(out, "]."+newline);
 }
 
-proc simplifyPoly(poly g, ideal E) {
+proc simplifyPoly(poly g, ideal E, list N) {
   int ring_flag = 0;
+  list N_simpl = N;
   if (nameof(basering) != "@RP") {
     def BR = basering;
     setring @RP;
     def g = imap(BR, g);
     def E = imap(BR, E);
+    if (!defined(N_simpl)) {
+      def N = imap(BR, N_simpl);
+    }
     ring_flag = 1;
   }
-  
+
   poly g_nonzero = 0;
   poly g_zero = 0;
-  ideal E_rad = radical(E);
+  ideal GB = groebner(radical(E));
+  //ideal E_rad = radical(E);
 
   while (g != 0) {
     poly lc_g = leadcoef_U(g);
-    if (!Check_Consistence_CGB(E_rad, list(lc_g))) {
+
+    if (checkNull(lc_g, E, N)) {
       // lc_g is determined to be 0.
       g_zero = g_zero + lm_X(g);
     } else {
-      poly f = reduce(lm_X(g), groebner(radical(E)));
-      g_nonzero = g_nonzero + f;
-      g_zero = g_zero + lm_X(g) - f;
+      if (checkNonNull(lc_g, E, N)) {
+	// lc_g is determined to be non-zero.
+	g_nonzero = g_nonzero + lm_X(g);
+      } else {
+	// lc_g is not determined.
+	poly f = reduce(lm_X(g), GB);
+	g_nonzero = g_nonzero + f;
+	g_zero = g_zero + lm_X(g) - f;
+      }
     }
+    
     g = g - lm_X(g);
   }
 
@@ -2345,7 +2361,7 @@ proc buildCGS_rec(ideal E, list N, list G_tuple, list CGS) {
     if (G_tuple[i][1] != 0) {
       poly g = G_tuple[i][1];
       poly g_nonzero, g_zero;
-      (g_nonzero, g_zero) = simplifyPoly(g, E);
+      (g_nonzero, g_zero) = simplifyPoly(g, E, N);
       G_tuple[i][1] = g_nonzero;
       G_tuple[i][2] = G_tuple[i][2] + g_zero;
     }
@@ -2518,7 +2534,8 @@ proc splitCriterion(poly f, list L_poly, ideal I) {
     if (I_rad[1] == 1) {
       return (1);
     } else {
-      if (simplifyPoly(f, I_rad) == 0) {
+      // Problematic
+      if (simplifyPoly(f, I_rad, list(1)) == 0) {
 	return (1);
       }
     }
@@ -2596,14 +2613,14 @@ proc generalSimplRec(poly f, ideal G, ideal E, list N) {
   }
 
   poly f_nz, f_z;
-  (f_nz, f_z) = simplifyPoly(f, E);
+  (f_nz, f_z) = simplifyPoly(f, E, N);
 
   if (f_nz == 0) {
     return (0);
   }
 
   list N_comp = insert(N, leadcoef_U(f_nz), size(N));
-  ideal G_nz = simplifyBasis(G, E);
+  ideal G_nz = simplifyBasis(G, E, N_comp);
 
   poly rem, m;
   ideal quots;
@@ -2735,7 +2752,7 @@ proc deletePolyFromIdeal(ideal I, poly f) {
   return (J);
 }
 
-proc simplifyBasis(ideal G, ideal E) {
+proc simplifyBasis(ideal G, ideal E, list N) {
   if (size(G) == 0) {
     return (G);
   }
@@ -2744,7 +2761,7 @@ proc simplifyBasis(ideal G, ideal E) {
   int i;
   poly f_nonzero, f_zero;
   for (i = 1; i <= size(G); i++) {
-    (f_nonzero, f_zero) = simplifyPoly(G[i], E);
+    (f_nonzero, f_zero) = simplifyPoly(G[i], E, N);
     L = insert(L, f_nonzero, size(L));
   }
 
@@ -2766,9 +2783,23 @@ proc faithfulPDivi(poly f_faith, poly f_nz, ideal G_faith, ideal G_nz, ideal E, 
 
   fprintf(special_out, "Unfaithful PDIVI:");
   string pdivi_res;
-  pdivi_res = pdivi_res + showParamPoly(m) + " (" + showParamPoly(f_faith) + ") = ";
-
+  pdivi_res = pdivi_res + showParamPoly(m) + " (" + showParamPoly(f_nz) + ") = ";
+  
   int i;
+  poly tmp_res = 0;
+  for (i = 1; i<= size(quots); i++) {
+    if (quots[i] != 0) {
+      tmp_res = tmp_res + quots[i] * G_nz[i];
+    }
+  }
+  /*
+  if (tmp_res + rem == m * f_nz) {
+    printf("Richtig!");
+  } else {
+    printf("Falsch!");
+  }
+  */
+  
   for (i = 1; i <= size(quots); i++) {
     if (quots[i] != 0) {
       pdivi_res = pdivi_res + "(" + showParamPoly(quots[i]) + ")G[" + string(i) + "] +";
@@ -2784,9 +2815,11 @@ proc faithfulPDivi(poly f_faith, poly f_nz, ideal G_faith, ideal G_nz, ideal E, 
   } else {
     fprintf(special_out, "UNFAITHFUL REMAINDER not 0: %s.", showParamPoly(rem));
     int i;
-    poly res;
+    poly res = 0;
     for (i = 1; i <= size(quots); i++) {
-      res = res + quots[i] * G_faith[i];
+      if (quots[i] != 0) {
+	res = res + quots[i] * G_faith[i];
+      }
     }
     poly rem_faithful = m * f_faith - res;
 
@@ -3020,8 +3053,8 @@ proc mcgbGenRec(ideal G, list pairs, ideal cur_pair, ideal E, list N, ideal E_gi
 
   poly f_nz, f_z;
   poly g_nz, g_z;
-  (f_nz, f_z) = simplifyPoly(f, E);
-  (g_nz, g_z) = simplifyPoly(g, E);
+  (f_nz, f_z) = simplifyPoly(f, E, N);
+  (g_nz, g_z) = simplifyPoly(g, E, N);
 
   int i;
   int computation_flag = 1;
@@ -3060,7 +3093,7 @@ proc mcgbGenRec(ideal G, list pairs, ideal cur_pair, ideal E, list N, ideal E_gi
   if (computation_flag) {
     poly h_faith, h;
     (h_faith, h) = getFaithfulSPoly(f, g, f_nz, g_nz);
-    ideal G_nz = simplifyBasis(G, E);
+    ideal G_nz = simplifyBasis(G, E, N_comp);
     
     fprintf(special_out, "σ(G) = [");
     for (i = 1; i <= size(G_nz); i++) {
@@ -3102,7 +3135,12 @@ proc mcgbGenRec(ideal G, list pairs, ideal cur_pair, ideal E, list N, ideal E_gi
     ideal G_old = G;
     fprintf(special_out, "INSERTING NEW POLY: %s", showParamPoly(rem));
     printf("INSERTING NEW POLY: %s", showParamPoly(rem));
+    if (generalSimplify(rem, G, E_given, N_given) == 0) {
+      fprintf(special_out, "WRONG!");
+      //printf("WRONG");
+    }
     G = insertPolyToIdeal(G, rem);
+    G = sortSetDesc(G);
     ideal G_sub;
     for (i = 1; i <= size(G_old); i++) {
       G_sub = deletePolyFromIdeal(G, G_old[i]);
@@ -3118,7 +3156,6 @@ proc mcgbGenRec(ideal G, list pairs, ideal cur_pair, ideal E, list N, ideal E_gi
     pairs = insertTuples(pairs, deletePolyFromIdeal(G, rem), rem);
   }
 
-  // Without factorization.
 
   if (split_flag) {
     ideal N_comp_factors = getFactorIdeal(N_comp);
@@ -3266,20 +3303,31 @@ proc mcgbGenerate(ideal E, list N, ideal F) {
   set_global_rings_mcgb();
   set_global_objects();
 
+  fprintf(special_out, "----------------NEW-----------------");
+  
   if (size(F) <= 1) {
     return (F);
   }
 
+  if (size(N) == 0){
+    N = 1;
+  }
+
+  F = sortSetDesc(F);
+  ideal F_old = F;
+  ideal F_new = F;
+  
   list L;
   int i, j;
-  for (i = 1; i <= size(F); i++) {
-    poly p = generalSimplify(F[i], deletePolyFromIdeal(F, F[i]), E, N);
-    if (p != 0) {
-      L = insert(L, F[i], size(L));
+  for (i = 1; i <= size(F_old); i++) {
+    F_new = deletePolyFromIdeal(F, F_old[i]);
+    poly p = generalSimplify(F_old[i], F_new, E, N);
+    if (p == 0) {
+      F = F_new;
     }
   }
 
-  ideal G = listToIdeal(L);
+  ideal G = F;
   
   // Build the list of tuples of G.
   int i, j;
@@ -3310,7 +3358,7 @@ proc mcgbGenerate(ideal E, list N, ideal F) {
   while (size(pairs) > 0) {
     G = sortSetAsce(G);
     cur_pair = pairs[random(1, size(pairs))];
-    fprintf(special_out, "========================");
+    fprintf(special_out, "=====================");
     fprintf(special_out, "G = [");
     for (i = 1; i <= size(G); i++) {
       fprintf(special_out, "  G[%s] = %s,", string(i), showParamPoly(G[i]));
@@ -3319,14 +3367,14 @@ proc mcgbGenerate(ideal E, list N, ideal F) {
     fprintf(special_out, "Now consider:");
     fprintf(special_out, "G[%s] = %s", string(searchIndex(cur_pair[1], G)), showParamPoly(cur_pair[1]));
     fprintf(special_out, "G[%s] = %s", string(searchIndex(cur_pair[2], G)), showParamPoly(cur_pair[2]));
-    printf("========================");
+    /*printf("========================");
     printf("Now consider:");
     printf("G[%s] = %s", string(searchIndex(cur_pair[1], G)), showParamPoly(cur_pair[1]));
-    printf("G[%s] = %s", string(searchIndex(cur_pair[2], G)), showParamPoly(cur_pair[2]));
+    printf("G[%s] = %s", string(searchIndex(cur_pair[2], G)), showParamPoly(cur_pair[2]));*/
     (G, pairs) = mcgbGenRec(G, pairs, cur_pair, E, N, E, N);
     pairs = deletePair(pairs, cur_pair);
     fprintf(special_out, "|G| = %s.", string(size(G)));
-    //fprintf(special_out, "%s", showPairs(pairs, G));
+    fprintf(special_out, "%s", showPairs(pairs, G));
     printf("|G| = %s.", string(size(G)));
     printf("|Pairs| = %s.", string(size(pairs)));
   }

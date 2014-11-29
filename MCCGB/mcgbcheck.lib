@@ -328,21 +328,39 @@ proc getSPoly(poly f, poly g) {
 }
 
 proc checkRemNull(poly f, ideal E, list N) {
-  // basering is @RP.
   if (f == 0) {
     return (1);
+  }
+
+  int ring_flag = 0;
+  if (nameof(basering) != "@RP") {
+    def BR = basering;
+    setring @RP;
+    def f = imap(BR, f);
+    def E = imap(BR, E);
+    if (!defined(N)) {
+      def N = imap(BR, N);
+    }
+    ring_flag = 1;
   }
 
   while (f != 0) {
     poly c = leadcoef_U(f);
     if (!checkNull(c, E, N)) {
+      if (ring_flag) {
+	setring BR;
+      }
       return (0);
     } else {
       f = f - lm_X(f);
     }
   }
 
+  if (ring_flag) {
+    setring BR;
+  }
   return (1);
+  
 }
 
 proc coprimeLPP(poly f, poly g) {

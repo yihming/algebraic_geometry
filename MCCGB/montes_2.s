@@ -2,7 +2,7 @@
 LIB "simulation.lib"		;
 
 // The output file name.
-link out = "montes_2_grlex.mp";
+link out = "montes_2_lex.mp";
 
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
@@ -18,7 +18,7 @@ int sim_times = 15		;
 // opt4 -- 1 if running checking the CGBness of RGB; 0 otherwise.
 intvec sim_option = 1, 1, 1, 1, 0	;
 	
-ring r = (0, u), x, dp;
+ring r = (0, u), x, lp;
 
 ideal polys = u2x + u, ux2 + x;
 ideal null_ideal = 0		;

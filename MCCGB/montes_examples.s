@@ -8,7 +8,7 @@ int debug_mode = 0;
 int sim_times = 20;
 
 intvec sim_option = 1, 0, 1, 1, 0;
-
+/*
 // s03.s:
 print("=========== s03 starts ==============") ;
 if (defined(R)) {
@@ -75,7 +75,7 @@ simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option
 print("=========== s10 finished ==============" + newline) ;
 
 // s11.s:
-/*
+
 print("=========== s11 starts ==============") ;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
 ring R = (0, r, Z, r2, d3, d4), (t), dp;
@@ -211,7 +211,7 @@ simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option
 print("=========== s53 finished ==============" + newline) ;
 
 // s54.s:
-/*
+
 print("=========== s54 starts ==============") ;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
 ring R = (0, a, b, cv, cw, sv, sw), (x1, x2, y1, y2), lp;
@@ -228,7 +228,7 @@ list nonnull_list = a2+1, b2+1, a+b	;
 simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 
 print("=========== s54 finished ==============" + newline) ;
-*/
+
 // s58.s:
 print("=========== s58 starts ==============") ;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;

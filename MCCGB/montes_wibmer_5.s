@@ -9,7 +9,7 @@ link out = "montes_wibmer_5_grlex.mp";
 int debug_mode = 0;
 
 // Times of running Algorithm 1 to generate different MCGBs.
-int sim_times = 20		;
+int sim_times = 1		;
 
 // sim_option = [opt1, opt2, opt3, opt4], where
 // opt1 -- 1 if running Algorithm 1; 0 otherwise.

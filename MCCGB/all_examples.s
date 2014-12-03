@@ -5,10 +5,10 @@ LIB "simulation.lib";
 link out;
 
 int debug_mode = 0;
-int sim_times = 1;
+int sim_times = 20;
 
 intvec sim_option = 1, 0, 1, 1, 0;
-
+/*
 // bad_test.s:
 print("=========== bad_test starts ==============") ;
 	// lex order.
@@ -354,6 +354,7 @@ list nonnull_list = list()	;
 simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 print("=========== montes_mccgs finished ==============" + newline) ;
 
+
 // montes_wibmer_5.s:
 print("=========== montes_wibmer_5 starts ==============") ;
 	// lex order.
@@ -393,7 +394,7 @@ print("=========== montes_wibmer_5 finished ==============" + newline) ;
 	
 // sato_suzuki_1.s:
 print("=========== sato_suzuki_1 starts ==============") ;
-	// lex order.
+// lex order.
 print("------ lex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
 ring R = (0, a, b), (x, y, z), lp;
@@ -811,7 +812,7 @@ ideal null_ideal = 0		;
 list nonnull_list = list()	;
 simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 print("=========== quadratic finished ==============" + newline) ;
-
+*/
 // ctd.s:
 print("=========== ctd starts ==============") ;
 	// lex order.

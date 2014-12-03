@@ -13,6 +13,9 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   open(out);
   open(special_out);
 
+
+  int gen_simpl_flag = 1;
+  
   int i, j;
 
   // Print the ring configuration.
@@ -47,6 +50,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   exportto(Top, G_beginning);
   exportto(Top, Modcgs);
 
+  /*
   
   ideal RGB = getRGB(F);
 
@@ -69,8 +73,8 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   fprintf(out, "].");
 
   check_validity(idealToList(G_min), Modcgs);
-    
-  /*
+      
+  
   if (!checkCGBness(G_beginning)) {
     printf("G_beginning is not a CGB!");
   } else {
@@ -79,7 +83,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
 
   printf("CGBness checking finished!");
   */
-
+  /*
     ideal CCGB;
     list CGS_ccgb;
     (CCGB, CGS_ccgb) = ccgbMain(E, N, F);
@@ -125,7 +129,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   */
 
   // Generate MCGBs.
-  
+  /*
   int sim_cnt = 1;
   list M_list;
   list M_split_list;
@@ -175,6 +179,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
     }
   }
   */
+  /*
   // Add polys in KSWCGB to all_polys;
   if (size(G_beginning) > 0) {
     for (i = 1; i <= size(G_beginning); i++) {
@@ -274,7 +279,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
     (M_list, M_split_norm_list) = sortMCGBs(M_list, M_split_norm_list);
   }
   */
-
+  /*
   if (size(M_list) > 0) {
     for (i = 1; i <= size(M_list); i++) {
       fprintf(out, "--------------------------" + newline);
@@ -312,7 +317,8 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   fprintf(out, "--------------------------------------" + newline);
   fprintf(out, "%s" + newline, StringModCGS_mod(F, Modcgs, 1));
   
-
+  */
   close(out);
   close(special_out);
+  
 }

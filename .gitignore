@@ -1,0 +1,11 @@
+*.given
+*~
+*.homog
+*.tar.gz
+*.GC
+*.mp.*
+*.mp\#
+*.mp
+**/temp
+*.txt
+./grobcovF2m.lib

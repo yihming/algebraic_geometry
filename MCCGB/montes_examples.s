@@ -8,7 +8,7 @@ int debug_mode = 0;
 int sim_times = 20;
 
 intvec sim_option = 1, 0, 1, 1, 0;
-/*
+
 // s03.s:
 print("=========== s03 starts ==============") ;
 if (defined(R)) {
@@ -91,7 +91,7 @@ list nonnull_list = list()	;
 simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 
 print("=========== s11 finished ==============" + newline) ;
-*/
+
 // s12.s:
 print("=========== s12 starts ==============") ;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;

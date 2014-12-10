@@ -92,13 +92,20 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   fprintf(out, "Size is: %s." + newline, string(size(RGB)));
   check_validity(idealToList(RGB), Modcgs);
 
+  if (idealEquals(MCGB, MCGB_new)) {
+    fprintf(out, "Two MCGBs are equivalent!");
+    printf("Two MCGBs are equivalent!");
+  } else {
+    printf("Wir haben ein unterschiedliches Basis!");
+  }
+
   fprintf(out, "==================================" + newline);
   fprintf(out, "%s" + newline, StringCGB(G_beginning, all_polys));
   fprintf(out, newline + "Size is: %s." + newline, string(size(G_beginning)));
   
   fprintf(out, "--------------------------------------" + newline);
   fprintf(out, "%s" + newline, StringModCGS_mod(F, Modcgs, 1));
-  
+  /*  
   ideal G_min = mcgbGenerate(E, N, F, 0);
   G_min = sortSetAsce(G_min);
   fprintf(out, "--------------------------" + newline);
@@ -109,7 +116,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   }
   fprintf(out, "].");
   check_validity(idealToList(G_min), Modcgs);
-  
+  */
   /*      
   
   if (!checkCGBness(G_beginning)) {

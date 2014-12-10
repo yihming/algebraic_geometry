@@ -2,7 +2,7 @@
 LIB "simulation.lib"		;
 
 // The output file name.
-link out = "weispfenning_3_grlex.mp"	;
+link out = "weispfenning_3_lex.mp"	;
 
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
@@ -19,7 +19,7 @@ int sim_times = 15		;
 intvec sim_option = 1, 1, 1, 1, 0	;
 
 // lex order.
-ring r = (0, v, u), (z, y, x), dp;
+ring r = (0, v, u), (z, y, x), lp;
 ideal polys = (u^2 + 1)*y + x^3 - 1, (u^2 + 1)*z + x^2 - 1;
 ideal null_ideal = 0  ;
 list nonnull_list = list()	;

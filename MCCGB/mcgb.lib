@@ -929,7 +929,7 @@ proc checkEssential(poly f, list M, list modcgs) {
       // f appears in this branch.
       poly pf;
       for (j = 1; j <= size(modcgs[i][3]); j++) {
-	if (equivalent(f, modcgs[i][3][j][1] + modcgs[i][3][j][2])) {
+	if (isParametricMultiple(modcgs[i][3][j][1] + modcgs[i][3][j][2], f)) {
 	  pf = lppX(modcgs[i][3][j][1]);
 	  break;
 	}
@@ -3411,10 +3411,19 @@ proc mcgbGenRec(ideal G, list pairs, ideal cur_pair, ideal E, list N, ideal E_gi
   if (computation_flag) {
     poly h_faith, h;
     (h_faith, h) = getFaithfulSPoly(f, g, f_nz, g_nz);
+    fprintf(special_out, "σ(h) = %s.", showParamPoly(h));
+    fprintf(special_out, "Beginning, E = <%s>,", E);
+    fprintf(special_out, "N = {%s}.", N_comp);
     ideal G_nz = simplifyBasis(G, E, N_comp);
+    fprintf(special_out, "Before purify, σ(G) = [");
+    for (i = 1; i <= size(G_nz); i++) {
+      fprintf(special_out, "%s,", showParamPoly(G_nz[i]));
+    }
+    fprintf(special_out, "].");
+    
     G_nz = purifyUnfaithBasis(G_nz, h);
 
-    fprintf(special_out, "σ(G) = [");
+    fprintf(special_out, "After purify, σ(G) = [");
     for (i = 1; i <= size(G_nz); i++) {
       fprintf(special_out, "%s,", showParamPoly(G_nz[i]));
     }
@@ -3772,11 +3781,6 @@ proc mcgbGenerate(ideal E, list N, ideal F, int random_flag) {
       G = sortSetAsce(G);
     }
     //cur_pair = pairs[random(1, size(pairs))];
-    printf("----------------------" + newline);
-    for (i = 1; i <= size(pairs); i++) {
-      printf("Pair %s: %s;", string(i), pairs[i][3]);
-    }
-    printf("----------------------" + newline);
     cur_pair = pairs[1];
     fprintf(special_out, "=====================");
     fprintf(special_out, "G = [");
@@ -3983,6 +3987,7 @@ proc reduceOneStep(poly f, ideal G) {
   for (i = 1; i <= size(G); i++) {
     (divisible_flag, term_idx) = isDivisible(terms_f, leadmonom(G[i]));
     if (divisible_flag) {
+      fprintf(special_out, "%s is reduced by %s * %s.", showParamPoly(f), showParamPoly((leadcoef(f[term_idx]) / leadcoef(G[i])) * (leadmonom(f[term_idx]) / leadmonom(G[i]))), showParamPoly(G[i]));
       f = f - (leadcoef(f[term_idx]) / leadcoef(G[i])) * (leadmonom(f[term_idx]) / leadmonom(G[i])) * G[i];
       break;
     }
@@ -4015,7 +4020,7 @@ proc mergeList(list L1, list L2) {
   return (L1);
 }
 
-proc getMCGBNew(ideal E, ideal N, ideal F) {
+proc getMCGBNew1(ideal E, ideal N, ideal F) {
   ideal G;
   list modcgs;
 
@@ -4074,11 +4079,8 @@ proc getMCGBNew(ideal E, ideal N, ideal F) {
       // Perform simplification.
       poly g_red = reduce(cur_g, MRem_ideal);
       g_red = monic(g_red);
-      if (defined(debug_mode) && debug_mode == 1) {
-	fprintf(out, "%s can be reduced to %s.", showParamPoly(cur_g), showParamPoly(g_red));
-      }
-
-      if (g_red != 0 && g_red != cur_g) {
+      
+      if (g_red != cur_g) {
 	M_new = insert(M, g_red, size(M));
 	(is_essential, BL) = checkEssential(cur_g, M_new, modcgs);
 	if (!is_essential) {
@@ -4087,8 +4089,9 @@ proc getMCGBNew(ideal E, ideal N, ideal F) {
 	  if (defined(debug_mode) && debug_mode == 1) {
 	    fprintf(out, "Substitute %s for %s in M.", showParamPoly(g_red), showParamPoly(cur_g));
 	  }
-	} else {
+	} else {       
 	  // One-Step reduction until essential.
+	  fprintf(special_out, "+++++++++" + newline + "Start one-step reduction!");
 	  int terminate_flag = 0;
 	  poly g_old = cur_g;
 	  poly g_new, g_final;
@@ -4096,13 +4099,22 @@ proc getMCGBNew(ideal E, ideal N, ideal F) {
 	  while (!terminate_flag) {
 	    g_new = reduceOneStep(g_old, MRem_ideal);
 	    g_new = monic(g_new);
+	    if (g_new == g_old) {
+	      fprintf(special_out, "%s is already normal form.", showParamPoly(g_new));
+	      BL_final = BL_old;
+	      g_final = g_old;
+	      break;
+	    }
+	    fprintf(special_out, "%s is reduced to %s", g_old, g_new);
 	    M_new = insert(M, g_new, size(M));
 	    (is_essential, BL_new) = checkEssential(cur_g, M_new, modcgs);
 	    if (is_essential) {
+	      fprintf(special_out, "%s is not covered, stop." + newline, g_old);
 	      terminate_flag = 1;
 	      BL_final = BL_old;
 	      g_final = g_old;
 	    } else {
+	      fprintf(special_out, "%s is covered, continue." + newline, g_old);
 	      BL_old = BL_new;
 	      g_old = g_new;
 	    }
@@ -4110,9 +4122,7 @@ proc getMCGBNew(ideal E, ideal N, ideal F) {
 	  if (g_final != cur_g) {
 	    modcgs = updateCGS(modcgs, cur_g, BL_final);
 	    M = substPolyInList(M, cur_g, g_final);
-	    if (defined(debug_mode) && debug_mode == 1) {
-	      fprintf(out, "Substitute %s for %s in M.", showParamPoly(g_final), showParamPoly(cur_g));
-	    }
+	    fprintf(special_out, "Substitute %s for %s in M.", showParamPoly(g_final), showParamPoly(cur_g));
 	  }
 	}
       }
@@ -4136,5 +4146,160 @@ proc getMCGBNew(ideal E, ideal N, ideal F) {
     def cgs_mcgb = imap(@RP, cgs_mcgb);
   }
 
+  return (MCGB, cgs_mcgb);
+}
+
+proc getMCGBNew2(ideal E, ideal N, ideal F) {
+  ideal G;
+  list modcgs;
+
+  (G, modcgs) = cgb_mod(F, E, idealToList(N), out);
+
+  if (size(G) == 0 || size(modcgs) == 0) {
+    return (list());
+  }
+
+  set_global_rings_mcgb();
+  set_global_objects();
+
+  G = purifyCGB(G);
+  G = sortSetDesc(G);
+  def CGB = G;
+  exportto(Top, CGB);
+
+  
+  int ring_flag = 0;
+  if (nameof(basering) != "@RP") {
+    def BR = basering;
+    setring @RP;
+    def G = imap(BR, G);
+    def modcgs = imap(BR, modcgs);
+    def CGB = G;
+    exportto(Top, CGB);
+    ring_flag = 1;
+  }
+  
+
+  list M;
+  int i, j;
+
+  for (i = 1; i <= size(G); i++) {
+    M = insert(M, G[i], size(M));
+  }
+
+  for (i = 1; i <= size(G); i++) {
+    poly cur_g = G[i];
+    printf("Now check g_%s = %s:", string(i), cur_g);
+    int is_essential;
+    list BL;
+    list modcgs_new;
+    list M_new;
+
+    ideal MRem_ideal = listToIdeal(deletePolyFromList(M, cur_g));
+    
+    poly g_red = reduce(cur_g, MRem_ideal);
+    if (g_red == 0) {
+      (is_essential, BL) = checkEssential(cur_g, M, modcgs);
+      if (!is_essential) {
+	modcgs = updateCGS(modcgs, cur_g, BL);
+	M = deletePolyFromList(M, cur_g);
+      } else {
+	// One step reduction until essential.
+	fprintf(special_out, "----------"+ newline+"Start one step reduction:");
+	int terminate_flag = 0;
+	poly g_old = cur_g;
+	poly g_new, g_final;
+	list BL_old, BL_new, BL_final;
+	while (!terminate_flag) {
+	  g_new = reduceOneStep(g_old, MRem_ideal);
+	  g_new = monic(g_new);
+	  if (g_new == g_old) {
+	    fprintf(special_out, "%s is already normal form.", showParamPoly(g_new));
+	    i++;
+	    continue;
+	  }
+	  fprintf(special_out, "%s -> %s.", showParamPoly(g_old), showParamPoly(g_new));
+	  M_new = insert(M, g_new, size(M));
+	  (is_essential, BL_new) = checkEssential(cur_g, M_new, modcgs);
+	  if (is_essential) {
+	    fprintf(special_out, "%s is not covered, stop." + newline, showParamPoly(g_old));
+	    terminate_flag = 1;
+	    BL_final = BL_old;
+	    g_final = g_old;
+	  } else {
+	    fprintf(special_out, "%s is covered, continue."+newline, showParamPoly(g_old));
+	    BL_old = BL_new;
+	    g_old = g_new;
+	  }
+	}
+	if (g_final != cur_g) {
+	  fprintf(special_out, "%s substitutes %s.", showParamPoly(g_final), showParamPoly(cur_g));
+	  modcgs = updateCGS(modcgs, cur_g, BL_final);
+	  M = substPolyInList(M, cur_g, g_final);
+	}
+      }
+      
+    } else {
+      // g_red != 0.
+      if (g_red == cur_g) {
+	fprintf(special_out, "%s is already normal form.", showParamPoly(cur_g));
+	i++;
+	continue;
+      }
+      
+      (is_essential, BL) = checkEssential(cur_g, M, modcgs);
+      if (!is_essential) {
+	modcgs = updateCGS(modcgs, cur_g, BL);
+	M = deletePolyFromList(M, cur_g);
+      } else {
+	// One-Step reduction until essential.
+	fprintf(special_out, "---------"+newline+"Start one step reduction:");
+	int terminate_flag = 0;
+	poly g_old = cur_g;
+	poly g_new, g_final;
+	list BL_old, BL_new, BL_final;
+	while (!terminate_flag) {
+	  g_new = reduceOneStep(g_old, MRem_ideal);
+	  g_new = monic(g_new);
+	  fprintf(special_out, "%s -> %s", showParamPoly(g_old), showParamPoly(g_new));
+	  M_new = insert(M, g_new, size(M));
+	  (is_essential, BL_new) = checkEssential(cur_g, M_new, modcgs);
+	  if (is_essential) {
+	    fprintf(special_out, "%s is not covered, stop."+newline, showParamPoly(g_old));
+	    terminate_flag = 1;
+	    BL_final = BL_old;
+	    g_final = g_old;
+	  } else {
+	    fprintf(special_out, "%s is covered, continue."+newline, showParamPoly(g_new));
+	    BL_old = BL_new;
+	    g_old = g_new;
+	  }
+	}
+	if (g_final != cur_g) {
+	  fprintf(special_out, "%s substitutes %s.", showParamPoly(g_final), showParamPoly(cur_g));
+	  modcgs = updateCGS(modcgs, cur_g, BL_final);
+	  M = substPolyInList(M, cur_g, g_final);
+	}
+      }
+    } // End if.
+  } // End for.
+    
+    
+
+  ideal M_ideal;
+  for (i = 1; i <= size(M); i++) {
+    M_ideal = insertPolyToIdeal(M_ideal, M[i]);
+  }
+
+  def MCGB = M_ideal;
+  def cgs_mcgb = modcgs;
+  
+  // Switch back to BR.
+  if (ring_flag) {
+    setring BR;
+    def MCGB = imap(@RP, MCGB);
+    def cgs_mcgb = imap(@RP, cgs_mcgb);
+  }
+  
   return (MCGB, cgs_mcgb);
 }

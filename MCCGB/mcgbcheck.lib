@@ -1,6 +1,45 @@
 LIB "grobcov.lib";
 LIB "mcgb.lib";
 
+proc makeBasisReduced(ideal G) {
+  if (size(G) <= 1) {
+    return (G);
+  }
+
+  int ring_flag = 0;
+  if (nameof(basering) != "@RP") {
+    def BR = basering;
+    setring @RP;
+    def G = imap(BR, G);
+    ring_flag = 1;
+  }
+
+  G = sortSetDesc(G);
+  ideal G_old = G;
+  int i;
+  poly g_red;
+  for (i = 1; i <= size(G_old); i++) {
+    g_red = reduce(G_old[i], deletePolyFromIdeal(G, G_old[i]));
+    if (g_red == 0) {
+      G = deletePolyFromIdeal(G, G_old[i]);
+    } else {
+      g_red = monic(g_red);
+      if (g_red != G_old[i]) {
+	G = listToIdeal(substPolyInList(idealToList(G), G_old[i], g_red));
+      }
+    }
+  }
+
+  def G_red = G;
+
+  if (ring_flag) {
+    setring BR;
+    def G_red = imap(@RP, G_red);
+  }
+  
+  return (G_red);
+}
+
 proc show_list_to_file(list l, link out) {
   int i;
   if (size(l) == 0) {
@@ -131,6 +170,12 @@ proc check_minimal(list M, list CGS) {
     if (check_comprehensive(M_subs[i], CGS)) {
       if (defined(debug_mode) && debug_mode == 1) {
 	fprintf(out, "The subset M_sub[%s] is also a CGS of <F>.", string(i));
+      }
+      int j;
+      for (j = 1; j <= size(M); j++) {
+	if (!listContains(M_subs[i], M[j])) {
+	  fprintf(out, "%s is redundant.", showParamPoly(M[j]));
+	}
       }
       return (0);
     } else {

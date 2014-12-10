@@ -196,6 +196,10 @@ proc checkNull(poly c, ideal E, list N)
   list N_res;
   (E_res, N_res) = redRepN(E, N, c);
 
+  if (size(N_res) == 0) {
+    N_res = insert(N_res, 1, size(N_res));
+  }
+  
   if (E_res[1] == 1 && N_res[1] == 0) {
     return (0);
   } else {
@@ -2045,6 +2049,8 @@ proc ccgbMain(ideal E, list N, ideal F) {
       }
     }
 
+    
+    
     poly g_red = reduce(cur_g, MRem_ideal);
     g_red = monic(g_red);
     if (g_red == 0 || g_red == cur_g) {
@@ -2072,6 +2078,8 @@ proc ccgbMain(ideal E, list N, ideal F) {
       }
 
     }
+
+    
   } // End of for.
 
   ideal M_ideal;
@@ -2728,30 +2736,17 @@ proc generalSimplify(poly f, ideal G, ideal E, list N) {
     ring_flag = 1;
   }
 
-  list p_list = generalSimplRec(f, G, E, N, list());
+  poly p = generalSimplRec(f, G, E, N);
+  //list p_list = generalSimplRec(f, G, E, N, list());
 
-  if (size(p_list) == 0) {
-    if (ring_flag) {
-      setring BR;
+  if (ring_flag) {
+    setring BR;
+    if (!defined(p)) {
+      def p = imap(@RP, p);
     }
-    printf("%s is reduced to 0.", showParamPoly(f));
-    return (list());
-  } else {
-    if (ring_flag) {
-      setring BR;
-      def p_list = imap(@RP, p_list);
-    }
-    printf("%s is simplified as:", showParamPoly(f));
-    int i;
-    printf("  {");
-    for (i = 1; i <= size(p_list); i++) {
-      printf("    %s,", showParamPoly(p_list[i]));
-    }
-    printf("  }.");
-    printf("----------------------------");
-    return (p_list);
   }
-  
+
+  return (p);
 }
 
 proc deletePolyFromIdeal(ideal I, poly f) {
@@ -2855,7 +2850,7 @@ proc faithfulPDivi(poly f_faith, poly f_nz, ideal G_faith, ideal G_nz, ideal E, 
   
 }
 
-proc deleteTuples(list pairs, poly f) {
+proc deletePairByPoly(list pairs, poly f) {
   if (size(pairs) == 0) {
     return (pairs);
   }
@@ -2867,6 +2862,42 @@ proc deleteTuples(list pairs, poly f) {
     } else {
       cnt = cnt + 1;
     }
+  }
+
+  return (pairs);
+}
+
+proc buildTriple(poly f, poly g) {
+  return (ideal(f, g, lcm(lppX(f), lppX(g))));
+}
+
+proc insertPairSorted(list pairs, ideal triple) {
+  if (size(pairs) == 0) {
+    return (list(triple));
+  }
+
+  int i;
+  for (i = 1; i <= size(pairs); i++) {
+    if (!lesspair(pairs[i], triple)) {
+      pairs = insert(pairs, triple, i - 1);
+      break;
+    }
+  }
+
+  return (pairs);
+}
+
+proc insertPairsByPoly(list pairs, ideal G, poly f) {
+  // pairs is sorted.
+  if (size(G) == 0) {
+    return (pairs);
+  }
+
+  int i;
+  for (i = 1; i <= size(G); i++) {
+    ideal triple = buildTriple(G[i], f);
+    pairs = insertPairSorted(pairs, triple);
+    
   }
 
   return (pairs);
@@ -3228,6 +3259,7 @@ proc generalSimplRecRaw(poly f, ideal G, ideal E, list N) {
   } 
 
   pdivi_res = pdivi_res + " + " + showParamPoly(rem) + ".";
+  printf(pdivi_res);
   
   if (rem != 0) {
     if (!checkRemNull(rem, E, N_comp)) {
@@ -3285,6 +3317,47 @@ proc generalSimplifyRaw(poly f, ideal G, ideal E, list N) {
   return (p);
 }
 
+proc getPPs(poly f) {
+  if (f == 0) {
+    return (list());
+  }
+
+  list pp_list;
+  while (f != 0) {
+    pp_list = insert(pp_list, lppX(f), size(pp_list));
+    f = f - lm_X(f);
+  }
+
+  return (pp_list);
+}
+
+proc purifyUnfaithBasis(ideal G, poly h) {
+  // basering is @RP.
+  
+  if (size(G) == 0) {
+    return (ideal());
+  }
+
+  int i, j;
+  list L_new;
+  list pp_list;
+
+  poly ph = lppX(h);
+  
+  for (i = 1; i <= size(G); i++) {
+    pp_list = getPPs(G[i]);
+    if (size(pp_list) != 0) {
+      for (j = 1; j <= size(pp_list); j++) {
+	if (ph / pp_list[j] != 0) {
+	  L_new = insert(L_new, G[i], size(L_new));
+	  break;
+	}
+      }
+    }
+  }
+
+  return (listToIdeal(L_new));
+}
 
 proc mcgbGenRec(ideal G, list pairs, ideal cur_pair, ideal E, list N, ideal E_given, list N_given, int simpl_flag) {
   // basering is @RP.
@@ -3339,13 +3412,21 @@ proc mcgbGenRec(ideal G, list pairs, ideal cur_pair, ideal E, list N, ideal E_gi
     poly h_faith, h;
     (h_faith, h) = getFaithfulSPoly(f, g, f_nz, g_nz);
     ideal G_nz = simplifyBasis(G, E, N_comp);
-    
+    G_nz = purifyUnfaithBasis(G_nz, h);
+
     fprintf(special_out, "σ(G) = [");
     for (i = 1; i <= size(G_nz); i++) {
       fprintf(special_out, "%s,", showParamPoly(G_nz[i]));
     }
     fprintf(special_out, "].");
 
+    // Under building.
+    if (size(G_nz) == 0) {
+      return (G, pairs, simpl_flag);
+    }
+
+    // End under building.
+    
     list pd_struct = faithfulPDivi(h_faith, h, G, G_nz, E, N_comp);
     rem = pd_struct[1];
     quots = pd_struct[2];
@@ -3379,8 +3460,24 @@ proc mcgbGenRec(ideal G, list pairs, ideal cur_pair, ideal E, list N, ideal E_gi
   fprintf(special_out, "N = {%s}.", N_comp);
   
   if (rem != 0) {
-    // Add new polynomial if possible.
-    G = insertPolyWithGenSimpl(G, rem, E_given, N_given);
+    // Add new polynomial to G.
+    ideal G_old = G;
+    G = insertPolyToIdeal(G, rem);
+    printf("Add poly %s.", showParamPoly(rem));
+    ideal G_sub;
+    for (i = 1; i <= size(G_old); i++) {
+      printf("Simplify %s:", showParamPoly(G_old[i]));
+      G_sub = deletePolyFromIdeal(G, G_old[i]);
+      poly p = generalSimplifyRaw(G_old[i], G_sub, E_given, N_given);
+      if (p == 0) {
+	printf("Remove poly %s.", showParamPoly(G_old[i]));
+	G = G_sub;
+	pairs = deletePairByPoly(pairs, G_old[i]);
+      }
+    }
+
+    pairs = insertPairsByPoly(pairs, deletePolyFromIdeal(G, rem), rem);
+    
     simpl_flag = 0;
   }
 
@@ -3408,16 +3505,15 @@ proc mcgbGenRec(ideal G, list pairs, ideal cur_pair, ideal E, list N, ideal E_gi
   
 }
 
-proc deletePair(list pairs, ideal tuple) {
+proc deletePair(list pairs, ideal triple) {
   if (size(pairs) == 0) {
     return (pairs);
   }
 
-  tuple = makePairWell(tuple);
-  
   int i;
   for (i = 1; i <= size(pairs); i++) {
-    if (pairs[i][1] == tuple[1] && pairs[i][2] == tuple[2]) {
+    if ((pairs[i][1] == triple[1] && pairs[i][2] == triple[2] && pairs[i][3] == triple[3])
+	|| (pairs[i][1] == triple[2] && pairs[i][2] == triple[1] && pairs[i][3] == triple[3])) {
       pairs = delete(pairs, i);
       break;
     }
@@ -3426,38 +3522,17 @@ proc deletePair(list pairs, ideal tuple) {
   return (pairs);
 }
 
-proc makePairWell(ideal pair) {
-  if (lesspoly(pair[1], pair[2])) {
-    return (pair);
-  } else {
-    ideal pair_new = pair[2], pair[1];
-    return (pair_new);
-  }
-}
-
 proc lesspair(ideal P1, ideal P2) {
-  P1 = makePairWell(P1);
-  P2 = makePairWell(P2);
 
-  int cmp_l = lesspoly(P1[1], P2[1]);
-  if (cmp_l == 2) {
-    // P1[1] == P2[1].
-    int cmp_r = lesspoly(P1[2], P2[2]);
-    if (cmp_r > 0) {
-      // P1[2] <= P2[2].
-      return (1);
-    } else {
-      return (0);
-    }
+  int cmp = lesspoly(P1[3], P2[3]);
+
+  if (cmp > 0) {
+    // P1[3] <= P2[3].
+    return (1);
   } else {
-    if (cmp_l == 1) {
-      // P1[1] < P2[1].
-      return (1);
-    } else {
-      // P1[1] > P2[1].
-      return (0);
-    }
+    return (0);
   }
+  
 }
 
 proc sortPairs(list pairs) {
@@ -3466,9 +3541,6 @@ proc sortPairs(list pairs) {
   }
 
   int i;
-  for (i = 1; i <= size(pairs); i++) {
-    pairs[i] = makePairWell(pairs[i]);
-  }
 
   if (size(pairs) == 1) {
     return (pairs);
@@ -3670,18 +3742,13 @@ proc mcgbGenerate(ideal E, list N, ideal F, int random_flag) {
 
   ideal G = F;
   
-  // Build the list of tuples of G.
+  // Build the list of triples of G.
   int i, j;
   list pairs;
   for (i = 1; i < size(G); i++) {
     for (j = i+1; j <= size(G); j++) {
-      ideal tuple;
-      if (lesspoly(G[i], G[j])) {
-	tuple = G[i], G[j];
-      } else {
-	tuple = G[j], G[i];
-      }
-      pairs = insert(pairs, tuple, size(pairs));
+      ideal triple = buildTriple(G[i], G[j]);
+      pairs = insert(pairs, triple, size(pairs));
     }
   }
   pairs = sortPairs(pairs);
@@ -3704,7 +3771,13 @@ proc mcgbGenerate(ideal E, list N, ideal F, int random_flag) {
     } else {
       G = sortSetAsce(G);
     }
-    cur_pair = pairs[random(1, size(pairs))];
+    //cur_pair = pairs[random(1, size(pairs))];
+    printf("----------------------" + newline);
+    for (i = 1; i <= size(pairs); i++) {
+      printf("Pair %s: %s;", string(i), pairs[i][3]);
+    }
+    printf("----------------------" + newline);
+    cur_pair = pairs[1];
     fprintf(special_out, "=====================");
     fprintf(special_out, "G = [");
     for (i = 1; i <= size(G); i++) {
@@ -3740,4 +3813,328 @@ proc mcgbGenerate(ideal E, list N, ideal F, int random_flag) {
 
   return (G_res);
   
+}
+
+/*
+The new MCGB Algorithm.
+ */
+
+proc getMCGB(ideal E, ideal N, ideal F) {
+  ideal G;
+  list modcgs;
+
+  (G, modcgs) = cgb_mod(F, E, idealToList(N), out);
+
+  if (size(G) == 0 || size(modcgs) == 0) {
+    return (list());
+  }
+
+  set_global_rings_mcgb();
+  set_global_objects();
+
+  G = purifyCGB(G);
+  G = sortSetDesc(G);
+  def CGB = G;
+  exportto(Top, CGB);
+
+  
+  int ring_flag = 0;
+  if (nameof(basering) != "@RP") {
+    def BR = basering;
+    setring @RP;
+    def G = imap(BR, G);
+    def modcgs = imap(BR, modcgs);
+    def CGB = G;
+    exportto(Top, CGB);
+    ring_flag = 1;
+  }
+  
+
+  list M;
+  int i, j;
+
+  for (i = 1; i <= size(G); i++) {
+    M = insert(M, G[i], size(M));
+  }
+
+  for (i = 1; i <= size(G); i++) {
+    poly cur_g = G[i];
+    if (defined(debug_mode) && debug_mode == 1) {
+      fprintf(out, "Now check g_%s = %s:", string(i), cur_g);
+    }
+    int is_essential;
+    list BL;
+    list modcgs_new;
+    list M_new;
+
+    ideal MRem_ideal = listToIdeal(deletePolyFromList(M, cur_g));
+
+    (is_essential, BL) = checkEssential(cur_g, M, modcgs);
+    if (!is_essential) {
+      // Remove cur_g from M.
+      modcgs = updateCGS(modcgs, cur_g, BL);
+      M = deletePolyFromList(M, cur_g);
+    } else {
+      // Perform simplification.
+      poly g_red = reduce(cur_g, MRem_ideal);
+      g_red = monic(g_red);
+      if (defined(debug_mode) && debug_mode == 1) {
+	fprintf(out, "%s is reduced to %s.", showParamPoly(cur_g), showParamPoly(g_red));
+      }
+      if (g_red != 0 && g_red != cur_g) {
+	M_new = insert(M, g_red, size(M));
+	(is_essential, BL) = checkEssential(cur_g, M_new, modcgs);
+	if (!is_essential) {
+
+	  modcgs = updateCGS(modcgs, cur_g, BL);
+	  M = substPolyInList(M, cur_g, g_red);
+	  if (defined(debug_mode) && debug_mode == 1) {
+	    fprintf(out, "Substitute %s for %s in M.", showParamPoly(g_red), showParamPoly(cur_g));
+	  }
+	}
+      }
+    } // End if.
+
+    
+  } // End for.
+
+  ideal M_ideal;
+  for (i = 1; i <= size(M); i++) {
+    M_ideal = insertPolyToIdeal(M_ideal, M[i]);
+  }
+
+  def MCGB = M_ideal;
+  def cgs_mcgb = modcgs;
+  
+  // Switch back to BR.
+  if (ring_flag) {
+    setring BR;
+    def MCGB = imap(@RP, MCGB);
+    def cgs_mcgb = imap(@RP, cgs_mcgb);
+  }
+
+  return (MCGB, cgs_mcgb);
+}
+
+proc getTerms(poly f) {
+  if (f == 0) {
+    return (list());
+  }
+
+  int ring_flag = 0;
+  if (nameof(basering) != "@RP") {
+    def BR = basering;
+    setring @RP;
+    def f = imap(BR, f);
+    ring_flag = 1;
+  }
+
+  list term_list;
+
+  while (f != 0) {
+    term_list = insert(term_list, leadmonom(f), size(term_list));
+    f = f - lead(f);
+  }
+
+  if (ring_flag) {
+    setring BR;
+    def term_list = imap(@RP, term_list);
+  }
+
+  return (term_list);
+}
+
+proc isDivisible(list terms_f, poly t) {
+  //basering is @RP.
+  if (size(terms_f) == 0 || t == 0) {
+    return (0, -1);
+  }
+
+  int i;
+  for (i = size(terms_f); i >= 1; i--) {
+    if (terms_f[i] / t != 0) {
+      return (1, i);
+    }
+  }
+
+  return (0, -1);
+}
+
+proc reduceOneStep(poly f, ideal G) {
+  if (size(G) == 0 || f == 0) {
+    return (f);
+  }
+  
+  int ring_flag = 0;
+  if (nameof(basering) != "@RP") {
+    def BR = basering;
+    setring @RP;
+    def f = imap(BR, f);
+    def G = imap(BR, G);
+    ring_flag = 1;
+  }
+
+  G = sortSetAsce(G);
+  int i;
+
+  list terms_f = getTerms(f);
+  int term_idx, divisible_flag;
+  
+  for (i = 1; i <= size(G); i++) {
+    (divisible_flag, term_idx) = isDivisible(terms_f, leadmonom(G[i]));
+    if (divisible_flag) {
+      f = f - (leadcoef(f[term_idx]) / leadcoef(G[i])) * (leadmonom(f[term_idx]) / leadmonom(G[i])) * G[i];
+      break;
+    }
+  }
+
+  if (ring_flag) {
+    setring BR;
+    def f = imap(@RP, f);
+  }
+  
+  return (f);
+}
+
+proc mergeList(list L1, list L2) {
+  if (size(L1) == 0) {
+    return (L2);
+  }
+
+  if (size(L2) == 0) {
+    return (L1);
+  }
+
+  int i;
+  for (i = 1; i <= size(L2); i++) {
+    if (!listContains(L1, L2[i])) {
+      L1 = insert(L1, L2[i], size(L1));
+    }
+  }
+
+  return (L1);
+}
+
+proc getMCGBNew(ideal E, ideal N, ideal F) {
+  ideal G;
+  list modcgs;
+
+  (G, modcgs) = cgb_mod(F, E, idealToList(N), out);
+
+  if (size(G) == 0 || size(modcgs) == 0) {
+    return (list());
+  }
+
+  set_global_rings_mcgb();
+  set_global_objects();
+
+  G = purifyCGB(G);
+  G = sortSetDesc(G);
+  def CGB = G;
+  exportto(Top, CGB);
+
+  
+  int ring_flag = 0;
+  if (nameof(basering) != "@RP") {
+    def BR = basering;
+    setring @RP;
+    def G = imap(BR, G);
+    def modcgs = imap(BR, modcgs);
+    def CGB = G;
+    exportto(Top, CGB);
+    ring_flag = 1;
+  }
+  
+
+  list M;
+  int i, j;
+
+  for (i = 1; i <= size(G); i++) {
+    M = insert(M, G[i], size(M));
+  }
+
+  for (i = 1; i <= size(G); i++) {
+    poly cur_g = G[i];
+    if (defined(debug_mode) && debug_mode == 1) {
+      fprintf(out, "Now check g_%s = %s:", string(i), cur_g);
+    }
+    int is_essential;
+    list BL;
+    list modcgs_new;
+    list M_new;
+
+    ideal MRem_ideal = listToIdeal(deletePolyFromList(M, cur_g));
+
+    (is_essential, BL) = checkEssential(cur_g, M, modcgs);
+    if (!is_essential) {
+      // Remove cur_g from M.
+      modcgs = updateCGS(modcgs, cur_g, BL);
+      M = deletePolyFromList(M, cur_g);
+    } else {
+      // Perform simplification.
+      poly g_red = reduce(cur_g, MRem_ideal);
+      g_red = monic(g_red);
+      if (defined(debug_mode) && debug_mode == 1) {
+	fprintf(out, "%s can be reduced to %s.", showParamPoly(cur_g), showParamPoly(g_red));
+      }
+
+      if (g_red != 0 && g_red != cur_g) {
+	M_new = insert(M, g_red, size(M));
+	(is_essential, BL) = checkEssential(cur_g, M_new, modcgs);
+	if (!is_essential) {
+	  modcgs = updateCGS(modcgs, cur_g, BL);
+	  M = substPolyInList(M, cur_g, g_red);
+	  if (defined(debug_mode) && debug_mode == 1) {
+	    fprintf(out, "Substitute %s for %s in M.", showParamPoly(g_red), showParamPoly(cur_g));
+	  }
+	} else {
+	  // One-Step reduction until essential.
+	  int terminate_flag = 0;
+	  poly g_old = cur_g;
+	  poly g_new, g_final;
+	  list BL_old, BL_new, BL_final;
+	  while (!terminate_flag) {
+	    g_new = reduceOneStep(g_old, MRem_ideal);
+	    g_new = monic(g_new);
+	    M_new = insert(M, g_new, size(M));
+	    (is_essential, BL_new) = checkEssential(cur_g, M_new, modcgs);
+	    if (is_essential) {
+	      terminate_flag = 1;
+	      BL_final = BL_old;
+	      g_final = g_old;
+	    } else {
+	      BL_old = BL_new;
+	      g_old = g_new;
+	    }
+	  }
+	  if (g_final != cur_g) {
+	    modcgs = updateCGS(modcgs, cur_g, BL_final);
+	    M = substPolyInList(M, cur_g, g_final);
+	    if (defined(debug_mode) && debug_mode == 1) {
+	      fprintf(out, "Substitute %s for %s in M.", showParamPoly(g_final), showParamPoly(cur_g));
+	    }
+	  }
+	}
+      }
+    } // End if.
+
+    
+  } // End for.
+
+  ideal M_ideal;
+  for (i = 1; i <= size(M); i++) {
+    M_ideal = insertPolyToIdeal(M_ideal, M[i]);
+  }
+
+  def MCGB = M_ideal;
+  def cgs_mcgb = modcgs;
+  
+  // Switch back to BR.
+  if (ring_flag) {
+    setring BR;
+    def MCGB = imap(@RP, MCGB);
+    def cgs_mcgb = imap(@RP, cgs_mcgb);
+  }
+
+  return (MCGB, cgs_mcgb);
 }

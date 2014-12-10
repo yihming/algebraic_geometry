@@ -43,37 +43,74 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   list Modcgs;
 
   (G_beginning, Modcgs) = cgb_mod(F, E, N, out);
-
+  list all_polys = idealToList(G_beginning);
 
   set_global_rings_mcgb();
   G_beginning = purifyCGB(G_beginning);
   exportto(Top, G_beginning);
   exportto(Top, Modcgs);
 
-  /*
+  ideal MCGB_new;
+  list cgs_mcgb_new;
+  
+  (MCGB_new, cgs_mcgb_new) = getMCGBNew(E, listToIdeal(N), F);
+  all_polys = mergeList(all_polys, idealToList(MCGB_new));
+  
+  
+
+
+  
+  ideal MCGB;
+  list cgs_mcgb;
+  (MCGB, cgs_mcgb) = getMCGB(E, listToIdeal(N), F);
+  all_polys = mergeList(all_polys, idealToList(MCGB));
+
   
   ideal RGB = getRGB(F);
+  all_polys = mergeList(all_polys, idealToList(RGB));
 
-  fprintf(out, "RGB = [");
-  int i;
-  for (i = 1; i<= size(RGB); i++) {
-    fprintf(out, "%s,", RGB[i]);
-  }
-  fprintf(out, "].");
-    
-        
-  ideal G_min = mcgbGenerate(E, N, RGB);
+
+  all_polys = sortSetAsce(all_polys);
+  exportto(Top, all_polys);
+
+
+  fprintf(out, "---------------------------" + newline);
+  fprintf(out, "MCGB" + newline);
+  showCCGB(MCGB, all_polys, out);
+  fprintf(out, "Size is: %s." + newline, string(size(MCGB)));
+  check_validity(idealToList(MCGB), Modcgs);
+  
+  fprintf(out, "--------------------------" + newline);
+  fprintf(out, "MCGB_new" + newline);
+  showCCGB(MCGB_new, all_polys, out);
+  fprintf(out, "Size is: %s." + newline, string(size(MCGB_new)));
+  check_validity(idealToList(MCGB_new), Modcgs);
+
+  fprintf(out, "--------------------------" + newline);
+  fprintf(out, "RGB" + newline);
+  showCCGB(RGB, all_polys, out);
+  fprintf(out, "Size is: %s." + newline, string(size(RGB)));
+  check_validity(idealToList(RGB), Modcgs);
+
+  fprintf(out, "==================================" + newline);
+  fprintf(out, "%s" + newline, StringCGB(G_beginning, all_polys));
+  fprintf(out, newline + "Size is: %s." + newline, string(size(G_beginning)));
+  
+  fprintf(out, "--------------------------------------" + newline);
+  fprintf(out, "%s" + newline, StringModCGS_mod(F, Modcgs, 1));
+  
+  ideal G_min = mcgbGenerate(E, N, F, 0);
   G_min = sortSetAsce(G_min);
-  fprintf(out, "Starting from RGB:");
-  fprintf(out, "G_min = [");
+  fprintf(out, "--------------------------" + newline);
+  fprintf(out, "Starting from F, G_min = [");
   int i;
   for (i = 1; i <= size(G_min); i++) {
     fprintf(out, "    %s,", G_min[i]);
   }
   fprintf(out, "].");
-
   check_validity(idealToList(G_min), Modcgs);
-      
+  
+  /*      
   
   if (!checkCGBness(G_beginning)) {
     printf("G_beginning is not a CGB!");
@@ -298,26 +335,12 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
       check_validity(idealToList(G_min), Modcgs);
     }
   }
-  
+  */
   // Print the KSWCGS and KSWCGB.
   
-  fprintf(out, "==================================" + newline);
-  fprintf(out, "%s" + newline, StringCGB(G_beginning, all_polys));
-  fprintf(out, newline + "Size is: %s." + newline, string(size(G_beginning)));
-  ideal G_min = mcgbGenerate(E, N, G_beginning);
-  fprintf(out, "Starting from KSWCGB:");
-  G_min = sortSetAsce(G_min);
-  fprintf(out, "G_min = [");
-  int i;
-  for (i = 1; i <= size(G_min); i++) {
-    fprintf(out, "    %s,", G_min[i]);
-  }
-  fprintf(out, "].");
+
   
-  fprintf(out, "--------------------------------------" + newline);
-  fprintf(out, "%s" + newline, StringModCGS_mod(F, Modcgs, 1));
   
-  */
   close(out);
   close(special_out);
   

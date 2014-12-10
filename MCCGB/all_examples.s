@@ -8,7 +8,7 @@ int debug_mode = 0;
 int sim_times = 20;
 
 intvec sim_option = 1, 0, 1, 1, 0;
-/*
+
 // bad_test.s:
 print("=========== bad_test starts ==============") ;
 	// lex order.
@@ -812,7 +812,7 @@ ideal null_ideal = 0		;
 list nonnull_list = list()	;
 simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 print("=========== quadratic finished ==============" + newline) ;
-*/
+
 // ctd.s:
 print("=========== ctd starts ==============") ;
 	// lex order.

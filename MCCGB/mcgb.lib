@@ -64,7 +64,9 @@ proc listToIdeal(list L)
   if (nameof(basering) != "@RP") {
     def BR = basering;
     setring @RP;
-    def L = imap(BR, L);
+    if (!defined(L)) {
+      def L = imap(BR, L);
+    }
     ring_flag = 1;
   }
   
@@ -2803,6 +2805,8 @@ proc faithfulPDivi(poly f_faith, poly f_nz, ideal G_faith, ideal G_nz, ideal E, 
   poly rem, m;
   ideal quots;
 
+  G_nz = purifyUnfaithBasis(G_nz, f_nz);
+  
   rem = pd_struct_nz[1];
   quots = pd_struct_nz[2];
   m = pd_struct_nz[3];
@@ -3341,18 +3345,24 @@ proc purifyUnfaithBasis(ideal G, poly h) {
   int i, j;
   list L_new;
   list pp_list;
+  int null_flag;
 
   poly ph = lppX(h);
   
   for (i = 1; i <= size(G); i++) {
     pp_list = getPPs(G[i]);
+    null_flag = 1;
     if (size(pp_list) != 0) {
       for (j = 1; j <= size(pp_list); j++) {
 	if (ph / pp_list[j] != 0) {
 	  L_new = insert(L_new, G[i], size(L_new));
+	  null_flag = 0;
 	  break;
 	}
       }
+    }
+    if (null_flag) {
+      L_new = insert(L_new, 0, size(L_new));
     }
   }
 
@@ -3421,7 +3431,7 @@ proc mcgbGenRec(ideal G, list pairs, ideal cur_pair, ideal E, list N, ideal E_gi
     }
     fprintf(special_out, "].");
     
-    G_nz = purifyUnfaithBasis(G_nz, h);
+    //G_nz = purifyUnfaithBasis(G_nz, h);
 
     fprintf(special_out, "After purify, σ(G) = [");
     for (i = 1; i <= size(G_nz); i++) {

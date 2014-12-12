@@ -21,7 +21,14 @@ intvec sim_option = 1, 1, 1, 1, 0	;
 
 ring R = (0, u, v), (x, y), lp	;
 
-ideal polys = vy, uy, uxy	;
+set_global_rings_mcgb()		;
+	
+ideal I = u2xy, u-v			;
+ideal J = v2x2, u3v-v2			;
+	
+ideal polys = 	insertPolyToIdeal(randomid(I, 1, 4), randomid(J, 1, 4)[1]) ;
+
+print(polys)			;
 	
 ideal null_ideal = 0		;
 list nonnull_list = list()	;

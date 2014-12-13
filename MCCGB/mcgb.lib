@@ -3753,16 +3753,34 @@ proc mcgbGenerate(ideal E, list N, ideal F, int random_flag) {
     N = 1;
   }
 
+  option(redSB);
+  def G = getRGB(F);
+
+  //ideal G = F;
+  
   if (random_flag) {
-    F = randomizeSet(F);
+    G = randomizeSet(G);
   } else {
-    F = sortSetDesc(F);
+    G = sortSetDesc(G);
   }
 
-  ideal G = F;
+  
   
   // Build the list of triples of G.
   int i, j;
+
+
+  def BR = basering;
+  setring @RP;
+  def G = imap(BR, G);
+  //def pairs = imap(BR, pairs);
+  def E = imap(BR, E);
+  if (!defined(N)) {
+    def N = imap(BR, N);
+  }
+
+  G = generalSimplifyBasisRaw(G, E, N, random_flag);
+
   list pairs;
   for (i = 1; i < size(G); i++) {
     for (j = i+1; j <= size(G); j++) {
@@ -3771,16 +3789,7 @@ proc mcgbGenerate(ideal E, list N, ideal F, int random_flag) {
     }
   }
   pairs = sortPairs(pairs);
-
-  def BR = basering;
-  setring @RP;
-  def G = imap(BR, G);
-  def pairs = imap(BR, pairs);
-  def E = imap(BR, E);
-  if (!defined(N)) {
-    def N = imap(BR, N);
-  }
-
+  
   ideal cur_pair;
   int global_simpl_flag = 1;
   while (size(pairs) > 0) {
@@ -3816,9 +3825,9 @@ proc mcgbGenerate(ideal E, list N, ideal F, int random_flag) {
     printf("|Pairs| = %s.", string(size(pairs)));
   }
 
-  if (global_simpl_flag && size(G) > 1) {
-    G = generalSimplifyBasisRaw(G, E, N, random_flag);
-  }
+  //if (global_simpl_flag && size(G) > 1) {
+  //  G = generalSimplifyBasisRaw(G, E, N, random_flag);
+  //}
   
   G = makeSetParamMonic(G);
 

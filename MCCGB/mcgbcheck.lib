@@ -361,8 +361,8 @@ proc getSPoly(poly f, poly g) {
     ring_flag = 1;
   }
 
-  poly teller = lcm(lm_X(f), lm_X(g));
-  poly h = (teller / lm_X(f)) * f - (teller / lm_X(g)) * g;
+  poly teiler = lcm(lm_X(f), lm_X(g));
+  poly h = (teiler / lm_X(f)) * f - (teiler / lm_X(g)) * g;
   
   if (ring_flag) {
     setring BR;

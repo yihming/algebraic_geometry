@@ -2985,9 +2985,9 @@ proc getFaithfulSPoly(poly f, poly g, poly f_nz, poly g_nz) {
     ring_flag = 1;
   }
 
-  poly teller = lcm(lm_X(f_nz), lm_X(g_nz));
-  poly h = (teller / lm_X(f_nz)) * f_nz - (teller / lm_X(g_nz)) * g_nz;
-  poly h_faith = (teller / lm_X(f_nz)) * f - (teller / lm_X(g_nz)) * g;
+  poly teiler = lcm(lm_X(f_nz), lm_X(g_nz));
+  poly h = (teiler / lm_X(f_nz)) * f_nz - (teiler / lm_X(g_nz)) * g_nz;
+  poly h_faith = (teiler / lm_X(f_nz)) * f - (teiler / lm_X(g_nz)) * g;
 
   return (h_faith, h);
 }

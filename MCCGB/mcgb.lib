@@ -619,6 +619,8 @@ proc insertPolyIntoG(list G, poly f, ideal E, list N) {
 
 proc lookUpIndex(poly f) {
   // Basering is @RP.
+  return (0);
+  
   if (size(CGB) == 0) {
     return (0);
   } else {
@@ -669,6 +671,7 @@ proc checkEssentialByHC(poly f, poly pf, list higher_coefs, poly g, list G_can, 
 	  if (defined(debug_mode) && debug_mode >= 1) {
 	    fprintf(out, "Split branch (<%s>, {%s}) w.r.t. %s:", E, N, cur_c);
 	  }
+	  printf("Split Branch 2!");
 	  list branches = splitBranch(E, N, cur_c);
 	  int is_essential;
 	  if (defined(debug_mode) && debug_mode == 1) {
@@ -833,6 +836,7 @@ proc checkEssentialInBranch(poly f, poly pf, list MRem, ideal E, list N, list G_
     if (defined(debug_mode) && debug_mode >= 1) {
       fprintf(out, "Split branch (<%s>, {%s}) w.r.t. %s:", E, N, cp);
     }
+    printf("Splitting Branch 1!");
     list branches = splitBranch(E, N, cp);
     int is_essential;
     list G_can_rem = deletePolyFromList(G_can, g);
@@ -2801,11 +2805,12 @@ proc simplifyBasis(ideal G, ideal E, list N) {
 
 // Das Problem: m * f_nz != sum(G_nz, quots) + rem machmals.
 proc faithfulPDivi(poly f_faith, poly f_nz, ideal G_faith, ideal G_nz, ideal E, list N) {
-  list pd_struct_nz = pseudoDivi(f_nz, G_nz);
   poly rem, m;
   ideal quots;
 
-  G_nz = purifyUnfaithBasis(G_nz, f_nz);
+  (G_nz, G_faith) = purifyUnfaithBasis(G_nz, G_faith, f_nz);
+  list pd_struct_nz = pseudoDivi(f_nz, G_nz);
+
   
   rem = pd_struct_nz[1];
   quots = pd_struct_nz[2];
@@ -3262,7 +3267,9 @@ proc generalSimplRecRaw(poly f, ideal G, ideal E, list N) {
     }
   } 
 
-  pdivi_res = pdivi_res + " + " + showParamPoly(rem) + ".";
+  pdivi_res = pdivi_res + " ++++ " + showParamPoly(rem) + ".";
+  show(E);
+  show(N_comp);
   printf(pdivi_res);
   
   if (rem != 0) {
@@ -3335,38 +3342,34 @@ proc getPPs(poly f) {
   return (pp_list);
 }
 
-proc purifyUnfaithBasis(ideal G, poly h) {
+proc purifyUnfaithBasis(ideal G_nz, ideal G_faith, poly h) {
   // basering is @RP.
   
-  if (size(G) == 0) {
+  if (size(G_nz) == 0) {
     return (ideal());
   }
 
   int i, j;
   list L_new;
+  list L_faith;
   list pp_list;
-  int null_flag;
 
   poly ph = lppX(h);
   
-  for (i = 1; i <= size(G); i++) {
-    pp_list = getPPs(G[i]);
-    null_flag = 1;
+  for (i = 1; i <= size(G_nz); i++) {
+    pp_list = getPPs(G_nz[i]);
     if (size(pp_list) != 0) {
       for (j = 1; j <= size(pp_list); j++) {
 	if (ph / pp_list[j] != 0) {
-	  L_new = insert(L_new, G[i], size(L_new));
-	  null_flag = 0;
+	  L_new = insert(L_new, G_nz[i], size(L_new));
+	  L_faith = insert(L_faith, G_faith[i], size(L_faith));
 	  break;
 	}
       }
     }
-    if (null_flag) {
-      L_new = insert(L_new, 0, size(L_new));
-    }
   }
 
-  return (listToIdeal(L_new));
+  return (listToIdeal(L_new), listToIdeal(L_faith));
 }
 
 proc mcgbGenRec(ideal G, list pairs, ideal cur_pair, ideal E, list N, ideal E_given, list N_given, int simpl_flag) {

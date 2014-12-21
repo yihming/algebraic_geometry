@@ -61,7 +61,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   ideal MCGB;
   list cgs_mcgb;
   //(MCGB, cgs_mcgb) = getMCGB(E, listToIdeal(N), F);
-  (MCGB, cgs_mcgb) = getMCGB(E, listToIdeal(N), G_beginning, Modcgs);
+  (MCGB, cgs_mcgb) = getMCGBComp(E, listToIdeal(N), G_beginning, Modcgs);
   all_polys = mergeList(all_polys, idealToList(MCGB));
   
   

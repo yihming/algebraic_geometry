@@ -1,5 +1,6 @@
 LIB "mcgb.lib";
 LIB "mcgbcheck.lib";
+LIB "completion.lib";
 LIB "buchtrace.lib";
 
 proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode, intvec sim_option) {
@@ -67,11 +68,11 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   
   ideal RGB = getRGB(F);
   all_polys = mergeList(all_polys, idealToList(RGB));
-  /*
+  
   ideal G_comp = mcgbGenerate(E, N, RGB, 0);
   G_comp = sortSetAsce(G_comp);
   all_polys = mergeList(all_polys, idealToList(G_comp));
-  */
+  
   all_polys = sortSetAsce(all_polys);
   exportto(Top, all_polys);
 
@@ -110,12 +111,12 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
       printf("Worse than MCGB!");
     }
   }
-  
+  */
   fprintf(out, "-----------Completion----------" + newline);
   fprintf(out, "Starting from RGB, G_comp = ");
   showCCGB(G_comp, all_polys, out);
   check_validity(idealToList(G_comp), Modcgs);
-  */
+  
   
   fprintf(out, "--------------------------" + newline);
   fprintf(out, "RGB" + newline);

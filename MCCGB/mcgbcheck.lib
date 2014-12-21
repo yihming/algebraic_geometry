@@ -46,7 +46,7 @@ proc show_list_to_file(list l, link out) {
     fprintf(out, newline);
   } else {
     for (i = 1; i <= size(l); i++) {
-      fprintf(out, "        %s,", string(l[i]));
+      fprintf(out, "        %s,", showParamPoly(l[i]));
     }
   }
 }

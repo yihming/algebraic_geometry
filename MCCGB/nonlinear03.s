@@ -24,7 +24,10 @@ ring R = (0, u, v), (x, y, z), lp;
 ideal I = ux2, y, u;
 ideal J = vy2, ux, u-v		;
 
-ideal polys = randomid(I, 1, 4) + randomid(J, 1, 4);
+	//ideal polys = randomid(I, 1, 4) + randomid(J, 1, 4);
+ideal polys = v2y4+(-uv+v2)*y2-(3/4u)*y+(1/4u2-1/2uv+1/4v2),
+	ux+2vy2+(-u+v),
+	vxy2+1/2vx+vy2+3/2y+(-1/2u+1/2v) ;
 	
 ideal null_ideal = 0		;
 list nonnull_list = list()	;

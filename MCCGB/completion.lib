@@ -245,11 +245,17 @@ proc insertPairSorted(list pairs, ideal triple) {
   }
 
   int i;
+  int insertion_flag = 1;
   for (i = 1; i <= size(pairs); i++) {
     if (!lesspair(pairs[i], triple)) {
       pairs = insert(pairs, triple, i - 1);
+      insertion_flag = 0;
       break;
     }
+  }
+
+  if (insertion_flag) {
+    pairs = insert(pairs, triple, size(pairs));
   }
 
   return (pairs);
@@ -264,6 +270,7 @@ proc insertPairsByPoly(list pairs, ideal G, poly f) {
   int i;
   for (i = 1; i <= size(G); i++) {
     ideal triple = buildTriple(G[i], f);
+    fprintf(special_out, "Insert pair: (%s, %s).", showParamPoly(triple[1]), showParamPoly(triple[2]));
     pairs = insertPairSorted(pairs, triple);
     
   }
@@ -747,6 +754,8 @@ proc mcgbGenRec(ideal G, list pairs, ideal cur_pair, ideal E, list N, ideal E_gi
   poly g_nz, g_z;
   (f_nz, f_z) = simplifyPoly(f, E, N);
   (g_nz, g_z) = simplifyPoly(g, E, N);
+  fprintf(special_out, "σ(f) = %s,", showParamPoly(f_nz));
+  fprintf(special_out, "σ(g) = %s.", showParamPoly(g_nz));
 
   int i;
   int computation_flag = 1;
@@ -773,12 +782,17 @@ proc mcgbGenRec(ideal G, list pairs, ideal cur_pair, ideal E, list N, ideal E_gi
   list N_comp = N;
 
   if (split_flag) {
+    fprintf(special_out, "Initially, N = {%s}.", N_comp);
     if (f_nz != 0) {
+      fprintf(special_out, "Add %s to N.", leadcoef_U(f_nz));
       N_comp = insert(N_comp, leadcoef_U(f_nz), size(N_comp));
+      fprintf(special_out, "Now N = {%s}.", string(N_comp));
     }
 
     if (g_nz != 0) {
+      fprintf(special_out, "Add %s to N.", leadcoef_U(g_nz));
       N_comp = insert(N_comp, leadcoef_U(g_nz), size(N_comp));
+      fprintf(special_out, "Now N = {%s}.", string(N_comp));
     }
   }
 
@@ -787,26 +801,23 @@ proc mcgbGenRec(ideal G, list pairs, ideal cur_pair, ideal E, list N, ideal E_gi
     (h_faith, h) = getFaithfulSPoly(f, g, f_nz, g_nz);
     fprintf(special_out, "σ(h) = %s.", showParamPoly(h));
     fprintf(special_out, "Beginning, E = <%s>,", E);
-    fprintf(special_out, "N = {%s}.", N_comp);
+    fprintf(special_out, "N = {%s}.", string(N_comp));
     ideal G_nz = simplifyBasis(G, E, N_comp);
-    fprintf(special_out, "Before purify, σ(G) = [");
+    fprintf(special_out, "σ(G) = [");
     for (i = 1; i <= size(G_nz); i++) {
       fprintf(special_out, "%s,", showParamPoly(G_nz[i]));
     }
     fprintf(special_out, "].");
     
-    //G_nz = purifyUnfaithBasis(G_nz, h);
-
-    fprintf(special_out, "After purify, σ(G) = [");
     for (i = 1; i <= size(G_nz); i++) {
       fprintf(special_out, "%s,", showParamPoly(G_nz[i]));
     }
     fprintf(special_out, "].");
 
     // Under building.
-    if (size(G_nz) == 0) {
-      return (G, pairs, simpl_flag);
-    }
+    //if (size(G_nz) == 0) {
+    //return (G, pairs, simpl_flag);
+    //}
 
     // End under building.
     
@@ -837,16 +848,18 @@ proc mcgbGenRec(ideal G, list pairs, ideal cur_pair, ideal E, list N, ideal E_gi
     fprintf(special_out, "%s", pdivi_res);
 
     N_comp = insert(N_comp, m, size(N_comp));
+    fprintf(special_out, "Finally, N = {%s}.", string(N_comp));
   }
 
+  fprintf(special_out, "This pseudo-division is valid under:");
   fprintf(special_out, "E = <%s>,", E);
-  fprintf(special_out, "N = {%s}.", N_comp);
+  fprintf(special_out, "N = {%s}." + newline, string(N_comp));
   
   if (rem != 0) {
     // Add new polynomial to G.
-    ideal G_old = G;
-    G = insertPolyToIdeal(G, rem);
-    printf("Add poly %s.", showParamPoly(rem));
+    //ideal G_old = G;
+    //G = insertPolyToIdeal(G, rem);
+    fprintf(special_out, "Add poly %s.", showParamPoly(rem));
     /*
     ideal G_sub;
     for (i = 1; i <= size(G_old); i++) {
@@ -860,7 +873,13 @@ proc mcgbGenRec(ideal G, list pairs, ideal cur_pair, ideal E, list N, ideal E_gi
       }
     }
     */
-    pairs = insertPairsByPoly(pairs, deletePolyFromIdeal(G, rem), rem);
+    fprintf(special_out, "----------Update critical pairs--------");
+    //pairs = insertPairsByPoly(pairs, deletePolyFromIdeal(G, rem), rem);
+    pairs = insertPairsByPoly(pairs, G, rem);
+    G = insertPolyToIdeal(G, rem);
+    fprintf(special_out, "|Pairs| = %s.", string(size(pairs)));
+    fprintf(special_out, "%s.", showPairs(pairs, G));
+    fprintf(special_out, "------Finish updating critical pairs------");
     
     simpl_flag = 0;
   }
@@ -1143,8 +1162,9 @@ proc mcgbGenerate(ideal E, list N, ideal F, int random_flag) {
   if (!defined(N)) {
     def N = imap(BR, N);
   }
-
+  fprintf(special_out, "-----------Remove Redundant----------");
   G = generalSimplifyBasisRaw(G, E, N, random_flag);
+  fprintf(special_out, "------------Finish Initial Removal------");
 
   list pairs;
   for (i = 1; i < size(G); i++) {
@@ -1175,23 +1195,20 @@ proc mcgbGenerate(ideal E, list N, ideal F, int random_flag) {
     fprintf(special_out, "Now consider:");
     fprintf(special_out, "G[%s] = %s", string(searchIndex(cur_pair[1], G)), showParamPoly(cur_pair[1]));
     fprintf(special_out, "G[%s] = %s", string(searchIndex(cur_pair[2], G)), showParamPoly(cur_pair[2]));
-    /*printf("========================");
-    printf("Now consider:");
-    printf("G[%s] = %s", string(searchIndex(cur_pair[1], G)), showParamPoly(cur_pair[1]));
-    printf("G[%s] = %s", string(searchIndex(cur_pair[2], G)), showParamPoly(cur_pair[2]));*/
     (G, pairs, simpl_flag) = mcgbGenRec(G, pairs, cur_pair, E, N, E, N, simpl_flag);
     if (simpl_flag == 0) {
       global_simpl_flag = 0;
     }
     pairs = deletePair(pairs, cur_pair);
+    fprintf(special_out, "Finsh this pair.");
     fprintf(special_out, "|G| = %s.", string(size(G)));
     fprintf(special_out, "%s", showPairs(pairs, G));
-    printf("|G| = %s.", string(size(G)));
-    printf("|Pairs| = %s.", string(size(pairs)));
   }
 
   //if (global_simpl_flag && size(G) > 1) {
+  fprintf(special_out, "------------Remove Redundant------------");
   G = generalSimplifyBasisRaw(G, E, N, random_flag);
+  fprintf(special_out, "------------Finish Final Removal--------");
   //}
   
   G = sortSetDesc(G);

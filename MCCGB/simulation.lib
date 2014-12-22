@@ -51,14 +51,14 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   G_beginning = purifyCGB(G_beginning);
   exportto(Top, G_beginning);
   exportto(Top, Modcgs);
-  /*
+  
   ideal MCGB_new;
   list cgs_mcgb_new;
     
   (MCGB_new, cgs_mcgb_new) = getMCGBNew1(E, listToIdeal(N), F);
   all_polys = mergeList(all_polys, idealToList(MCGB_new));
   printf("Step one finished!");
-  */
+  
   ideal MCGB;
   list cgs_mcgb;
   //(MCGB, cgs_mcgb) = getMCGB(E, listToIdeal(N), F);
@@ -69,27 +69,36 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   ideal RGB = getRGB(F);
   all_polys = mergeList(all_polys, idealToList(RGB));
   
+  /*
   ideal G_comp = mcgbGenerate(E, N, RGB, 0);
   G_comp = sortSetAsce(G_comp);
   all_polys = mergeList(all_polys, idealToList(G_comp));
+  */
   
   all_polys = sortSetAsce(all_polys);
   exportto(Top, all_polys);
 
-  
+
   fprintf(out, "---------------------------" + newline);
   fprintf(out, "MCGB" + newline);
   showCCGB(MCGB, all_polys, out);
   fprintf(out, "Size is: %s." + newline, string(size(MCGB)));
   check_validity(idealToList(MCGB), Modcgs);
   
-  for (i = 1; i <= size(MCGB); i++) {
-    if (!idealContains(G_beginning, MCGB[i])) {
+  fprintf(out, "---------------------------" + newline);
+  fprintf(out, "MCGB_new" + newline);
+  showCCGB(MCGB_new, all_polys, out);
+  fprintf(out, "Size is: %s." + newline, string(size(MCGB_new)));
+  check_validity(idealToList(MCGB_new), Modcgs);
+  
+  for (i = 1; i <= size(MCGB_new); i++) {
+    if (!idealContains(G_beginning, MCGB_new[i])) {
       fprintf(out, "MCGB is not a subset of KSWCGB!");
       printf("MCGB is not a subset of KSWCGB!");
       break;
     }
   }
+  
   /*
   fprintf(out, "--------------------------" + newline);
   fprintf(out, "MCGB_new" + newline);
@@ -111,12 +120,12 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
       printf("Worse than MCGB!");
     }
   }
-  */
+  
   fprintf(out, "-----------Completion----------" + newline);
   fprintf(out, "Starting from RGB, G_comp = ");
   showCCGB(G_comp, all_polys, out);
   check_validity(idealToList(G_comp), Modcgs);
-  
+  */
   
   fprintf(out, "--------------------------" + newline);
   fprintf(out, "RGB" + newline);

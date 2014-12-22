@@ -714,7 +714,7 @@ proc purifyUnfaithBasis(ideal G_nz, ideal G_faith, poly h) {
   // basering is @RP.
   
   if (size(G_nz) == 0) {
-    return (ideal());
+    return (ideal(), ideal());
   }
 
   int i, j;

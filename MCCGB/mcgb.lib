@@ -2196,6 +2196,7 @@ proc getMCGB(ideal E, ideal N, ideal F) {
 
 	  modcgs = updateCGS(modcgs, cur_g, BL);
 	  M = substPolyInList(M, cur_g, g_red);
+	  printf("Substitution!");
 	  if (defined(debug_mode) && debug_mode == 1) {
 	    fprintf(out, "Substitute %s for %s in M.", showParamPoly(g_red), showParamPoly(cur_g));
 	  }
@@ -2484,6 +2485,7 @@ proc getMCGBNew1(ideal E, ideal N, ideal F) {
 	if (!is_essential) {
 	  modcgs = updateCGS(modcgs, cur_g, BL);
 	  M = substPolyInList(M, cur_g, g_red);
+	  printf("Substitute!");
 	  if (defined(debug_mode) && debug_mode == 1) {
 	    fprintf(out, "Substitute %s for %s in M.", showParamPoly(g_red), showParamPoly(cur_g));
 	  }

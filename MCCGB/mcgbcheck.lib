@@ -487,6 +487,8 @@ proc numParamMonom(poly f) {
 // 1 if the current case is fine, and no need to go further;
 // 2 if the current case if fine, but have to consider further.
 proc optBuchberger(poly f_nz, poly g_nz, ideal E, list N) {
+  return (0, ideal(), list());
+
   int ring_flag = 0;
   if (nameof(basering) != "@RP") {
     def BR = basering;

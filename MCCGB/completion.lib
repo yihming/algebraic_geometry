@@ -847,6 +847,7 @@ proc mcgbGenRec(ideal G, list pairs, ideal cur_pair, ideal E, list N, ideal E_gi
     ideal G_old = G;
     G = insertPolyToIdeal(G, rem);
     printf("Add poly %s.", showParamPoly(rem));
+    /*
     ideal G_sub;
     for (i = 1; i <= size(G_old); i++) {
       printf("Simplify %s:", showParamPoly(G_old[i]));
@@ -858,7 +859,7 @@ proc mcgbGenRec(ideal G, list pairs, ideal cur_pair, ideal E, list N, ideal E_gi
 	pairs = deletePairByPoly(pairs, G_old[i]);
       }
     }
-
+    */
     pairs = insertPairsByPoly(pairs, deletePolyFromIdeal(G, rem), rem);
     
     simpl_flag = 0;
@@ -1041,7 +1042,7 @@ proc generalSimplifyBasisRaw(ideal G, ideal E, list N, int random_flag) {
   ideal I;
   int i;
   for (i = 1; i <= size(G_old); i++) {
-    printf("Now consider %s:", G_old[i]);
+    printf("Now consider %s:", showParamPoly(G_old[i]));
     I = deletePolyFromIdeal(G, G_old[i]);
     if (generalSimplifyRaw(G_old[i], I, E, N) == 0) {
       G = I;
@@ -1190,9 +1191,10 @@ proc mcgbGenerate(ideal E, list N, ideal F, int random_flag) {
   }
 
   //if (global_simpl_flag && size(G) > 1) {
-  //  G = generalSimplifyBasisRaw(G, E, N, random_flag);
+  G = generalSimplifyBasisRaw(G, E, N, random_flag);
   //}
   
+  G = sortSetDesc(G);
   G = makeSetParamMonic(G);
 
   setring BR;

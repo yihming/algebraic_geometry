@@ -937,12 +937,12 @@ proc set_global_objects() {
   setring BR;
 }
 
-proc mcgbMain(ideal E, list N, ideal F) {
+proc mcgbMain(ideal E, list N, int choice_flag, ideal F) {
   // basering is @R.
   ideal G;
   list modcgs;
 
-  (G, modcgs) = cgb_mod(F, E, N, out);
+  (G, modcgs) = cgb_mod(F, E, N, choice_flag, out);
 
   if (size(G) == 0 || size(modcgs) == 0) {
     return (list());
@@ -1610,11 +1610,11 @@ proc substPolyInList(list M, poly g_old, poly g_new) {
   return (M);
 }
 
-proc ccgbMain(ideal E, list N, ideal F) {
+proc ccgbMain(ideal E, list N, int choice_flag ideal F) {
   ideal G;
   list modcgs;
 
-  (G, modcgs) = cgb_mod(F, E, N, out);
+  (G, modcgs) = cgb_mod(F, E, N, choice_flag, out);
 
   if (size(G) == 0 || size(modcgs) == 0) {
     return (list());
@@ -2127,11 +2127,11 @@ proc makeCGBReduced(list M, list Modcgs) {
 The new MCGB Algorithm.
  */
 
-proc getMCGB(ideal E, ideal N, ideal F) {
+proc getMCGB(ideal E, ideal N, ideal F, int choice_flag) {
   ideal G;
   list modcgs;
 
-  (G, modcgs) = cgb_mod(F, E, idealToList(N), out);
+  (G, modcgs) = cgb_mod(F, E, idealToList(N), choice_flag, out);
 
   if (size(G) == 0 || size(modcgs) == 0) {
     return (ideal(), list());
@@ -2419,11 +2419,11 @@ proc mergeList(list L1, list L2) {
   return (L1);
 }
 
-proc getMCGBNew1(ideal E, ideal N, ideal F) {
+proc getMCGBNew1(ideal E, ideal N, ideal F, int choice_flag) {
   ideal G;
   list modcgs;
 
-  (G, modcgs) = cgb_mod(F, E, idealToList(N), out);
+  (G, modcgs) = cgb_mod(F, E, idealToList(N), choice_flag, out);
 
   if (size(G) == 0 || size(modcgs) == 0) {
     return (list());
@@ -2549,11 +2549,11 @@ proc getMCGBNew1(ideal E, ideal N, ideal F) {
   return (MCGB, cgs_mcgb);
 }
 
-proc getMCGBNew2(ideal E, ideal N, ideal F) {
+proc getMCGBNew2(ideal E, ideal N, ideal F, int choice_flag) {
   ideal G;
   list modcgs;
 
-  (G, modcgs) = cgb_mod(F, E, idealToList(N), out);
+  (G, modcgs) = cgb_mod(F, E, idealToList(N), choice_flag, out);
 
   if (size(G) == 0 || size(modcgs) == 0) {
     return (list());

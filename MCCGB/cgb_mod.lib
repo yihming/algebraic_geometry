@@ -483,11 +483,116 @@ proc Bigger(list c1 , list c2)
 }
 
 
+/*
+Yiming: 
+  choice_flag = 1  --  pick the one with least faithful form;
+  choice_flag = 0  -- pick the one with least non-zero form.
+ */
 
-proc Get_MDBasis(ideal GB)
+proc polyToTuple(poly f) {
+  // Basering is @AXU.
+  ideal U = groebner(ideal(Auxiliary[1] - 1, Auxiliary[2]));
+  ideal V = groebner(ideal(Auxiliary[1], Auxiliary[2] - 1));
+  
+  if (f == 0) {
+    return (0, 0);
+  }
+
+  poly f1 = reduce(f, U);
+  poly f0 = reduce(f, V);
+
+  return (f1, f0);
+}
+
+proc tupleToAuxPoly(list tuple) {
+  // Basering is @AXU.
+  return (tuple[1] * Auxiliary[1] + tuple[2] * Auxiliary[2]);
+}
+
+proc sortPolyAsceByFaith(list G_tuple) {
+  // Basering is @AXU.
+  if (size(G_tuple) <= 1) {
+    return (G_tuple);
+  }
+
+  // Bubble sort.
+  int i;
+  int swapped = 1;
+  int n = size(G_tuple);
+  list tmp;
+
+  while (swapped) {
+    swapped = 0;
+    for (i = 1; i <= n - 1; i++) {
+      if (lppX(G_tuple[i][1]) == lppX(G_tuple[i+1][1])) {
+	// same leading term in non-zero parts.
+	poly f = monic(G_tuple[i][1] + G_tuple[i][2]);
+	poly g = monic(G_tuple[i+1][1] + G_tuple[i+1][2]);
+	if (!lesspoly(f, g)) {
+	  tmp = G_tuple[i];
+	  G_tuple[i] = G_tuple[i+1];
+	  G_tuple[i+1] = tmp;
+	  swapped = 1;
+	}	
+      } else {
+	// Different leading term in non-zero parts.
+	if (!lesspoly(G_tuple[i][1], G_tuple[i+1][1])) {
+	  tmp = G_tuple[i];
+	  G_tuple[i] = G_tuple[i+1];
+	  G_tuple[i+1] = tmp;
+	  swapped = 1;
+	}
+      }
+      
+    }
+    n = n - 1;
+  }
+
+  return (G_tuple);
+}
+
+proc Get_MDBasis(ideal GB, int choice_flag) {
+  // basering is @AXU.
+  if (size(GB) == 0) {
+    return (list(), list());
+  }
+
+  if (!choice_flag) {
+    return (Get_MDBasisOrigin(GB));
+  }
+
+  // choice_flag == 1.
+  list G_tuple;
+  int i;
+  poly p1, p0;
+  for (i = 1; i <= size(GB); i++) {
+    (p1, p0) = polyToTuple(GB[i]);
+    G_tuple = insert(G_tuple, list(p1, p0), size(G_tuple));
+  }
+
+  G_tuple = sortPolyAsceByFaith(G_tuple);
+  list mdb_tuple = removeLPPXRedundancy(G_tuple);
+
+  list mdbasis;
+  poly lc_prod = 1;
+  for (i = 1; i <= size(mdb_tuple); i++) {
+    mdbasis = insert(mdbasis, tupleToAuxPoly(mdb_tuple[i]), size(mdbasis));
+    lc_prod = lc_prod * leadcoef_U(mdb_tuple[i][1]);
+  }
+
+
+
+  list lc_factors = idealToList(factorize(lc_prod, 1));
+
+  return (mdbasis, lc_factors);
+  
+}
+
+proc Get_MDBasisOrigin(ideal GB)
 {
   setring(@RUA);
   ideal newGB = imap(@AXU, GB);
+
   list MDBasis, MList, LCoefs;
   poly P, mon;
   int i, j;
@@ -709,7 +814,7 @@ proc sortLCAsce(list L) {
 }
 
 
-proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
+proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu, int choice_flag)
 {
   ideal GB, AllVarPolys, CGB;
   list Gr, MGr, MDBasis, LeadCoeffFactors;
@@ -746,8 +851,9 @@ proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
 
   //get minimal Dickson basis
   AllVarPolys, Gr, MGr = Divides_MPolys(GB);
+
   int trivial_flag = 0;
-  MDBasis, LeadCoeffFactors = Get_MDBasis(AllVarPolys);
+  MDBasis, LeadCoeffFactors = Get_MDBasis(AllVarPolys, choice_flag);
 
   //trivial branches
   for (i = 1; i <= size(Gr); i++)
@@ -774,7 +880,7 @@ proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
     MixIdeals = MPolys + newMEqu;
     GB = std(MixIdeals);
     AllVarPolys, Gr, MGr = Divides_MPolys(GB);
-    MDBasis, LeadCoeffFactors = Get_MDBasis(AllVarPolys);
+    MDBasis, LeadCoeffFactors = Get_MDBasis(AllVarPolys, choice_flag);
   }
 
 
@@ -800,7 +906,7 @@ proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu)
   for (i = 1; i <= size(LeadCoeffFactors); i++)
   {
     //CGB = CGB + cgb_mod_main(AllVarPolys, newEqu + LeadCoeffFactors[i], newDisEqu + tempDisEqu);
-    CGB = CGB + cgb_mod_main(MPolys, newEqu + LeadCoeffFactors[i], newDisEqu + tempDisEqu);
+    CGB = CGB + cgb_mod_main(MPolys, newEqu + LeadCoeffFactors[i], newDisEqu + tempDisEqu, choice_flag);
     tempDisEqu = tempDisEqu + list(LeadCoeffFactors[i]);
   }
 
@@ -910,14 +1016,14 @@ proc set_global_rings() {
 }	
 
 // This is the top-level function.
-proc cgb_mod(ideal Polys, ideal Equ, list DisEqu, link out)
+proc cgb_mod(ideal Polys, ideal Equ, list DisEqu, int choice_flag, link out)
 {
   // BR is R[U][X].
   def BR = basering;
 
   //  option(redSB);
 
-  set_global_rings(ordering);
+  set_global_rings();
 
   // Base ring is R[A, X, U] now.
   // Set Variable List.
@@ -962,22 +1068,22 @@ proc cgb_mod(ideal Polys, ideal Equ, list DisEqu, link out)
   if (size(Equ) == 0) {
     if (size(DisEqu) == 0) {
       setring(@AXU);
-      ideal G = cgb_mod_main(MPolys, ideal(), list());
+      ideal G = cgb_mod_main(MPolys, ideal(), list(), choice_flag);
     } else {
       setring(@AXU);
       def DisEqu = imap(BR, DisEqu);
-      ideal G = cgb_mod_main(MPolys, ideal(), DisEqu);
+      ideal G = cgb_mod_main(MPolys, ideal(), DisEqu, choice_flag);
     }
   } else {
     if (size(DisEqu) == 0) {
       setring(@AXU);
       def Equ = imap(BR, Equ);
-      ideal G = cgb_mod_main(MPolys, Equ, list());
+      ideal G = cgb_mod_main(MPolys, Equ, list(), choice_flag);
     } else {
       setring(@AXU);
       def Equ = imap(BR, Equ);
       def DisEqu = imap(BR, DisEqu);
-      ideal G = cgb_mod_main(MPolys, Equ, DisEqu);
+      ideal G = cgb_mod_main(MPolys, Equ, DisEqu, choice_flag);
     }
   }
 

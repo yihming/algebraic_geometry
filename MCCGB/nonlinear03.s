@@ -21,14 +21,14 @@ intvec sim_option = 1, 1, 1, 1, 0	;
 // degree reversed lex order.
 ring R = (0, u, v), (x, y, z), lp;
 
-//ideal I = ux2, y, u;
-//ideal J = vy2, ux, u-v		;
+ideal I = ux2, y, u;
+ideal J = vy2, ux, u-v		;
 //ideal I = ux2y, vy, u	;
 //ideal J = vxy2, uy, v	;
 //ideal K = u		;
 
-//ideal polys = randomid(I, 1, 4) + randomid(J, 1, 4);
-ideal polys = ux2-2y+(4u+4v)*z, (-2u+2v)*x2-2y+4vz ;
+ideal polys = randomid(I, 1, 4) + randomid(J, 1, 4);
+//ideal polys = ux2-2y+(4u+4v)*z, (-2u+2v)*x2-2y+4vz ;
 	
 ideal null_ideal = 0		;
 list nonnull_list = list()	;

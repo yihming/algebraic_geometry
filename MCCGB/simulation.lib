@@ -47,14 +47,17 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   set_global_rings();
   
   
-  ideal G_init;
+  ideal G_origin;
   list Modcgs;
-  (G_init, Modcgs) = cgb_mod(F, E, N, 1, out);
+  (G_origin, Modcgs) = cgb_mod(F, E, N, 1, out);
+  G_origin = sortSetAsce(G_origin);
   printf("Step 0 is finished!");
-  list all_polys = idealToList(G_init);
+  list all_polys = idealToList(G_origin);
   
   set_global_rings_mcgb();
-  G_init = purifyCGB(G_init);
+  ideal G_init = purifyCGB(G_origin);
+  G_init = sortSetAsce(G_init);
+  all_polys = mergeList(all_polys, idealToList(G_init));
   exportto(Top, G_init);
   exportto(Top, Modcgs);
 
@@ -137,6 +140,11 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   check_validity(idealToList(MCGB_step), Modcgs);
 
   fprintf(out, "=============Faith=================" + newline);
+  fprintf(out, "Before preprocess:");
+  fprintf(out, "%s" + newline, StringCGB(G_origin, all_polys));
+  fprintf(out, newline + "Size is: %s." + newline, string(size(G_origin)));
+
+  fprintf(out, "After preprocess:");
   fprintf(out, "%s" + newline, StringCGB(G_init, all_polys));
   fprintf(out, newline + "Size is: %s." + newline, string(size(G_init)));
   check_validity(idealToList(G_init), Modcgs);

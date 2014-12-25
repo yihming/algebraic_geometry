@@ -945,7 +945,7 @@ proc mcgbMain(ideal E, list N, int choice_flag, ideal F) {
   (G, modcgs) = cgb_mod(F, E, N, choice_flag, out);
 
   if (size(G) == 0 || size(modcgs) == 0) {
-    return (list());
+    return (ideal(), modcgs);
   }
 
   set_global_rings_mcgb();
@@ -1012,7 +1012,7 @@ proc mcgbMainComp(ideal G, list modcgs) {
   // basering is @R.
 
   if (size(G) == 0 || size(modcgs) == 0) {
-    return (list());
+    return (ideal(), modcgs);
   }
 
   set_global_rings_mcgb();
@@ -1070,6 +1070,59 @@ proc mcgbMainComp(ideal G, list modcgs) {
   def modcgsRed = imap(@RP, modcgsRed);
 
   return (M, modcgsRed);
+}
+
+proc mcgbMainFalscher(ideal G, list modcgs) {
+  // basering is @R.
+
+  if (size(G) == 0 || size(modcgs) == 0) {
+    return (ideal());
+  }
+
+  set_global_rings_mcgb();
+
+  set_global_objects();
+
+  G = purifyCGB(G);
+
+  // Switch to @RP.
+  setring(@RP);
+  def G = imap(@R, G);
+  G = sortSetDesc(G);
+
+  def CGB = G;
+  exportto(Top, CGB);
+  def modcgs = imap(@R, modcgs);
+
+  list modcgsRed = makeRRep(modcgs);
+  list M;
+  int i, j;
+  for (i = 1; i <= size(G); i++) {
+    M[i] = G[i];
+  }
+
+  for (i = 1; i <= size(G); i++) {
+    poly cur_f = G[i];
+    if (defined(debug_mode) && debug_mode == 1) {
+      fprintf(out, "Now check f_%s = %s:", string(i), showParamPoly(cur_f));
+    }
+    int is_essential;
+    list BL;
+    (is_essential, BL) = checkEssential(cur_f, M, modcgsRed);
+    if (is_essential == 0) {
+      // Don't update CGS.
+      M = deletePolyFromList(M, cur_f);
+    } 
+    
+  }
+
+  ideal M_id = listToIdeal(M);
+
+  // Switch back to @R.
+  setring(@R);
+  def M = imap(@RP, M_id);
+
+  return (M);
 }
 
 // For Canonical CGB.

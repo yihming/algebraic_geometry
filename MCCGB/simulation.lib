@@ -3,6 +3,55 @@ LIB "mcgbcheck.lib";
 LIB "completion.lib";
 LIB "buchtrace.lib";
 
+proc sucheBeispiel(ideal G, list Modcgs, ideal M1, list cgs_m1, ideal M_simpl, list cgs_simpl, ideal M_step) {
+  // Without updating CGS, result is not CGB.
+  printf("Without updating CGS:");
+  ideal M_falsche = mcgbMainFalscher(G, Modcgs);
+  int valid_flag = check_validity(idealToList(M_falsche), Modcgs);
+  if (valid_flag == 1) {
+    printf("Result is still MCGB.");
+  } else {
+    if (valid_flag == -1) {
+      printf("Result is a CGB, not minimal!");
+    } else {
+      printf("RESULT IS NOT EVEN A CGB!");
+    }
+  }
+
+
+  // Branch split on CGS.
+  if (size(cgs_m1) > size(Modcgs)) {
+    printf("CGS of M has branch split!");
+  } else {
+    printf("CGS of M has NO branch split!");
+  }
+
+  // M_simpl < M1.
+  int cmp_flag = lessSet(idealToList(M_simpl), idealToList(M1));
+  if (cmp_flag == 1) {
+    printf("M_simpl is better than M!");
+  } else {
+    if (cmp_flag == 2) {
+      printf("M_simpl is the same as M!");
+    } else {
+      printf("M_simpl is worse than M!");
+    }
+  }
+
+  // M_step < M_simpl.
+  cmp_flag = lessSet(idealToList(M_step), idealToList(M_simpl));
+  if (cmp_flag == 1) {
+    printf("M_step is better than M_simpl!");
+  } else {
+    if (cmp_flag == 2) {
+      printf("M_step is the same as M_simpl!");
+    } else {
+      printf("M_step is worse than M_simpl!");
+    }
+  }
+
+}
+
 proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode, intvec sim_option) {
   def BR = basering;
   system("--no-warn", 1);
@@ -85,39 +134,6 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   all_polys = sortSetAsce(all_polys);
   exportto(Top, all_polys);
 
-  if (size(cgs_m1) > size(Modcgs)) {
-    printf("Have branch split!");
-  } else {
-    printf("No branch split!");
-  }
-
-  int cmp_flag = lessSet(idealToList(M2), idealToList(M1));
-  if (cmp_flag == 1) {
-    fprintf(out, "M2 is better than M1!");
-    printf("M2 is Better than M1!");
-  } else {
-    if (cmp_flag == 2) {
-      fprintf(out, "M2 is the same as M1!");
-      printf("M2 is the same as M1!");
-    } else {
-      fprintf(out, "M2 is worse than M1!");
-      printf("M2 is worse than M1!");
-    }
-  }
-
-  cmp_flag = lessSet(idealToList(MCGB_step), idealToList(M2));
-  if (cmp_flag == 1) {
-    fprintf(out, "MCGB_step is better than M2");
-    printf("MCGB_step is better than M2!");
-  } else {
-    if (cmp_flag == 2) {
-      fprintf(out, "MCGB_step is the same as M2!");
-      printf("MCGB_step is the same as M2!");
-    } else {
-      fprintf(out, "MCGB_step is worse than M2!");
-      printf("MCGB_step is worse than M2!");
-    }
-  }
   
 
   fprintf(out, "---------------------------" + newline);
@@ -151,16 +167,10 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   
   fprintf(out, "--------------------------------------" + newline);
   fprintf(out, "%s" + newline, StringModCGS_mod(F, Modcgs, 1));
+
+
+  sucheBeispiel(G_init, Modcgs, M1, cgs_m1, M2, cgs_m2, MCGB_step);
   
-  /*
-  for (i = 1; i <= size(MCGB_new); i++) {
-    if (!idealContains(G_beginning, MCGB_new[i])) {
-      fprintf(out, "MCGB is not a subset of KSWCGB!");
-      printf("MCGB is not a subset of KSWCGB!");
-      break;
-    }
-  }
-  */
   
   /*
   fprintf(out, "-----------Completion----------" + newline);

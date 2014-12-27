@@ -17,10 +17,14 @@ int debug_mode = 0		;
 // opt4 -- 1 if running checking the CGBness of RGB; 0 otherwise.
 intvec sim_option = 1,0,1,1,1	;
 	
-ring r = (0, a, b), (x, y, u, v), dp;
+ring r = (0, a, b), (x, y, u, v), Dp;
 
-ideal polys = (a-1)*u - b*(x-1), (a-1)*(x+1)+bu,
-	(a+1)*v - b*(y+1), (a+1)*(y-1) + bv ;
+//ideal polys = (a-1)*u - b*(x-1), (a-1)*(x+1)+bu,
+//	(a+1)*v - b*(y+1), (a+1)*(y-1) + bv ;
+
+ideal polys  =(a-1)*u2 - b*(x2-1), (a-1)*(x2+1)+bu2,
+	(a+1)*v2 - b*(y2+y), (a+1)*(y2-1) + bv2 ;
+	
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
 

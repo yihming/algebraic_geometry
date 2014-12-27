@@ -3,16 +3,19 @@ LIB "mcgbcheck.lib";
 LIB "completion.lib";
 LIB "buchtrace.lib";
 
-proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode, intvec sim_option) {
+proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode) {
   def BR = basering;
   system("--no-warn", 1);
+  system("--ticks-per-sec", 1000);
 
   exportto(Top, out);
   exportto(Top, debug_mode);
   link special_out = "debug_info.mp";
+  link time_res = "time_info.mp";
   exportto(Top, special_out);
   open(out);
   open(special_out);
+  open(time_res);
 
 
   int gen_simpl_flag = 1;
@@ -22,6 +25,10 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   // Print the ring configuration.
   fprintf(out, "The given ring is:");
   fprintf(out, "%s" + newline, BR);
+
+  fprintf(time_res, newline + "+++++++++++++++++++++");
+  fprintf(time_res, "The given ring is:");
+  fprintf(time_res, "%s"+newline, BR);
 
   // Print the given parametric ideal.
   fprintf(out, "F = {");
@@ -49,7 +56,15 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   
   ideal G_origin;
   list Modcgs;
+  timer = 0;
+  int cnt_Time = timer;
   (G_origin, Modcgs) = cgb_mod(F, E, N, 1, out);
+  int time_cnt_KSW = timer - cnt_Time;
+  fprintf(time_res, "|CGS| = %s.", string(size(Modcgs)));
+  fprintf(time_res, "|G| = %s.", string(size(G_origin)));
+  fprintf(time_res, "Time Used: %s ms." + newline, string(time_cnt_KSW));
+
+  
   G_origin = sortSetAsce(G_origin);
   printf("Step 0 is finished!");
   list all_polys = idealToList(G_origin);
@@ -60,22 +75,39 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   all_polys = mergeList(all_polys, idealToList(G_init));
   exportto(Top, G_init);
   exportto(Top, Modcgs);
-
+  
   ideal M1;
   list cgs_m1;
+  timer = 0;
+  cnt_Time = timer;
   (M1, cgs_m1) = mcgbMainComp(G_init, Modcgs);
+  int time_cnt_MCGB = timer - cnt_Time;
+  fprintf(time_res, "|CGS_M| = %s.", string(size(cgs_m1)));
+  fprintf(time_res, "|M|: %s", string(size(M1)));
+  fprintf(time_res, "Time Used: %s ms." + newline, string(time_cnt_MCGB));
   all_polys = mergeList(all_polys, idealToList(M1));
   
   ideal M2;
   list cgs_m2;
+  timer = 0;
+  cnt_Time = timer;
   (M2, cgs_m2) = getMCGBComp(E, listToIdeal(N), G_init, Modcgs);
+  int time_cnt_MSIMPL = timer - cnt_Time;
+  fprintf(time_res, "|CGS_M_SIMPL| = %s.", string(size(cgs_m2)));
+  fprintf(time_res, "|M_simpl| = %s.", string(size(M2)));
+  fprintf(time_res, "Time Used: %s ms." + newline, string(time_cnt_MSIMPL));
   all_polys = mergeList(all_polys, idealToList(M2));
-  
+
+  fprintf(time_res, "Total time of MCGB: %s ms;", string(time_cnt_MCGB+time_cnt_KSW));
+  fprintf(time_res, "Percentage of MCGB: %s / %s.", string(time_cnt_MCGB), string(time_cnt_MCGB + time_cnt_KSW));
+  fprintf(time_res, "Total time of M_simpl: %s ms;", string(time_cnt_MSIMPL + time_cnt_KSW));
+fprintf(time_res, "Percentage of M_simpl: %s / %s.", string(time_cnt_MSIMPL), string(time_cnt_MSIMPL + time_cnt_KSW));
+ 
   ideal MCGB_step;
   list cgs_step;
   (MCGB_step, cgs_step) = getMCGBNew1(E, listToIdeal(N), F, 1);
   all_polys = mergeList(all_polys, idealToList(MCGB_step));
-
+  
   /*
   ideal G_comp = mcgbGenerate(E, N, RGB, 0);
   G_comp = sortSetAsce(G_comp);
@@ -174,5 +206,5 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   
   close(out);
   close(special_out);
-  
+  close(time_res);
 }

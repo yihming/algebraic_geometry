@@ -19,20 +19,18 @@ int sim_times = 20	;
 intvec sim_option = 1, 1, 1, 1, 0	;
 
 // degree reversed lex order.
-	//ring R = (0, u, v), (x, y, z), lp;
-ring R = (0, u, v), (x, y), lp	;
+//ring R = (0, u, v), (x, y, z), lp;
+ring R = (0, u, v), (x, y, z), lp	;
 
-	//ideal I = (u-v)*x2, uy2, uz2, vx2, vy2, vz2;
-//	ideal K = u2y2, vy, v2z		;
+//ideal I = ux2, y, u;
+//ideal J = vy2, ux, u-v		;
 //ideal I = ux2y, vy, u	;
 //ideal J = vxy2, uy, v	;
 //ideal K = u		;
 
-	ideal polys = (u3-v3)*x2 + (u-v)*y - u2 ,
-	(u2-v2)*x2 - 3uy + v	;
-	
-//ideal polys = randomid(I, 2, 4);
-//ideal polys = ux2-2y+(4u+4v)*z, (-2u+2v)*x2-2y+4vz ;
+//ideal polys = randomid(I, 1, 4) + randomid(J, 1, 4);
+//ideal polys = uz+x, (u+1)*y-x	;
+ideal polys = ux2-2y+(4u+4v)*z, (-2u+2v)*x2-2y+4vz ;
 	
 ideal null_ideal = 0		;
 list nonnull_list = list()	;

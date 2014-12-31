@@ -20,20 +20,14 @@ intvec sim_option = 1, 1, 1, 1, 0	;
 
 // degree reversed lex order.
 ring R = (0, a, b), (x, y, z), Dp;
-	ideal I = ax2y, a2x2, a;
+//	ideal I = ax2y, a2x2, a;
 
-	ideal J = bxy2, ab2y2, b3-1 ;
+//	ideal J = bxy2, ab2y2, b3-1 ;
 
-//ideal polys = (-3a)*x2y+(-a2)*x2+(-a),(-3ab2)*y2+(2b3-2) ;
-
-//ideal polys = (-2a-2b2)*x2y+(3a2)*x, 
-	//(3a+2b2)*x2y+(3b)*y2		;
-//ideal polys =	(2a)*x2y+(a2)*x2+(-a), 
-//(4ab2)*y2+(-b3+1);
-	//print(polys)			;
-//	F = <(-3a)*x2y+(-a2)*x2+(-a),(-3ab2)*y2+(2b3-2)>
-//ideal polys = (-3a)*x2y+(-a2)*x2+(4a),(-ab2)*y2+(2b3-2) ;
-ideal polys = (a)*x2y+(a2)*x2+(-3a),(-4ab2)*y2+(-4b3+4) ;
+	//ideal polys = (a)*x2y+(a2)*x2+(-3a),(-4ab2)*y2+(-4b3+4) ;
+ideal polys = /* f_1 = */ (ab2)*y2+(b3-1),
+/* f_2 = */ (a3b2+b3-1)*x2+(3ab2)*y+(-3a2b2),
+/* f_7 = */ (a4b2+ab3-a)*x4+(-6a3b2)*x2+(9a2b2);
 	
 ideal null_ideal = 0		;
 	list nonnull_list = list()	;

@@ -124,6 +124,13 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   all_polys = mergeList(all_polys, idealToList(G_init));
   exportto(Top, G_init);
   exportto(Top, Modcgs);
+
+  ideal G_comp = mcgbGenerateComp(E, N, F, 0);
+  G_comp = sortSetAsce(G_comp);
+  all_polys = mergeList(all_polys, idealToList(G_comp));
+  
+  ideal RGB = getRGB(F);
+  all_polys = mergeList(all_polys, idealToList(RGB));
   
   ideal M1;
   list cgs_m1;
@@ -150,23 +157,22 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   fprintf(time_res, "Total time of MCGB: %s ms;", string(time_cnt_MCGB+time_cnt_KSW));
   fprintf(time_res, "Percentage of MCGB: %s / %s.", string(time_cnt_MCGB), string(time_cnt_MCGB + time_cnt_KSW));
   fprintf(time_res, "Total time of M_simpl: %s ms;", string(time_cnt_MSIMPL + time_cnt_KSW));
-fprintf(time_res, "Percentage of M_simpl: %s / %s.", string(time_cnt_MSIMPL), string(time_cnt_MSIMPL + time_cnt_KSW));
+  fprintf(time_res, "Percentage of M_simpl: %s / %s.", string(time_cnt_MSIMPL), string(time_cnt_MSIMPL + time_cnt_KSW));
  
   ideal MCGB_step;
   list cgs_step;
   (MCGB_step, cgs_step) = getMCGBNew1(E, listToIdeal(N), F, 1);
   all_polys = mergeList(all_polys, idealToList(MCGB_step));
   
-  /*
-  ideal G_comp = mcgbGenerate(E, N, RGB, 0);
-  G_comp = sortSetAsce(G_comp);
-  all_polys = mergeList(all_polys, idealToList(G_comp));
-  */
   
   all_polys = sortSetAsce(all_polys);
   exportto(Top, all_polys);
 
-  
+  fprintf(out, "------------------------" + newline);
+  fprintf(out, "RGB" + newline);
+  showRGB(RGB, all_polys, out);
+  fprintf(out, "Size is: %s." + newline, string(size(RGB)));
+  check_validity(idealToList(RGB), Modcgs);
 
   fprintf(out, "---------------------------" + newline);
   fprintf(out, "M1" + newline);

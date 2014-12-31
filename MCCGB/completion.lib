@@ -360,6 +360,11 @@ proc getFaithfulSPoly(poly f, poly g, poly f_nz, poly g_nz) {
   poly h = (teiler / lm_X(f_nz)) * f_nz - (teiler / lm_X(g_nz)) * g_nz;
   poly h_faith = (teiler / lm_X(f_nz)) * f - (teiler / lm_X(g_nz)) * g;
 
+  if (ring_flag) {
+    setring BR;
+    def h_faith = imap(@RP, h_faith);
+    def h = imap(@RP, h);
+  }
   return (h_faith, h);
 }
 
@@ -746,7 +751,6 @@ proc mcgbGenRec(ideal G, list pairs, ideal cur_pair, ideal E, list N, ideal E_gi
     return (G, pairs, simpl_flag);
   }
 
-  // Take the smallest pair.
   poly f = cur_pair[1];
   poly g = cur_pair[2];
 
@@ -1142,6 +1146,102 @@ proc mcgbGenerate(ideal E, list N, ideal F, int random_flag) {
 
   //ideal G = F;
   
+  if (random_flag) {
+    G = randomizeSet(G);
+  } else {
+    G = sortSetDesc(G);
+  }
+
+  
+  
+  // Build the list of triples of G.
+  int i, j;
+
+
+  def BR = basering;
+  setring @RP;
+  def G = imap(BR, G);
+  //def pairs = imap(BR, pairs);
+  def E = imap(BR, E);
+  if (!defined(N)) {
+    def N = imap(BR, N);
+  }
+  fprintf(special_out, "-----------Remove Redundant----------");
+  G = generalSimplifyBasisRaw(G, E, N, random_flag);
+  fprintf(special_out, "------------Finish Initial Removal------");
+
+  list pairs;
+  for (i = 1; i < size(G); i++) {
+    for (j = i+1; j <= size(G); j++) {
+      ideal triple = buildTriple(G[i], G[j]);
+      pairs = insert(pairs, triple, size(pairs));
+    }
+  }
+  pairs = sortPairs(pairs);
+  
+  ideal cur_pair;
+  int global_simpl_flag = 1;
+  while (size(pairs) > 0) {
+    int simpl_flag = 1;
+    if (random_flag) {
+      G = randomizeSet(G);
+    } else {
+      G = sortSetAsce(G);
+    }
+    //cur_pair = pairs[random(1, size(pairs))];
+    cur_pair = pairs[1];
+    fprintf(special_out, "=====================");
+    fprintf(special_out, "G = [");
+    for (i = 1; i <= size(G); i++) {
+      fprintf(special_out, "  G[%s] = %s,", string(i), showParamPoly(G[i]));
+    }
+    fprintf(special_out, "].");
+    fprintf(special_out, "Now consider:");
+    fprintf(special_out, "G[%s] = %s", string(searchIndex(cur_pair[1], G)), showParamPoly(cur_pair[1]));
+    fprintf(special_out, "G[%s] = %s", string(searchIndex(cur_pair[2], G)), showParamPoly(cur_pair[2]));
+    (G, pairs, simpl_flag) = mcgbGenRec(G, pairs, cur_pair, E, N, E, N, simpl_flag);
+    if (simpl_flag == 0) {
+      global_simpl_flag = 0;
+    }
+    pairs = deletePair(pairs, cur_pair);
+    fprintf(special_out, "Finsh this pair.");
+    fprintf(special_out, "|G| = %s.", string(size(G)));
+    fprintf(special_out, "%s", showPairs(pairs, G));
+  }
+
+  //if (global_simpl_flag && size(G) > 1) {
+  fprintf(special_out, "------------Remove Redundant------------");
+  G = generalSimplifyBasisRaw(G, E, N, random_flag);
+  fprintf(special_out, "------------Finish Final Removal--------");
+  //}
+  
+  G = sortSetDesc(G);
+  G = makeSetParamMonic(G);
+
+  setring BR;
+  def G_res = imap(@RP, G);
+
+  return (G_res);
+  
+}
+
+proc mcgbGenerateComp(ideal E, list N, ideal G, int random_flag) {
+  // basering is @R.
+  set_global_rings();
+  set_global_rings_mcgb();
+  set_global_objects();
+
+  fprintf(special_out, "----------------NEW-----------------");
+  
+  if (size(G) <= 1) {
+    return (G);
+  }
+
+  if (size(N) == 0){
+    N = 1;
+  }
+
+
   if (random_flag) {
     G = randomizeSet(G);
   } else {

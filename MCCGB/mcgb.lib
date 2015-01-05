@@ -2101,6 +2101,18 @@ proc getMDBasis(list G_tuple) {
 Build CGS from a CGB.
  */
 
+proc isTrivialBasis(list tuple_list) {
+  if (size(tuple_list) != 1) {
+    return (0);
+  }
+
+  if (lppX(tuple_list[1][1]) == 1) {
+    return (1);
+  } else {
+    return (0);
+  }
+}
+
 proc buildCGS_rec(ideal E, list N, list G_tuple, list CGS) {
   // Basering is @RP.
   if (size(G_tuple) == 0) {return (CGS);}
@@ -2123,6 +2135,34 @@ proc buildCGS_rec(ideal E, list N, list G_tuple, list CGS) {
   G_tuple = removeRedundancy(G_tuple);
 
   list mdbasis = getMDBasis(G_tuple);
+
+  
+  int trivial_flag = 0;
+  if (isTrivialBasis(mdbasis)) {
+    // Trivial branch.
+    list N_trivial = updateNonNullList(N, mdbasis[1][1]);
+    if (Check_Consistence_CGB(E, N_trivial)) {
+      CGS = insert(CGS, list(E, N_trivial, mdbasis), size(CGS));
+    }
+    if (!trivial_flag) {trivial_flag = 1;}
+  }
+
+  if (trivial_flag) {
+    // Re-simplify G_tuple with the updated E.
+    E = E + ideal(mdbasis[1][1]);
+    for (i = 1; i <= size(G_tuple); i++) {
+      if (G_tuple[i][1] != 0) {
+	poly g = G_tuple[i][1];
+	poly g_nonzero, g_zero;
+	(g_nonzero, g_zero) = simplifyPoly(g, E, N);
+	G_tuple[i][1] = g_nonzero;
+	G_tuple[i][2] = G_tuple[i][2] + g_zero;
+      }
+    }
+    G_tuple = removeRedundancy(G_tuple);
+
+    mdbasis = getMDBasis(G_tuple);
+  }
 
   ideal LC_factors = buildLCUFactors(mdbasis);
 

@@ -328,7 +328,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
 
   exportto(Top, out);
   exportto(Top, debug_mode);
-  //open(out);
+  open(out);
 
 
   int gen_simpl_flag = 1;
@@ -368,13 +368,29 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   ideal G_origin;
   list Modcgs;
   (G_origin, Modcgs) = cgb_mod(F, E, N, 1, out);
+  G_origin = sortSetAsce(G_origin);
+  list all_polys = idealToList(G_origin);
 
+  exportto(Top, Modcgs);
+  
   ideal M;
   list cgs_m;
+  //(M, cgs_m) = getMCGBComp(E, listToIdeal(N), G_origin, Modcgs);
   (M, cgs_m) = mcgbMainComp(G_origin, Modcgs);
+  all_polys = mergeList(all_polys, idealToList(M));
 
   list cgs_recover = buildCGS(M);
 
+  ideal M2 = (a2+2a+b2+1)*v+(-2ab-2b),
+    (a2-2a+b2+1)*u+(2ab-2b),
+    (a2+2a+b2+1)*y+(-a2-2a+b2-1),
+    (a2-2a+b2+1)*x+(a2-2a-b2+1);
+
+  list cgs_cmp = buildCGS(M2);
+  all_polys = mergeList(all_polys, idealToList(M2));
+  
+  show(size(Modcgs));
+  show(size(cgs_recover));
   if (size(cgs_recover) < size(Modcgs)) {
     printf("CGS recovered is BETTER than original CGS!");
   } else {
@@ -385,6 +401,24 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
     }
   }
 
+  if (size(cgs_recover) <= size(cgs_cmp)) {
+    printf("FINE!!");
+  }
+  
+  all_polys = sortSetAsce(all_polys);
+  
+  fprintf(out, "=============Original==================");
+  fprintf(out, "%s" + newline, StringCGB(G_origin, all_polys));
+  fprintf(out, "%s" + newline, StringModCGS_mod(F, Modcgs, 0));
 
-  //  close(out);
+  fprintf(out, "============= Recovered ================");
+  showCCGB(M, all_polys, out);
+  fprintf(out, "%s" + newline, StringModCGS_mod(F, cgs_recover, 0));
+
+  fprintf(out, "========= Newer ====================");
+  showCCGB(M2, all_polys, out);
+  fprintf(out, "%s" + newline, StringModCGS_mod(F, cgs_cmp, 0));
+
+
+  close(out);
 }

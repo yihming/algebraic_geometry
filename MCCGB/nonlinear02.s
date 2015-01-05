@@ -24,10 +24,13 @@ ring R = (0, a, b), (x, y, z), Dp;
 
 //	ideal J = bxy2, ab2y2, b3-1 ;
 
-	//ideal polys = (a)*x2y+(a2)*x2+(-3a),(-4ab2)*y2+(-4b3+4) ;
-ideal polys = /* f_1 = */ (ab2)*y2+(b3-1),
-/* f_2 = */ (a3b2+b3-1)*x2+(3ab2)*y+(-3a2b2),
-/* f_7 = */ (a4b2+ab3-a)*x4+(-6a3b2)*x2+(9a2b2);
+	ideal polys = (a)*x2y+(a2)*x2+(-3a),(-4ab2)*y2+(-4b3+4) ;
+
+//ideal polys = /* f_5 = */ (ab2)*y2+(b3-1),
+/* f_4 = */ //(a3b2+b3-1)*x2+(3ab2)*y+(-3a2b2),
+/* f_3 = */ //(a)*x2y+(a2)*x2+(-3a),
+/* f_2 = */ //(a2b2)*x2y+(-b3+1)*x2+(-3ab2)*y,
+/* f_1 = */ //(a3b2+b3-1)*x4+(-6a2b2)*x2+(9ab2);
 	
 ideal null_ideal = 0		;
 	list nonnull_list = list()	;

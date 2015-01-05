@@ -2143,7 +2143,7 @@ proc buildCGS_rec(ideal E, list N, list G_tuple, list CGS) {
   return (CGS);
 }
 
-proc buildCGS(list MCGB) {
+proc buildCGS(ideal MCGB) {
   // Basering is @R.
   if (size(MCGB) == 0) {
     return (list());

@@ -21,7 +21,7 @@ intvec sim_option = 1, 1, 1, 1, 0	;
 // lex order.
 ring r = (0, a, b, c, d), (x, y), lp;
 
-ideal polys = ax + b, cx + d;
+ideal polys = ax + 1, bx + 1;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
 	

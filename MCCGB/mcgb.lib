@@ -2164,7 +2164,7 @@ proc buildCGS_rec(ideal E, list N, list G_tuple, list CGS) {
     mdbasis = getMDBasis(G_tuple);
   }
 
-  ideal LC_factors = buildLCUFactors(mdbasis);
+  ideal LC_factors = listToIdeal(randomize(buildLCUFactors(mdbasis)));
 
   list N_branch = updateNonNullList(N, LC_factors);
 

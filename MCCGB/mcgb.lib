@@ -589,7 +589,30 @@ proc lookUpIndex(poly f) {
   }
 }
 
-proc checkEssentialByHC(poly f, poly pf, list higher_coefs, poly g, list G_can, ideal E, list N, list G_branch, list BL) {
+proc pickCandidatePoly(list G_can, poly pf, ideal E, list N, int opt_flag) {
+  // basering is @RP.
+  if (size(G_can) == 1) {
+    return (G_can[1]);
+  }
+
+  if (!opt_flag) {
+    int idx = random(1, size(G_can));
+    return (G_can[idx]);
+  } else {
+    G_can = sortSetAsce(G_can);
+    poly cp;
+    int i;
+    for (i = 1; i <= size(G_can); i++) {
+      cp = getCoefOfPP(G_can[i], pf);
+      if (checkNonNull(cp, E, N)) {
+	return (G_can[i]);
+      }
+    }
+    return (G_can[1]);
+  }
+}
+
+proc checkEssentialByHC(poly f, poly pf, list higher_coefs, poly g, list G_can, ideal E, list N, list G_branch, list BL, int opt_flag) {
   // Basering is @RP.
   if (size(higher_coefs) == 0) {
     // {g} covers f in (E, N).
@@ -620,7 +643,7 @@ proc checkEssentialByHC(poly f, poly pf, list higher_coefs, poly g, list G_can, 
 	  if (defined(debug_mode) && debug_mode == 1) {
 	    fprintf(out, "There is some non-null higher coef %s. So %s cannot cover %s in (<%s>, {%s})", cur_c, showParamPoly(g), f, E, N);
 	  }
-	  return (checkEssentialInBranch(f, pf, G_can, E, N, G_branch, BL));
+	  return (checkEssentialInBranch(f, pf, G_can, E, N, G_branch, BL, opt_flag));
 	} else {
 	  // sigma(cur_c) is not determined.
 	  if (defined(debug_mode) && debug_mode >= 1) {
@@ -631,7 +654,7 @@ proc checkEssentialByHC(poly f, poly pf, list higher_coefs, poly g, list G_can, 
 	  if (defined(debug_mode) && debug_mode == 1) {
 	    fprintf(out, "Come to sub-branch (<%s> {%s}):", branches[1][1], branches[1][2]);
 	  }
-	  (is_essential, BL) = checkEssentialInBranch(f, pf, G_can, branches[1][1], branches[1][2], G_branch, BL);
+	  (is_essential, BL) = checkEssentialInBranch(f, pf, G_can, branches[1][1], branches[1][2], G_branch, BL, opt_flag);
 	  if (is_essential) {
 	    return (1, BL);
 	  } else {
@@ -640,7 +663,7 @@ proc checkEssentialByHC(poly f, poly pf, list higher_coefs, poly g, list G_can, 
 	      fprintf(out, "%s is covered in the first sub-branch (<%s>, {%s}).", showParamPoly(f), branches[1][1], branches[1][2]);
 	      fprintf(out, "Continue with the other sub-branch (<%s>, {%s}):", branches[2][1], branches[2][2]);
 	    }
-	    return (checkEssentialInBranch(f, pf, G_can, branches[2][1], branches[2][2], G_branch, BL));
+	    return (checkEssentialInBranch(f, pf, G_can, branches[2][1], branches[2][2], G_branch, BL, opt_flag));
 	  }
 	}
       }
@@ -684,7 +707,10 @@ proc getCoefOfPP(poly f, poly pp) {
 
   return (0);
 }
-proc checkEssentialInBranch(poly f, poly pf, list MRem, ideal E, list N, list G_branch, list BL) {
+
+
+
+proc checkEssentialInBranch(poly f, poly pf, list MRem, ideal E, list N, list G_branch, list BL, int opt_flag) {
   // Basering is @RP.
   MRem = listAsceOrd(MRem);
   list G_can = getCandidatePolys(pf, MRem, E, N);
@@ -701,7 +727,7 @@ proc checkEssentialInBranch(poly f, poly pf, list MRem, ideal E, list N, list G_
     return (1, BL);
   }
 
-  poly g = G_can[1];
+  poly g = pickCandidatePoly(G_can, pf, E, N, opt_flag);
   list higher_coefs = getHigherCoefs(g, pf);
   poly cp = getCoefOfPP(g, pf);
   if (defined(debug_mode) && debug_mode == 1) {
@@ -711,7 +737,7 @@ proc checkEssentialInBranch(poly f, poly pf, list MRem, ideal E, list N, list G_
     if (defined(debug_mode) && debug_mode == 1) {
       fprintf(out, "Coef(g, pf) is non-null. Now check higher coefs:");
     }
-    return (checkEssentialByHC(f, pf, higher_coefs, g, G_can, E, N, G_branch, BL));
+    return (checkEssentialByHC(f, pf, higher_coefs, g, G_can, E, N, G_branch, BL, opt_flag));
   } else {
     if (defined(debug_mode) && debug_mode >= 1) {
       fprintf(out, "Split branch (<%s>, {%s}) w.r.t. %s:", E, N, cp);
@@ -722,7 +748,7 @@ proc checkEssentialInBranch(poly f, poly pf, list MRem, ideal E, list N, list G_
     if (defined(debug_mode) && debug_mode >= 1) {
       fprintf(out, "Come to sub-branch (<%s>, {%s}):", branches[1][1], branches[1][2]);
     }
-    (is_essential, BL) = checkEssentialInBranch(f, pf, G_can_rem, branches[1][1], branches[1][2], G_branch, BL);
+    (is_essential, BL) = checkEssentialInBranch(f, pf, G_can_rem, branches[1][1], branches[1][2], G_branch, BL, opt_flag);
     if (is_essential) {
       return (1, BL);
     } else {
@@ -731,7 +757,7 @@ proc checkEssentialInBranch(poly f, poly pf, list MRem, ideal E, list N, list G_
 	fprintf(out, "f_%s = %s is covered in the first sub-branch (<%s>, {%s}).", string(idx_f), showParamPoly(f), branches[1][1], branches[1][2]);
 	fprintf(out, "Continue with the other sub-branch (<%s>, {%s}):", branches[2][1], branches[2][2]);
       }
-      return (checkEssentialInBranch(f, pf, G_can, branches[2][1], branches[2][2], G_branch, BL));
+      return (checkEssentialInBranch(f, pf, G_can, branches[2][1], branches[2][2], G_branch, BL, opt_flag));
     }
   }
 }
@@ -749,7 +775,7 @@ proc equivalent(poly f, poly g) {
   }
 }
 
-proc checkEssential(poly f, list M, list modcgs) {
+proc checkEssential(poly f, list M, list modcgs, int opt_flag) {
   // Basering is @RP.
   list BL;
   int i, j;
@@ -772,7 +798,7 @@ proc checkEssential(poly f, list M, list modcgs) {
       if (defined(debug_mode) && debug_mode == 1) {
 	fprintf(out, "Now come to Branch %s: (<%s>, {%s}):", string(i), E_cur, N_cur);
       }
-      (is_essential, BL) = checkEssentialInBranch(f, pf, MRem, E_cur, N_cur, G_cur, BL);
+      (is_essential, BL) = checkEssentialInBranch(f, pf, MRem, E_cur, N_cur, G_cur, BL, opt_flag);
       if (is_essential) {
 	if (defined(debug_mode) && debug_mode == 1) {
 	  fprintf(out, "%s is essential" + newline + "=================", showParamPoly(f));
@@ -937,7 +963,7 @@ proc set_global_objects() {
   setring BR;
 }
 
-proc mcgbMain(ideal E, list N, int choice_flag, ideal F) {
+proc mcgbMain(ideal E, list N, int choice_flag, int opt_flag, ideal F) {
   // basering is @R.
   ideal G;
   list modcgs;
@@ -963,7 +989,8 @@ proc mcgbMain(ideal E, list N, int choice_flag, ideal F) {
   exportto(Top, CGB);
   def modcgs = imap(@R, modcgs);
 
-  list modcgsRed = makeRRep(modcgs);
+  //list modcgsRed = makeRRep(modcgs);
+  list modcgsRed = modcgs;
   list M;
   int i, j;
   for (i = 1; i <= size(G); i++) {
@@ -977,7 +1004,7 @@ proc mcgbMain(ideal E, list N, int choice_flag, ideal F) {
     }
     int is_essential;
     list BL;
-    (is_essential, BL) = checkEssential(cur_f, M, modcgsRed);
+    (is_essential, BL) = checkEssential(cur_f, M, modcgsRed, opt_flag);
     if (is_essential == 0) {
       
       list modcgs1;
@@ -1008,7 +1035,7 @@ proc mcgbMain(ideal E, list N, int choice_flag, ideal F) {
 /*
 Starting from a KSWCGB.
  */
-proc mcgbMainComp(ideal G, list modcgs) {
+proc mcgbMainComp(ideal G, list modcgs, int opt_flag) {
   // basering is @R.
 
   if (size(G) == 0 || size(modcgs) == 0) {
@@ -1030,7 +1057,8 @@ proc mcgbMainComp(ideal G, list modcgs) {
   exportto(Top, CGB);
   def modcgs = imap(@R, modcgs);
 
-  list modcgsRed = makeRRep(modcgs);
+  //list modcgsRed = makeRRep(modcgs);
+  list modcgsRed = modcgs;
   list M;
   int i, j;
   for (i = 1; i <= size(G); i++) {
@@ -1044,7 +1072,7 @@ proc mcgbMainComp(ideal G, list modcgs) {
     }
     int is_essential;
     list BL;
-    (is_essential, BL) = checkEssential(cur_f, M, modcgsRed);
+    (is_essential, BL) = checkEssential(cur_f, M, modcgsRed, opt_flag);
     if (is_essential == 0) {
       
       list modcgs1;
@@ -1072,7 +1100,7 @@ proc mcgbMainComp(ideal G, list modcgs) {
   return (M, modcgsRed);
 }
 
-proc mcgbMainFalscher(ideal G, list modcgs) {
+proc mcgbMainFalscher(ideal G, list modcgs, int opt_flag) {
   // basering is @R.
 
   if (size(G) == 0 || size(modcgs) == 0) {
@@ -1108,7 +1136,7 @@ proc mcgbMainFalscher(ideal G, list modcgs) {
     }
     int is_essential;
     list BL;
-    (is_essential, BL) = checkEssential(cur_f, M, modcgsRed);
+    (is_essential, BL) = checkEssential(cur_f, M, modcgsRed, opt_flag);
     if (is_essential == 0) {
       // Don't update CGS.
       M = deletePolyFromList(M, cur_f);
@@ -1689,7 +1717,7 @@ proc checkCGB(list M1, list M, list CGS) {
 
   if (size(CGS) == 0) {return (1, CGS);}
 
-  (is_essential, BL) = checkEssential(g, M1, CGS);
+  (is_essential, BL) = checkEssential(g, M1, CGS, 1);
 
   if (is_essential) {
     return(0, list());
@@ -1783,7 +1811,7 @@ proc ccgbMain(ideal E, list N, int choice_flag ideal F) {
     poly g_red = reduce(cur_g, MRem_ideal);
     g_red = monic(g_red);
     if (g_red == 0 || g_red == cur_g) {
-      (is_essential, BL) = checkEssential(cur_g, M, modcgsRed);
+      (is_essential, BL) = checkEssential(cur_g, M, modcgsRed, 0);
       if (!is_essential) {
 	modcgsRed = updateCGS(modcgsRed, cur_g, BL);
 	M = deletePolyFromList(M, cur_g);
@@ -2252,7 +2280,7 @@ proc makeCGBReduced(list M, list Modcgs) {
     g_red = monic(g_red);
 
     if (g_red == 0 || g_red == cur_g) {
-      (is_essential, BL) = checkEssential(cur_g, M_res, Modcgs);
+      (is_essential, BL) = checkEssential(cur_g, M_res, Modcgs, 1);
       if (!is_essential) {
 	Modcgs = updateCGS(Modcgs, cur_g, BL);
 	M_res = deletePolyFromList(M_res, cur_g);
@@ -2288,7 +2316,7 @@ proc makeCGBReduced(list M, list Modcgs) {
 The new MCGB Algorithm.
  */
 
-proc getMCGB(ideal E, ideal N, ideal F, int choice_flag) {
+proc getMCGB(ideal E, ideal N, ideal F, int choice_flag, int opt_flag) {
   ideal G;
   list modcgs;
 
@@ -2338,7 +2366,7 @@ proc getMCGB(ideal E, ideal N, ideal F, int choice_flag) {
 
     ideal MRem_ideal = listToIdeal(deletePolyFromList(M, cur_g));
 
-    (is_essential, BL) = checkEssential(cur_g, M, modcgs);
+    (is_essential, BL) = checkEssential(cur_g, M, modcgs, opt_flag);
     if (!is_essential) {
       // Remove cur_g from M.
       modcgs = updateCGS(modcgs, cur_g, BL);
@@ -2387,7 +2415,7 @@ proc getMCGB(ideal E, ideal N, ideal F, int choice_flag) {
 }
 
 // For comparison of MCGB and CGB.
-proc getMCGBComp(ideal E, ideal N, ideal G, list modcgs) {
+proc getMCGBComp(ideal E, ideal N, ideal G, list modcgs, int opt_flag) {
 
   if (size(G) == 0 || size(modcgs) == 0) {
     return (G, modcgs);
@@ -2433,7 +2461,7 @@ proc getMCGBComp(ideal E, ideal N, ideal G, list modcgs) {
 
     ideal MRem_ideal = listToIdeal(deletePolyFromList(M, cur_g));
 
-    (is_essential, BL) = checkEssential(cur_g, M, modcgs);
+    (is_essential, BL) = checkEssential(cur_g, M, modcgs, opt_flag);
     if (!is_essential) {
       // Remove cur_g from M.
       modcgs = updateCGS(modcgs, cur_g, BL);
@@ -2447,7 +2475,7 @@ proc getMCGBComp(ideal E, ideal N, ideal G, list modcgs) {
       }
       if (g_red != 0 && g_red != cur_g) {
 	M_new = insert(M, g_red, size(M));
-	(is_essential, BL) = checkEssential(cur_g, M_new, modcgs);
+	(is_essential, BL) = checkEssential(cur_g, M_new, modcgs, opt_flag);
 	if (!is_essential) {
 
 	  modcgs = updateCGS(modcgs, cur_g, BL);
@@ -2580,7 +2608,7 @@ proc mergeList(list L1, list L2) {
   return (L1);
 }
 
-proc getMCGBNew1(ideal E, ideal N, ideal F, int choice_flag) {
+proc getMCGBNew1(ideal E, ideal N, ideal F, int choice_flag, int opt_flag) {
   ideal G;
   list modcgs;
 
@@ -2630,7 +2658,7 @@ proc getMCGBNew1(ideal E, ideal N, ideal F, int choice_flag) {
 
     ideal MRem_ideal = listToIdeal(deletePolyFromList(M, cur_g));
 
-    (is_essential, BL) = checkEssential(cur_g, M, modcgs);
+    (is_essential, BL) = checkEssential(cur_g, M, modcgs, opt_flag);
     if (!is_essential) {
       // Remove cur_g from M.
       modcgs = updateCGS(modcgs, cur_g, BL);
@@ -2642,7 +2670,7 @@ proc getMCGBNew1(ideal E, ideal N, ideal F, int choice_flag) {
       
       if (g_red != cur_g) {
 	M_new = insert(M, g_red, size(M));
-	(is_essential, BL) = checkEssential(cur_g, M_new, modcgs);
+	(is_essential, BL) = checkEssential(cur_g, M_new, modcgs, opt_flag);
 	if (!is_essential) {
 	  modcgs = updateCGS(modcgs, cur_g, BL);
 	  M = substPolyInList(M, cur_g, g_red);
@@ -2668,7 +2696,7 @@ proc getMCGBNew1(ideal E, ideal N, ideal F, int choice_flag) {
 	    }
 	    //fprintf(special_out, "%s is reduced to %s", showParamPoly(g_old), showParamPoly(g_new));
 	    M_new = insert(M, g_new, size(M));
-	    (is_essential, BL_new) = checkEssential(cur_g, M_new, modcgs);
+	    (is_essential, BL_new) = checkEssential(cur_g, M_new, modcgs, opt_flag);
 	    if (is_essential) {
 	      //fprintf(special_out, "%s is not covered, stop." + newline, showParamPoly(g_old));
 	      terminate_flag = 1;
@@ -2710,7 +2738,7 @@ proc getMCGBNew1(ideal E, ideal N, ideal F, int choice_flag) {
   return (MCGB, cgs_mcgb);
 }
 
-proc getMCGBNew2(ideal E, ideal N, ideal F, int choice_flag) {
+proc getMCGBNew2(ideal E, ideal N, ideal F, int choice_flag, int opt_flag) {
   ideal G;
   list modcgs;
 
@@ -2760,7 +2788,7 @@ proc getMCGBNew2(ideal E, ideal N, ideal F, int choice_flag) {
     
     poly g_red = reduce(cur_g, MRem_ideal);
     if (g_red == 0) {
-      (is_essential, BL) = checkEssential(cur_g, M, modcgs);
+      (is_essential, BL) = checkEssential(cur_g, M, modcgs, opt_flag);
       if (!is_essential) {
 	modcgs = updateCGS(modcgs, cur_g, BL);
 	M = deletePolyFromList(M, cur_g);
@@ -2781,7 +2809,7 @@ proc getMCGBNew2(ideal E, ideal N, ideal F, int choice_flag) {
 	  }
 	  fprintf(special_out, "%s -> %s.", showParamPoly(g_old), showParamPoly(g_new));
 	  M_new = insert(M, g_new, size(M));
-	  (is_essential, BL_new) = checkEssential(cur_g, M_new, modcgs);
+	  (is_essential, BL_new) = checkEssential(cur_g, M_new, modcgs, opt_flag);
 	  if (is_essential) {
 	    fprintf(special_out, "%s is not covered, stop." + newline, showParamPoly(g_old));
 	    terminate_flag = 1;
@@ -2808,7 +2836,7 @@ proc getMCGBNew2(ideal E, ideal N, ideal F, int choice_flag) {
 	continue;
       }
       
-      (is_essential, BL) = checkEssential(cur_g, M, modcgs);
+      (is_essential, BL) = checkEssential(cur_g, M, modcgs, opt_flag);
       if (!is_essential) {
 	modcgs = updateCGS(modcgs, cur_g, BL);
 	M = deletePolyFromList(M, cur_g);
@@ -2824,7 +2852,7 @@ proc getMCGBNew2(ideal E, ideal N, ideal F, int choice_flag) {
 	  g_new = monic(g_new);
 	  fprintf(special_out, "%s -> %s", showParamPoly(g_old), showParamPoly(g_new));
 	  M_new = insert(M, g_new, size(M));
-	  (is_essential, BL_new) = checkEssential(cur_g, M_new, modcgs);
+	  (is_essential, BL_new) = checkEssential(cur_g, M_new, modcgs, opt_flag);
 	  if (is_essential) {
 	    fprintf(special_out, "%s is not covered, stop."+newline, showParamPoly(g_old));
 	    terminate_flag = 1;

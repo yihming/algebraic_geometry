@@ -127,7 +127,7 @@ proc check_comprehensive(list M, list CGS) {
 	  list G_branch = CGS[i][3];
 	  int is_essential;
 	  list DontCare;
-	  (is_essential, DontCare) = checkEssentialInBranch(f, pp_f, M, E_cur, N_cur, G_branch, DontCare);
+	  (is_essential, DontCare) = checkEssentialInBranch(f, pp_f, M, E_cur, N_cur, G_branch, DontCare, 1);
 	  if (is_essential) {
 	    return (0);
 	  }

@@ -2,7 +2,7 @@
 LIB "simulation.lib"		;
 
 // The output file name.
-link out = "montes_wibmer_5_grlex.mp";
+link out = "montes_wibmer_5_lex.mp";
 
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
@@ -19,7 +19,7 @@ int sim_times = 1		;
 intvec sim_option = 1, 1, 1, 1, 0	;
 
 // degree reversed lex order.
-ring r = (0, a, b), (x(2), x(3), y(2), y(3)), dp;
+ring r = (0, a, b), (x(2), x(3), y(2), y(3)), lp;
 	
 ideal polys = (a-1)*y(2) - b*(x(2)-1), (a-1)*(x(2)+1)+b*y(2),
 	      (a+1)*y(3) - b*(x(3)+1), (a+1)*(x(3)-1)+b*y(3),

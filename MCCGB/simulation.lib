@@ -53,6 +53,101 @@ proc sucheBeispiel(ideal G, list Modcgs, ideal M1, list cgs_m1, ideal M_simpl, l
 }
 
 /*
+With and without optimization of MCGBMain.
+ */
+
+proc simulate_eins(ideal E, list N, ideal F) {
+  //  set_global_rings_mcgb();
+  //set_global_rings();
+  //system("--ticks-per-sec", 1000);
+
+  ideal G_origin;
+  list Modcgs;
+  timer = 0;
+  int cnt_Time = timer;
+  (G_origin, Modcgs) = cgb_mod(F, E, N, 1, out);
+  int time_cnt_KSW = timer - cnt_Time;
+
+
+  ideal M1;
+  list cgs_m1;
+  timer = 0;
+  cnt_Time = timer;
+  (M1, cgs_m1) = mcgbMainComp(G_origin, Modcgs, 0);
+  int time_cnt_MCGB = timer - cnt_Time;
+
+  ideal M2;
+  list cgs_m2;
+  timer = 0;
+  cnt_Time = timer;
+  (M2, cgs_m2) = mcgbMainComp(G_origin, Modcgs, 1);
+  int time_cnt_MOPT = timer - cnt_Time;
+
+  return (time_cnt_KSW, time_cnt_MCGB, time_cnt_MOPT);
+}
+
+proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode, intvec sim_option) {
+  def BR = basering;
+  system("--no-warn", 1);
+  system("--ticks-per-sec", 1000);
+
+  link time_res = out;
+  open(time_res);
+
+
+  int i, j;
+
+  // Print the ring configuration.
+  fprintf(time_res, newline + "+++++++++++++++++++++");
+  fprintf(time_res, "The given ring is:");
+  fprintf(time_res, "%s"+newline, BR);
+
+  // Print the given parametric ideal.
+  fprintf(time_res, "F = {");
+  if (size(F) > 0) {
+    for (i = 1; i < size(F); i++) {
+      fprintf(time_res, "%s, ", F[i]);
+    }
+    fprintf(time_res, "%s" + newline + "}." + newline, F[size(F)]);
+  } else {
+    fprintf(time_res, newline + "}." + newline);
+  }
+
+  // Print the given parameter space.
+  fprintf(time_res, "E = {%s}." + newline, E);
+  fprintf(time_res, "N = {%s}." + newline, string(N));
+
+
+  int time_cnt_KSW = 0;
+  int time_cnt_MCGB = 0;
+  int time_cnt_MOPT = 0;
+  int valT1, valT2, valT3;
+  int exp_times = 10;
+
+  set_global_rings();
+  set_global_rings_mcgb();
+  set_global_objects();
+
+  for (i = 1; i <= exp_times; i++) {
+    printf("Simulation %s:", string(i));
+    (valT1, valT2, valT3) = simulate_eins(E, N, F);
+    time_cnt_KSW = time_cnt_KSW + valT1;
+    time_cnt_MCGB = time_cnt_MCGB + valT2;
+    time_cnt_MOPT = time_cnt_MOPT + valT3;
+  }
+
+  time_cnt_KSW = time_cnt_KSW / exp_times;
+  time_cnt_MCGB = time_cnt_MCGB / exp_times;
+  time_cnt_MOPT = time_cnt_MOPT / exp_times;
+
+  fprintf(time_res, "Time of KSW: %s ms;" + newline, string(time_cnt_KSW));
+  fprintf(time_res, "Time of MCGB: %s ms;" + newline, string(time_cnt_MCGB));
+  fprintf(time_res, "Time of MCGB with OPT: %s ms." + newline, string(time_cnt_MOPT));
+
+  close(time_res);
+}
+
+/*
 Record Time used.
  */
 proc simulate1(ideal E, list N, ideal F, int sim_times, link out, int debug_mode, intvec sim_option) {
@@ -439,7 +534,7 @@ proc simulate3(ideal E, list N, ideal F, int sim_times, link out, int debug_mode
 /*
 Compare KSWCGS and CGS from MCGB.
  */
-proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode, intvec sim_option) {
+proc simulate5(ideal E, list N, ideal F, int sim_times, link out, int debug_mode, intvec sim_option) {
   def BR = basering;
   system("--no-warn", 1);
 

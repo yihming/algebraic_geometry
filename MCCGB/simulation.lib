@@ -86,7 +86,7 @@ proc simulate_eins(ideal E, list N, ideal F) {
   return (time_cnt_KSW, time_cnt_MCGB, time_cnt_MOPT);
 }
 
-proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode, intvec sim_option) {
+proc simulate1(ideal E, list N, ideal F, int sim_times, link out, int debug_mode, intvec sim_option) {
   def BR = basering;
   system("--no-warn", 1);
   system("--ticks-per-sec", 1000);
@@ -145,6 +145,32 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   fprintf(time_res, "Time of MCGB with OPT: %s ms." + newline, string(time_cnt_MOPT));
 
   close(time_res);
+}
+
+/*
+See whether MCGB < KSWCGB.
+ */
+proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode, intvec sim_option) {
+  def BR = basering;
+  system("--no-warn", 1);
+  system("--ticks-per-sec", 1000);
+
+  set_global_rings_mcgb();
+  set_global_rings();
+  set_global_objects();
+
+  ideal G_origin;
+  list Modcgs;
+  (G_origin, Modcgs) = cgb_mod(F, E, N, 1, out);
+
+  ideal M1;
+  list cgs_m1;
+  (M1, cgs_m1) = mcgbMainComp(G_origin, Modcgs, 1);
+  
+  if (size(M1) < size(G_origin)) {
+    printf("MCGB < KSWCGB!!!!");
+  }
+
 }
 
 /*
@@ -216,7 +242,6 @@ proc simulate1(ideal E, list N, ideal F, int sim_times, link out, int debug_mode
   printf("Step 0 is finished!");
   list all_polys = idealToList(G_origin);
   
-  set_global_rings_mcgb();
   ideal G_init = purifyCGB(G_origin);
   G_init = sortSetAsce(G_init);
   all_polys = mergeList(all_polys, idealToList(G_init));

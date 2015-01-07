@@ -646,6 +646,10 @@ proc checkEssentialByHC(poly f, poly pf, list higher_coefs, poly g, list G_can, 
 	  return (checkEssentialInBranch(f, pf, G_can, E, N, G_branch, BL, opt_flag));
 	} else {
 	  // sigma(cur_c) is not determined.
+	  if (size(G_can) == 1 && opt_flag) {
+	    return (1, BL);
+	  }
+
 	  if (defined(debug_mode) && debug_mode >= 1) {
 	    fprintf(out, "Split branch (<%s>, {%s}) w.r.t. %s:", E, N, cur_c);
 	  }
@@ -714,6 +718,8 @@ proc checkEssentialInBranch(poly f, poly pf, list MRem, ideal E, list N, list G_
   // Basering is @RP.
   MRem = listAsceOrd(MRem);
   list G_can = getCandidatePolys(pf, MRem, E, N);
+
+  // Case 1
   if (size(G_can) == 0) {
     list branch = E, N, list(0);
     BL = insert(BL, branch, size(BL));
@@ -733,12 +739,19 @@ proc checkEssentialInBranch(poly f, poly pf, list MRem, ideal E, list N, list G_
   if (defined(debug_mode) && debug_mode == 1) {
     fprintf(out, "Coef(%s, %s) = %s", showParamPoly(g), pf, cp);
   }
+  
   if (checkNonNull(cp, E, N)) {
+    // Case 2.
     if (defined(debug_mode) && debug_mode == 1) {
       fprintf(out, "Coef(g, pf) is non-null. Now check higher coefs:");
     }
     return (checkEssentialByHC(f, pf, higher_coefs, g, G_can, E, N, G_branch, BL, opt_flag));
   } else {
+    // Case 3.
+    if (size(G_can) == 1 && opt_flag) {
+      return (1, BL);
+    }
+
     if (defined(debug_mode) && debug_mode >= 1) {
       fprintf(out, "Split branch (<%s>, {%s}) w.r.t. %s:", E, N, cp);
     }

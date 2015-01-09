@@ -181,12 +181,6 @@ proc faithfulPDivi(poly f_faith, poly f_nz, ideal G_faith, ideal G_nz, ideal E, 
   pdivi_res = pdivi_res + showParamPoly(m) + " (" + showParamPoly(f_nz) + ") = ";
   
   int i;
-  poly tmp_res = 0;
-  for (i = 1; i<= size(quots); i++) {
-    if (quots[i] != 0) {
-      tmp_res = tmp_res + quots[i] * G_nz[i];
-    }
-  }
   
   for (i = 1; i <= size(quots); i++) {
     if (quots[i] != 0) {
@@ -203,13 +197,13 @@ proc faithfulPDivi(poly f_faith, poly f_nz, ideal G_faith, ideal G_nz, ideal E, 
   } else {
     fprintf(special_out, "UNFAITHFUL REMAINDER not 0: %s.", showParamPoly(rem));
     int i;
-    poly res = 0;
-    for (i = 1; i <= size(quots); i++) {
+    poly p = 0;
+    for (i = 1; i <= size(G_nz); i++) {
       if (quots[i] != 0) {
-	res = res + quots[i] * G_faith[i];
+	p = p + quots[i] * G_faith[i];
       }
     }
-    poly rem_faithful = m * f_faith - res;
+    poly rem_faithful = m * f_faith - p;
 
     fprintf(special_out, "It's faithful version: %s.", showParamPoly(rem_faithful));
     

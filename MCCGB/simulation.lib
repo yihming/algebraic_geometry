@@ -150,7 +150,7 @@ proc simulate1(ideal E, list N, ideal F, int sim_times, link out, int debug_mode
 /*
 See whether MCGB < KSWCGB.
  */
-proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode, intvec sim_option) {
+proc simulate3(ideal E, list N, ideal F, int sim_times, link out, int debug_mode, intvec sim_option) {
   def BR = basering;
   system("--no-warn", 1);
   system("--ticks-per-sec", 1000);
@@ -459,19 +459,19 @@ proc simulate1(ideal E, list N, ideal F, int sim_times, link out, int debug_mode
   close(out);
 }
 
-proc simulate3(ideal E, list N, ideal F, int sim_times, link out, int debug_mode, intvec sim_option) {
+/*
+For Completion
+ */
+proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode, intvec sim_option) {
   def BR = basering;
   system("--no-warn", 1);
-  system("--ticks-per-sec", 1000);
 
   exportto(Top, out);
   exportto(Top, debug_mode);
   link special_out = "debug_info.mp";
-  link time_res = "time_info.mp";
   exportto(Top, special_out);
   open(out);
   open(special_out);
-  open(time_res);
 
 
   int gen_simpl_flag = 1;
@@ -482,9 +482,6 @@ proc simulate3(ideal E, list N, ideal F, int sim_times, link out, int debug_mode
   fprintf(out, "The given ring is:");
   fprintf(out, "%s" + newline, BR);
 
-  fprintf(time_res, newline + "+++++++++++++++++++++");
-  fprintf(time_res, "The given ring is:");
-  fprintf(time_res, "%s"+newline, BR);
 
   // Print the given parametric ideal.
   fprintf(out, "F = {");
@@ -514,46 +511,18 @@ proc simulate3(ideal E, list N, ideal F, int sim_times, link out, int debug_mode
   ideal G_origin;
   list Modcgs;
   (G_origin, Modcgs) = cgb_mod(F, E, N, 1, out);
-  /* 
-  printf("Start computing G_cgb");
-  ideal G_cgb = cgbGenerate(E, N, F, 0);
-  list all_polys = idealToList(G_cgb);
-
- 
-  printf("Start computing G_comp");
-
-  */
 
   ideal G_comp = mcgbGenerateComp(E, N, F, 0);
   list all_polys = idealToList(G_comp);
-  /*
-  printf("Start computing G_RGB");
-  
-  ideal G_RGB = mcgbGenerate(E, N, F, 0);
-  all_polys = mergeList(all_polys, idealToList(G_RGB));
-  
-  
-  fprintf(out, "CGB computed from F:");
-  showCCGB(G_cgb, all_polys, out);
-  check_validity(idealToList(G_cgb), Modcgs);
-  */
+
   all_polys = sortSetAsce(all_polys);
   
-  fprintf(out, "Starting from F, G_comp = ");
+  fprintf(out, "G_comp = ");
   showCCGB(G_comp, all_polys, out);
   check_validity(idealToList(G_comp), Modcgs);
-  /*
-  fprintf(out, "Starting from RGB, G_comp = ");
-  showCCGB(G_RGB, all_polys, out);
-  check_validity(idealToList(G_RGB), Modcgs);
-  
 
-  ideal RGB = getRGB(F);
-  check_validity(idealToList(RGB), Modcgs);
-  */
   close(out);
   close(special_out);
-  close(time_res);
 }
 
 /*

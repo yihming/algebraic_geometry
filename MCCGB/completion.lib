@@ -101,17 +101,18 @@ proc generalSimplify(poly f, ideal G, ideal E, list N) {
     ring_flag = 1;
   }
 
-  poly p = generalSimplRec(f, G, E, N);
-  //list p_list = generalSimplRec(f, G, E, N, list());
+  //poly p = generalSimplRec(f, G, E, N);
+  list p_list = generalSimplRec(f, G, E, N, list());
 
   if (ring_flag) {
     setring BR;
     if (!defined(p)) {
-      def p = imap(@RP, p);
+      def p_list = imap(@RP, p_list);
     }
   }
 
-  return (p);
+  //return (p);
+  return (p_list);
 }
 
 proc deletePolyFromIdeal(ideal I, poly f) {

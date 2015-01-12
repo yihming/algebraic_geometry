@@ -24,8 +24,10 @@ ring R = (0, a, b), (x, y, z), Dp;
 
 //	ideal J = bxy2, ab2y2, b3-1 ;
 
-	ideal polys = (a)*x2y+(a2)*x2+(-3a),(-4ab2)*y2+(-4b3+4) ;
+//	ideal polys = (a)*x2y+(a2)*x2+(-3a),(-4ab2)*y2+(-4b3+4) ;
 
+ideal polys = ab2y2+b3-1, ax2y+a2x2-3a ;
+	
 //ideal polys = /* f_5 = */ (ab2)*y2+(b3-1),
 /* f_4 = */ //(a3b2+b3-1)*x2+(3ab2)*y+(-3a2b2),
 /* f_3 = */ //(a)*x2y+(a2)*x2+(-3a),

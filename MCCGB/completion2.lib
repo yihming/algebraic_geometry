@@ -1,11 +1,94 @@
 LIB "mcgb.lib";
 
-proc getSpecializedTuples(poly f, ideal E, list N) {
+/*
+Global Structures:
 
-}
+STLIST -- map of specialized tuples.
+type: list
+structures:
+1 -- faithful polynomial f
+2 -- list of specialized tuples of f:
+    1 -- specialized form
+    (2, 3) -- segment of this form
+
+
+CPairs -- list of critical pairs
+type: list
+each element:
+1 -- ideal of f and its specialized form:
+    (1, 2) -- (f, f_nz)
+2 -- ideal of g and its specialized form:
+    (1, 2) -- (g, g_nz)
+(3, 4) -- the intersected segment (E, N)
+
+NFLIST -- map of normal forms under segments.
+type: list
+structures:
+1 -- faithful polynomial f
+2 -- has it been tried to specialize before?
+3 -- list of normal forms of f under segments.
+    (1, 2) -- the intersected segment (E, N)
+    (3, 4) -- normal form (rem, m)
+
+SBLIST -- map of specialized bases.
+type: list
+structures:
+(1, 2) -- segment (E, N)
+3 -- ideal of specialized basis under (E, N)
+ */
 
 proc isRedundant(poly f, ideal G) {
+  if (size(G) <= 1) {
+    return (0);
+  }
 
+  int idx = searchNFlist(f);
+  list st;
+  
+  if (idx == -1) {
+    ERROR("out of index!");
+  }
+
+  int is_checked = NFLIST[idx][2];
+
+  if (is_checked) {
+    // We can directly use NFLIST[idx][3].
+    int i;
+    list nf = NFLIST[idx][3];
+    poly rem, m, E, N;
+    for (i = 1; i <= size(nf); i++) {
+      if (nf[i][3] != 0) {
+	E = nf[i][1];
+	N = nf[i][2];
+	rem = nf[i][3];
+
+	ideal G_nz = simplifyBasis(G, E, N);
+	(rem, m) = reduceUnderSegment(rem, G_nz, E, N);
+	if (rem != 0 && rem != nf[i][3]) {
+	  updateNFLIST()
+	}
+      }
+    }
+  } else {
+    // Compute, and store as NFLIST[idx][3].
+  }
+  
+}
+
+proc searchNFlist(poly f) {
+  f = monic(f);
+  if (size(NFLIST) == 0) {
+    return (-1);
+  }
+
+  int i;
+  for (i = 1; i <= size(NFLIST); i++) {
+    if (f == NFLIST[i][1]) {
+      return (i);
+    }
+  }
+
+  return (-1);
 }
 
 proc deletePolyFromIdeal(poly f, ideal G) {
@@ -21,7 +104,19 @@ proc buildCriticalPairs() {
 }
 
 proc searchSTuples(poly f) {
+  f = monic(f);
+  int i;
+  if (size(STLIST) == 0) {
+    return (-1);
+  }
 
+  for (i = 1; i <= size(STLIST); i++) {
+    if (f == STLIST[i][1]) {
+      return (i);
+    }
+  }
+
+  return (-1);
 }
 
 proc selectCPair() {
@@ -40,6 +135,10 @@ proc reduceFaithSegment(poly h, poly h_nz, ideal G, ideal G_nz, ideal E, list N)
 
 }
 
+proc reduceUnderSegment(poly h, ideal G, ideal E, list N) {
+
+}
+
 proc insertCPairs(ideal G, poly f) {
 
 }
@@ -48,8 +147,22 @@ proc insertDescSet(G, poly f) {
 
 }
 
-proc insertSpecializedTuples(poly f, ideal E, list N) {
+proc insertSTuples(poly f, ideal E, list N) {
+  list st;
+  poly koeff;
+  
+  while (f != 0) {
+    koeff = leadcoef_U(f);
+    if (Check_Consistence_CGB(E, N + list(koeff))) {
+      st = insert(st, list(f, E, N + list(koeff)), size(st));
+    } else {
+      break;
+    }
+    E = E + ideal(koeff);
+    f = monic(f - lm_X(f));
+  }
 
+  STLIST = insert(STLIST, list(f, st), size(STLIST));
 }
 
 proc updateNFLIST(poly f, ideal G) {
@@ -70,9 +183,19 @@ proc mcgbGenerate(ideal E, list N, ideal F) {
   }
 
   option(redSB);
-  //def G = getRGB(F);
+
   def G = F;
   G = sortSetDesc(G);
+
+  def BR = basering;
+  int ring_flag = 0;
+  if (nameof(BR) != "@RP") {
+    setring @RP;
+    def E = imap(BR, E);
+    def N = imap(BR, N);
+    def G = imap(BR, G);
+    ring_flag = 1;
+  }
   
   // Construct specialized tuples of each poly in G.
   int i, j;
@@ -80,7 +203,7 @@ proc mcgbGenerate(ideal E, list N, ideal F) {
   list STLIST;
   list STuples;
   for (i = 1; i <= size(G); i++) {
-    insertSpecializedTuples(G[i], E, N);
+    insertSTuples(G[i], E, N);
   }
   
   export(STLIST);
@@ -90,21 +213,18 @@ proc mcgbGenerate(ideal E, list N, ideal F) {
   for (i = 1; i <= size(G); i++) {
     if (isRedundant(G[i], M)) {
       M = deletePolyFromIdeal(M, G[i]);
-      //STLIST = deleteSTuples(STLIST, G[i]);
       deleleteSTuples(G[i]);
     }
   }
   G = M;
 
   // Initialize the list of critical pairs to be checked.
-  //list CPairs = buildCriticalPairs(STLIST);
   list CPairs = buildCriticalPairs();
   export(CPairs);
 
   // Initialize the list of normal forms.
   list NFLIST;
   for (i = 1; i <= size(G); i++) {
-    //STuples = searchSTuples(STLIST, G[i]);
     STuples = searchSTuples(G[i]);
     // To be finished.
   }
@@ -113,12 +233,11 @@ proc mcgbGenerate(ideal E, list N, ideal F) {
 
   list cp;
   while (size(CPairs) > 0) {
-    //cp = selectCPair(CPairs);
     cp = selectCPair();
 
     poly sp, sp_nz;
-    ideal E_cur = cp[3][1];
-    list N_cur = cp[3][2];
+    ideal E_cur = cp[3];
+    list N_cur = cp[4];
     (sp, sp_nz) = getFaithSPolyFromCPair(cp);
 
     ideal basis, basis_nz;
@@ -139,14 +258,19 @@ proc mcgbGenerate(ideal E, list N, ideal F) {
       G = M;
 
       // Add new CPairs and poly.
-      //CPairs = insertCPairs(CPairs, M, nf);
       insertCPairs(M, nf);
       G = insertDescSet(G, nf);
       STLIST = insertSTuples(nf, E_cur, N_cur);
-      //NFLIST = updateNFLIST(NFLIST, nf, G);
       updateNFLIST(nf, G);
     }
   }
 
-  return (G);
+  def MCGB = G;
+  
+  if (ring_flag) {
+    setring BR;
+    def MCGB = imap(@RP, MCGB);
+  }
+  
+  return (MCGB);
 }

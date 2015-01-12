@@ -1,0 +1,152 @@
+LIB "mcgb.lib";
+
+proc getSpecializedTuples(poly f, ideal E, list N) {
+
+}
+
+proc isRedundant(poly f, ideal G) {
+
+}
+
+proc deletePolyFromIdeal(poly f, ideal G) {
+
+}
+
+proc deleteSTuples(poly f) {
+
+}
+
+proc buildCriticalPairs() {
+
+}
+
+proc searchSTuples(poly f) {
+
+}
+
+proc selectCPair() {
+
+}
+
+proc getFaithSPolyFromCPair(list cp) {
+
+}
+
+proc simplifyBasisFaith(ideal G, ideal E, list N) {
+
+}
+
+proc reduceFaithSegment(poly h, poly h_nz, ideal G, ideal G_nz, ideal E, list N) {
+
+}
+
+proc insertCPairs(ideal G, poly f) {
+
+}
+
+proc insertDescSet(G, poly f) {
+
+}
+
+proc insertSpecializedTuples(poly f, ideal E, list N) {
+
+}
+
+proc updateNFLIST(poly f, ideal G) {
+
+}
+
+proc mcgbGenerate(ideal E, list N, ideal F) {
+  set_global_rings();
+  set_global_rings_mcgb();
+  set_global_objects();
+
+  if (size(F) <= 1) {
+    return (F);
+  }
+
+  if (size(N) == 0) {
+    N = 1;
+  }
+
+  option(redSB);
+  //def G = getRGB(F);
+  def G = F;
+  G = sortSetDesc(G);
+  
+  // Construct specialized tuples of each poly in G.
+  int i, j;
+
+  list STLIST;
+  list STuples;
+  for (i = 1; i <= size(G); i++) {
+    insertSpecializedTuples(G[i], E, N);
+  }
+  
+  export(STLIST);
+
+  // Remove redundant poly.
+  ideal M = G;
+  for (i = 1; i <= size(G); i++) {
+    if (isRedundant(G[i], M)) {
+      M = deletePolyFromIdeal(M, G[i]);
+      //STLIST = deleteSTuples(STLIST, G[i]);
+      deleleteSTuples(G[i]);
+    }
+  }
+  G = M;
+
+  // Initialize the list of critical pairs to be checked.
+  //list CPairs = buildCriticalPairs(STLIST);
+  list CPairs = buildCriticalPairs();
+  export(CPairs);
+
+  // Initialize the list of normal forms.
+  list NFLIST;
+  for (i = 1; i <= size(G); i++) {
+    //STuples = searchSTuples(STLIST, G[i]);
+    STuples = searchSTuples(G[i]);
+    // To be finished.
+  }
+
+  export(NFLIST);
+
+  list cp;
+  while (size(CPairs) > 0) {
+    //cp = selectCPair(CPairs);
+    cp = selectCPair();
+
+    poly sp, sp_nz;
+    ideal E_cur = cp[3][1];
+    list N_cur = cp[3][2];
+    (sp, sp_nz) = getFaithSPolyFromCPair(cp);
+
+    ideal basis, basis_nz;
+    (basis, basis_nz) = simplifyBasisFaith(G, E_cur, N_cur);
+    
+    poly nf, nf_nz, teiler;
+    (nf, nf_nz, teiler) = reduceFaithSegment(nf, nf_nz, basis, basis_nz, E_cur, N_cur);
+
+    if (nf != 0) {
+      // Remove redundant poly.
+      ideal M = G;
+      for (i = 1; i <= size(G); i++) {
+	if (isRedundant(G[i], insertPolyToIdeal(M, nf))) {
+	  M = deletePolyFromIdeal(M, G[i]);
+	  STLIST = deleteSTuples(STLIST, G[i]);
+	}
+      }
+      G = M;
+
+      // Add new CPairs and poly.
+      //CPairs = insertCPairs(CPairs, M, nf);
+      insertCPairs(M, nf);
+      G = insertDescSet(G, nf);
+      STLIST = insertSTuples(nf, E_cur, N_cur);
+      //NFLIST = updateNFLIST(NFLIST, nf, G);
+      updateNFLIST(nf, G);
+    }
+  }
+
+  return (G);
+}

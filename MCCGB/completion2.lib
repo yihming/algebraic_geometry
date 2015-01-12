@@ -3,7 +3,7 @@ LIB "mcgb.lib";
 /*
 Global Structures:
 
-STLIST -- map of specialized tuples.
+STMAP -- map of specialized tuples.
 type: list
 structures:
 1 -- faithful polynomial f
@@ -21,21 +21,99 @@ each element:
     (1, 2) -- (g, g_nz)
 (3, 4) -- the intersected segment (E, N)
 
-NFLIST -- map of normal forms under segments.
+NFMAP -- map of normal forms under segments.
 type: list
 structures:
 1 -- faithful polynomial f
-2 -- has it been tried to specialize before?
-3 -- list of normal forms of f under segments.
+2 -- list of normal forms of f under segments.
     (1, 2) -- the intersected segment (E, N)
     (3, 4) -- normal form (rem, m)
 
-SBLIST -- map of specialized bases.
+vSBLIST -- map of specialized bases.
 type: list
 structures:
 (1, 2) -- segment (E, N)
 3 -- ideal of specialized basis under (E, N)
  */
+
+proc updateSingleNF(ideal E, list N, poly h, ideal G) {
+  ideal G_nz = simplifyBasis(G, E, N);
+  poly rem, m;
+  list nf;
+  
+  (rem, m) = reduceUnderSegment(h, G_nz, E, N);
+  int split_flag = 0;
+  while (!checkNonNull(m, E, N)) {
+    split_flag = 1;
+    if (rem != 0) {
+      nf = insert(nf, list(E, N + list(m), rem, m), size(nf));
+    }
+    E = E + ideal(m);
+    G_nz = simplifyBasis(G, E, N);
+    (rem, m) = reduceUnderSegment(h, G_nz, E, N);
+  }
+
+  if (!split_flag) {
+    if (rem != 0) { 
+      nf = insert(nf, list(E, N, rem, m), size(nf));
+    }
+  }
+
+  return (nf);
+}
+
+proc insertNFLIST(poly f, ideal G) {
+  int idx = searchSTuples(f);
+  if (idx == -1) {
+    ERROR("index out of bound");
+  }
+
+  list st = STMAP[idx][2];
+  if (size(st) == 0) {
+    NFMAP = insert(NFMAP, list(f, list()), size(NFMAP));
+  }
+
+  int i;
+  list nf;
+  for (i = 1; i <= size(st); i++) {
+    poly h = st[i][1];
+    ideal E = st[i][2];
+    list N = st[i][3];
+    nf = insert(nf, list(E, N, h, 1), size(nf));
+  }
+
+  NFMAP = insert(NFMAP, list(f, nf), size(NFMAP));
+}
+
+proc updateNFMAP(int idx, ideal G) {
+  list nf_old = NFMAP[idx][2];
+
+  if (size(nf_old) != 0) {
+    int i;
+    list nf_new;
+    list nfl;
+    for (i = 1; i <= size(nf_old); i++) {
+      ideal E = nf_old[i][1];
+      list N = nf_old[i][2];
+      poly h = nf_old[i][3];
+      nf_old = delete(nf_old, 1);
+      
+      nfl = updateSingleNF(E, N, h, G);
+      if (size(nfl) != 0) {
+	nf_new = nf_new + nfl;
+	nf_new = nf_new + nf_old;
+	NFMAP[idx][2] = nf_new;
+	return (0);
+      }
+      
+    }
+    
+    NFMAP[idx][2] = list();
+    return (1);
+  }
+
+  return (1);
+}
 
 proc isRedundant(poly f, ideal G) {
   if (size(G) <= 1) {
@@ -49,33 +127,17 @@ proc isRedundant(poly f, ideal G) {
     ERROR("out of index!");
   }
 
-  int is_checked = NFLIST[idx][2];
-
-  if (is_checked) {
-    // We can directly use NFLIST[idx][3].
-    int i;
-    list nf = NFLIST[idx][3];
-    poly rem, m, E, N;
-    for (i = 1; i <= size(nf); i++) {
-      if (nf[i][3] != 0) {
-	E = nf[i][1];
-	N = nf[i][2];
-	rem = nf[i][3];
-
-	ideal G_nz = simplifyBasis(G, E, N);
-	(rem, m) = reduceUnderSegment(rem, G_nz, E, N);
-	if (rem != 0 && rem != nf[i][3]) {
-	  updateNFLIST()
-	}
-      }
-    }
+  int reduced_flag = updateNFMAP(idx, G);
+  
+  if (reduced_flag) {
+    return (1);
   } else {
-    // Compute, and store as NFLIST[idx][3].
+    return (0);
   }
   
 }
 
-proc searchNFlist(poly f) {
+proc searchNFLIST(poly f) {
   f = monic(f);
   if (size(NFLIST) == 0) {
     return (-1);
@@ -91,27 +153,91 @@ proc searchNFlist(poly f) {
   return (-1);
 }
 
-proc deletePolyFromIdeal(poly f, ideal G) {
+proc deletePolyFromIdeal(ideal I, poly f) {
+  if (size(I) == 0) {
+    return (I);
+  }
 
+  int ring_flag = 0;
+  if (nameof(basering) != "@RP") {
+    def BR = basering;
+    setring @RP;
+    def I = imap(BR, I);
+    if (!defined(f)) {
+      def f = imap(BR, f);
+    }
+    ring_flag = 1;
+  }
+
+  ideal J;
+  int i;
+  for (i = 1; i <= size(I); i++) {
+    if (I[i] != f) {
+      J = J + I[i];
+    }
+  }
+
+  if (ring_flag) {
+    setring BR;
+    def J = imap(@RP, J);
+  }
+
+  return (J);
 }
 
 proc deleteSTuples(poly f) {
+  int idx = searchSTuples(f);
+  STMAP = delete(STMAP, idx);
+}
 
+proc buildCPairsPerPair(int idx_f, int idx_g) {
+  poly f = STMAP[idx_f][1];
+  list st_f = STMAP[idx_f][2];
+  poly g = STMAP[idx_g][1];
+  list st_g = STMAP[idx_g][2];
+
+  list cp_list;
+  int i, j;
+  for (i = 1; i <= size(st_f); i++) {
+    for (j = 1; j <= size(st_g); j++) {
+      if (isNecessary(st_f[i], st_g[j])) {
+	poly f_nz = st_f[i][1];
+	poly g_nz = st_g[j][1];
+	ideal E = st_f[i][2] + st_g[j][2];
+	list N = st_f[i][3] + st_g[j][3];
+	cp_list = insert(cp_list, list(list(f, f_nz), list(g, g_nz), E, N), size(cp_list));
+      }
+    }
+  }
+
+  return (cp_list);
 }
 
 proc buildCriticalPairs() {
+  if (size(STMAP) <= 1) {
+    return (list());
+  }
 
+  int i, j;
+  list cpairs;
+  for (i = 1; i <= size(STMAP) - 1; i++) {
+    for (j = i + 1; j <= size(STMAP); j++) {
+      cpairs = cpairs + buildCPairsPerPair(i, j);
+    }
+  }
+
+  return (cpairs);
 }
 
 proc searchSTuples(poly f) {
   f = monic(f);
   int i;
-  if (size(STLIST) == 0) {
+  if (size(STMAP) == 0) {
     return (-1);
   }
 
-  for (i = 1; i <= size(STLIST); i++) {
-    if (f == STLIST[i][1]) {
+  for (i = 1; i <= size(STMAP); i++) {
+    if (f == STMAP[i][1]) {
       return (i);
     }
   }
@@ -136,15 +262,51 @@ proc reduceFaithSegment(poly h, poly h_nz, ideal G, ideal G_nz, ideal E, list N)
 }
 
 proc reduceUnderSegment(poly h, ideal G, ideal E, list N) {
+  list pd_struct = pseudoDivi(h, G);
+  poly rem = pd_struct[1];
+  poly m = pd_struct[3];
 
+  if (checkRemNull(rem, E, N)) {
+    return (0, m);
+  } else {
+    return (rem, m);
+  }
 }
 
 proc insertCPairs(ideal G, poly f) {
+  if (size(G) == 0) {
+    return ;
+  }
 
+  int i;
+  int idx_f = searchSTuples(f);
+  int idx_g;
+  for (i = 1; i <= size(G); i++) {
+    idx_g = searchSTuples(G[i]);
+    CPairs = CPairs + buildCPairsPerPair(idx_g, idx_f);
+  }
 }
 
 proc insertDescSet(G, poly f) {
+  if (size(G) == 0) {
+    return (ideal(f));
+  }
 
+  int i;
+  int insert_flag = 0;
+  for (i = 1; i <= size(G); i++) {
+    if(lesspoly(G[i], f)) {
+      G = insert(G, f, i-1);
+      insert_flag = 1;
+      break;
+    }
+  }
+
+  if (!insert_flag) {
+    G = insert(G, f, size(G));
+  }
+
+  return (G);
 }
 
 proc insertSTuples(poly f, ideal E, list N) {
@@ -162,11 +324,7 @@ proc insertSTuples(poly f, ideal E, list N) {
     f = monic(f - lm_X(f));
   }
 
-  STLIST = insert(STLIST, list(f, st), size(STLIST));
-}
-
-proc updateNFLIST(poly f, ideal G) {
-
+  STMAP = insert(STMAP, list(f, st), size(STMAP));
 }
 
 proc mcgbGenerate(ideal E, list N, ideal F) {
@@ -200,13 +358,13 @@ proc mcgbGenerate(ideal E, list N, ideal F) {
   // Construct specialized tuples of each poly in G.
   int i, j;
 
-  list STLIST;
+  list STMAP;
   list STuples;
   for (i = 1; i <= size(G); i++) {
     insertSTuples(G[i], E, N);
   }
   
-  export(STLIST);
+  export(STMAP);
 
   // Remove redundant poly.
   ideal M = G;
@@ -223,13 +381,13 @@ proc mcgbGenerate(ideal E, list N, ideal F) {
   export(CPairs);
 
   // Initialize the list of normal forms.
-  list NFLIST;
+  list NFMAP;
   for (i = 1; i <= size(G); i++) {
     STuples = searchSTuples(G[i]);
     // To be finished.
   }
 
-  export(NFLIST);
+  export(NFMAP);
 
   list cp;
   while (size(CPairs) > 0) {
@@ -248,11 +406,12 @@ proc mcgbGenerate(ideal E, list N, ideal F) {
 
     if (nf != 0) {
       // Remove redundant poly.
+      nf = monic(nf);
       ideal M = G;
       for (i = 1; i <= size(G); i++) {
 	if (isRedundant(G[i], insertPolyToIdeal(M, nf))) {
 	  M = deletePolyFromIdeal(M, G[i]);
-	  STLIST = deleteSTuples(STLIST, G[i]);
+	  STMAP = deleteSTuples(STMAP, G[i]);
 	}
       }
       G = M;
@@ -260,8 +419,8 @@ proc mcgbGenerate(ideal E, list N, ideal F) {
       // Add new CPairs and poly.
       insertCPairs(M, nf);
       G = insertDescSet(G, nf);
-      STLIST = insertSTuples(nf, E_cur, N_cur);
-      updateNFLIST(nf, G);
+      STMAP = insertSTuples(nf, E_cur, N_cur);
+      insertNFLIST(nf, G);
     }
   }
 

@@ -7,6 +7,7 @@ LIB "cgb_mod.lib";
 LIB "buchtrace.lib";
 LIB "mcgbcheck.lib";
 
+
 proc set_global_rings_mcgb() {
   // Basering is K[U][X].
 
@@ -1048,6 +1049,7 @@ proc mcgbMain(ideal E, list N, int choice_flag, int opt_flag, ideal F) {
 /*
 Starting from a KSWCGB.
  */
+
 proc mcgbMainComp(ideal G, list modcgs, int opt_flag) {
   // basering is @R.
 
@@ -1958,6 +1960,7 @@ proc showRGB(ideal G, list global_polys, link out) {
   }
   fprintf(out, "]."+newline);
 }
+
 
 proc simplifyPoly(poly g, ideal E, list N) {
   int ring_flag = 0;
@@ -2895,8 +2898,9 @@ proc getMCGBNew2(ideal E, ideal N, ideal F, int choice_flag, int opt_flag) {
   if (ring_flag) {
     setring BR;
     def MCGB = imap(@RP, MCGB);
-    def cgs_mcgb = imap(@RP, cgs_mcgb;
+    def cgs_mcgb = imap(@RP, cgs_mcgb);
   }
   
   return (MCGB, cgs_mcgb);
 }
+

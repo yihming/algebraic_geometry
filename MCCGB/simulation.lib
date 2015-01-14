@@ -1,6 +1,6 @@
 LIB "mcgb.lib";
 LIB "mcgbcheck.lib";
-LIB "completion.lib";
+LIB "completion2.lib";
 LIB "buchtrace.lib";
 
 proc sucheBeispiel(ideal G, list Modcgs, ideal M1, list cgs_m1, ideal M_simpl, list cgs_simpl, ideal M_step) {
@@ -53,9 +53,48 @@ proc sucheBeispiel(ideal G, list Modcgs, ideal M1, list cgs_m1, ideal M_simpl, l
 }
 
 /*
-Test with general simplification to multiple normal forms.
+Test with optmized mcgbGenerate().
  */
 proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode, intvec sim_option) {
+  def BR = basering;
+  system("--no-warn", 1);
+  system("--ticks-per-sec", 1000);
+
+  set_global_rings_mcgb();
+  set_global_rings();
+  set_global_objects();
+  link special_out = "fdfsfsfi";
+  exportto(Top, special_out);
+  exportto(Top, out);
+
+  ideal G_origin;
+  list Modcgs;
+  (G_origin, Modcgs) = cgb_mod(F, E, N, 1, out);
+
+  ideal M1;
+  list cgs1;
+  timer = 0;
+  int cnt_Time = timer;
+  (M1, cgs1) = mcgbMain(E, N, 1, 1, F);
+  int time_mcgbMain = timer - cnt_Time;
+  check_validity(idealToList(M1), Modcgs);
+  
+
+  timer = 0;
+  cnt_Time = timer;
+  ideal M2 = mcgbGenerate(E, listToIdeal(N), F);
+  int time_mcgbGenerate = timer - cnt_Time;
+  check_validity(idealToList(M2), Modcgs);
+
+  printf("Time of mcgbMain: %s;", string(time_mcgbMain));
+  printf("Time of mcgbGnerate: %s.", string(time_mcgbGenerate));
+  
+}
+
+/*
+Test with general simplification to multiple normal forms.
+ */
+proc simulate7(ideal E, list N, ideal F, int sim_times, link out, int debug_mode, intvec sim_option) {
   def BR = basering;
   system("--no-warn", 1);
   system("--ticks-per-sec", 1000);
@@ -69,7 +108,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   ideal G_origin;
   list Modcgs;
   (G_origin, Modcgs) = cgb_mod(F, E, N, 1, out);
-  
+
   ideal M = mcgbGenerate(E, N, F, 0);
   int i;
   poly g;

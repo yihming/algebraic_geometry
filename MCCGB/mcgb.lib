@@ -1985,15 +1985,10 @@ proc simplifyPoly(poly g, ideal E, list N) {
       // lc_g is determined to be 0.
       g_zero = g_zero + lm_X(g);
     } else {
-      if (checkNonNull(lc_g, E, N)) {
-	// lc_g is determined to be non-zero.
-	g_nonzero = g_nonzero + lm_X(g);
-      } else {
-	// lc_g is not determined.
-	poly f = reduce(lm_X(g), GB);
-	g_nonzero = g_nonzero + f;
-	g_zero = g_zero + lm_X(g) - f;
-      }
+      poly f = reduce(lm_X(g), GB);
+      g_nonzero = g_nonzero + f;
+      g_zero = g_zero + lm_X(g) - f;
+      
     }
     
     g = g - lm_X(g);
@@ -2900,7 +2895,7 @@ proc getMCGBNew2(ideal E, ideal N, ideal F, int choice_flag, int opt_flag) {
   if (ring_flag) {
     setring BR;
     def MCGB = imap(@RP, MCGB);
-    def cgs_mcgb = imap(@RP, cgs_mcgb);
+    def cgs_mcgb = imap(@RP, cgs_mcgb;
   }
   
   return (MCGB, cgs_mcgb);

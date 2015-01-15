@@ -64,13 +64,14 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   set_global_rings();
   set_global_objects();
   link special_out = "fdfsfsfi";
+  exportto(Top, debug_mode);
   exportto(Top, special_out);
   exportto(Top, out);
 
   ideal G_origin;
   list Modcgs;
   (G_origin, Modcgs) = cgb_mod(F, E, N, 1, out);
-
+  /*
   ideal M1;
   list cgs1;
   timer = 0;
@@ -78,15 +79,15 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   (M1, cgs1) = mcgbMain(E, N, 1, 1, F);
   int time_mcgbMain = timer - cnt_Time;
   check_validity(idealToList(M1), Modcgs);
-  
+  */
 
   timer = 0;
-  cnt_Time = timer;
-  ideal M2 = mcgbGenerate(E, listToIdeal(N), F);
+  int cnt_Time = timer;
+  ideal M2 = mcgbGenerate2(E, listToIdeal(N), F);
   int time_mcgbGenerate = timer - cnt_Time;
   check_validity(idealToList(M2), Modcgs);
 
-  printf("Time of mcgbMain: %s;", string(time_mcgbMain));
+  //  printf("Time of mcgbMain: %s;", string(time_mcgbMain));
   printf("Time of mcgbGnerate: %s.", string(time_mcgbGenerate));
   
 }

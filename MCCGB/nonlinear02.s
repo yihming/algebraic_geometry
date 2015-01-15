@@ -6,7 +6,7 @@ link out = "nonlinear02_glex.mp";
 
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
-int debug_mode = 0;
+int debug_mode = 1;
 
 // Times of running Algorithm 1 to generate different MCGBs.
 int sim_times = 50	;
@@ -26,7 +26,8 @@ ring R = (0, a, b), (x, y, z), Dp;
 
 //	ideal polys = (a)*x2y+(a2)*x2+(-3a),(-4ab2)*y2+(-4b3+4) ;
 
-ideal polys = ab2y2+b3-1, ax2y+a2x2-3a ;
+	//ideal polys = ab2y2+b3-1, ax2y+a2x2-3a ;
+	ideal polys = ab2y2+b3-1, (a3b2+b3-1)*x2+3ab2y-3a2b2 ;
 	
 //ideal polys = /* f_5 = */ (ab2)*y2+(b3-1),
 /* f_4 = */ //(a3b2+b3-1)*x2+(3ab2)*y+(-3a2b2),

@@ -683,7 +683,7 @@ proc reduceUnderSegment(poly h, ideal G, ideal E, list N) {
   }
 }
 
-proc mcgbGenerate(ideal E, ideal N_ideal, ideal F) {
+proc mcgbGenerate2(ideal E, ideal N_ideal, ideal F) {
   set_global_rings();
   set_global_rings_mcgb();
   set_global_objects();
@@ -721,6 +721,7 @@ proc mcgbGenerate(ideal E, ideal N_ideal, ideal F) {
   list NFMAP;
   
   export(STMAP, CPairs, NFMAP);
+  debug_mode = 1;
 
   buildSTMAPFromBasis(G, E, N);
   buildNFMAPFromSTMAP();

@@ -650,7 +650,6 @@ proc checkEssentialByHC(poly f, poly pf, list higher_coefs, poly g, list G_can, 
 	  if (size(G_can) == 1 && opt_flag) {
 	    return (1, BL);
 	  }
-	  printf("Branch split on higher coeff!");
 	  if (defined(debug_mode) && debug_mode >= 1) {
 	    fprintf(out, "Split branch (<%s>, {%s}) w.r.t. %s:", E, N, cur_c);
 	  }
@@ -749,7 +748,6 @@ proc checkEssentialInBranch(poly f, poly pf, list MRem, ideal E, list N, list G_
     return (checkEssentialByHC(f, pf, higher_coefs, g, G_can, E, N, G_branch, BL, opt_flag));
   } else {
     // Case 3.
-    printf("Branch Split on coef of t!");
     if (size(G_can) == 1 && opt_flag) {
       return (1, BL);
     }

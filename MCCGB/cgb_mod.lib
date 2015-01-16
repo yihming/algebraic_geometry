@@ -839,6 +839,7 @@ proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu, int choice_flag)
   ideal MixIdeals = MPolys + newMEqu;
   //GB = groebner(MPolys + newMEqu + ideal(Auxiliary[1] * Auxiliary[2]));
 
+  // YIMING: this is where to change the function on RGB computation.
   GB = std(MixIdeals);
   
   tempP = Trivial_Poly(GB);

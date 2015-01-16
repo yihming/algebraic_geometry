@@ -721,7 +721,6 @@ proc mcgbGenerate2(ideal E, ideal N_ideal, ideal F) {
   list NFMAP;
   
   export(STMAP, CPairs, NFMAP);
-  debug_mode = 1;
 
   buildSTMAPFromBasis(G, E, N);
   buildNFMAPFromSTMAP();

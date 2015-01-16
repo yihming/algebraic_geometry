@@ -68,29 +68,94 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   exportto(Top, special_out);
   exportto(Top, out);
 
+  fprintf(out, newline + "+++++++++++++++++++++");
+  fprintf(out, "The given ring is:");
+  fprintf(out, "%s"+newline, BR);
+
+  int i;
+  
+  // Print the given parametric ideal.
+  fprintf(out, "F = {");
+  if (size(F) > 0) {
+    for (i = 1; i < size(F); i++) {
+      fprintf(out, "%s, ", F[i]);
+    }
+    fprintf(out, "%s" + newline + "}." + newline, F[size(F)]);
+  } else {
+    fprintf(out, newline + "}." + newline);
+  }
+
+  // Print the given parameter space.
+  fprintf(out, "E = {%s}." + newline, E);
+  fprintf(out, "N = {%s}." + newline, string(N));
+  
   ideal G_origin;
   list Modcgs;
+  timer = 0;
+  int cnt_Time = timer;
   (G_origin, Modcgs) = cgb_mod(F, E, N, 1, out);
-  
+  int time_KSW = timer - cnt_Time;
+  list all_polys = idealToList(G_origin);
+    
   ideal M1;
   list cgs1;
   timer = 0;
-  int cnt_Time = timer;
-  (M1, cgs1) = mcgbMain(E, N, 1, 1, F);
-  int time_mcgbMain = timer - cnt_Time;
-  check_validity(idealToList(M1), Modcgs);
+  cnt_Time = timer;
+  (M1, cgs1) = mcgbMainComp(G_origin, Modcgs, 1);
+  int time_mcgb = timer - cnt_Time;
+  all_polys = mergeList(all_polys, idealToList(M1));
+  printf("Time of MCGBMain: %s.", string(time_KSW + time_mcgb));
+
   
+  ideal M2;
+  list cgs2;
+  timer = 0;
+  cnt_Time = timer;
+  (M2, cgs2) = getMCGBComp(E, listToIdeal(N), G_origin, Modcgs, 1);
+  int time_simpl = timer - cnt_Time;
+  all_polys = mergeList(all_polys, idealToList(M2));
+  printf("Time of MCGBSimpl: %s.", string(time_KSW + time_simpl));
+
   
   timer = 0;
   cnt_Time = timer;
-  ideal M2 = mcgbGenerate2(E, listToIdeal(N), F);
-  int time_mcgbGenerate = timer - cnt_Time;
+  ideal M3 = mcgbGenerate2(E, listToIdeal(N), F);
+  int time_completion = timer - cnt_Time;
+  all_polys = mergeList(all_polys, idealToList(M3));
+  
+
+  all_polys = sortSetAsce(all_polys);
+  
+  
+  // Print M1.
+  fprintf(out, "--------- mcgbMain -------------" + newline);
+  showCCGB(M1, all_polys, out);
+  check_validity(idealToList(M1), Modcgs);
+
+  
+  // Print M2.
+  fprintf(out, "---------- M_simpl ---------------" + newline);
+  showCCGB(M2, all_polys, out);
   check_validity(idealToList(M2), Modcgs);
   
-  printf("Time of mcgbMain: %s;", string(time_mcgbMain));
-  show(M1);
-  printf("Time of mcgbGnerate: %s.", string(time_mcgbGenerate));
-  show(M2);
+  // Print M3.
+  fprintf(out, "------------- Completion ------------" + newline);
+  showCCGB(M3, all_polys, out);
+  check_validity(idealToList(M3), Modcgs);
+  printf("Time of Completion: %s.", string(time_completion));
+
+  // Compare M1, M2 and M3.
+  if (lessSet(idealToList(M2), idealToList(M1)) == 1) {
+    printf("M_simpl < M");
+  }
+
+  if (lessSet(idealToList(M3), idealToList(M2)) == 1) {
+    printf("M_compl < M_simpl");
+  }
+  
+  fprintf(out, "---------- KSW --------" + newline);
+  fprintf(out, "%s" + newline, StringModCGS_mod(F, Modcgs, 1));
+  fprintf(out, "%s" + newline, StringCGB(G_origin, all_polys));
   
 }
 

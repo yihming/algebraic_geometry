@@ -28,10 +28,10 @@ ideal J = vy2, ux, u-v		;
 //ideal J = vxy2, uy, v	;
 //ideal K = u		;
 
-ideal polys = (u2+1)*x, (u+5)*x, (v-1)*x ;
+	//ideal polys = (u2+1)*x, (u+5)*x, (v-1)*x ;
 //ideal polys = randomid(I, 1, 4) + randomid(J, 1, 4);
 //ideal polys = uz+x, (u+1)*y-x	;
-//ideal polys = ux2-2y+(4u+4v)*z, (-2u+2v)*x2-2y+4vz ;
+ideal polys = ux2-2y+(4u+4v)*z, (-2u+2v)*x2-2y+4vz ;
 	
 ideal null_ideal = 0		;
 list nonnull_list = list()	;

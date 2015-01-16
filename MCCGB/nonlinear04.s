@@ -24,10 +24,24 @@ ring R = (0, a, b), (x, y), Dp;
 ideal I = (a-b)*x2, by2, ay;
 	
 
-	ideal J = a2xy, (a+b)*y2, by;
+ideal J = a2xy, ay2, by;
 
-ideal polys = randomid(I, 2, 4) + randomid(J, 2, 4) ;
+//ideal polys = randomid(I, 1, 4) + randomid(J, 1, 4) ;
+
+ideal polys = (a-b)*x2+(-3b)*y2+(3a)*y, 
+	(2a2)*xy+(-a)*y2+(-4b)*y	;
 	
+	
+// M_compl not CGB.
+/*ideal polys = (3a-3b)*x2+(b)*y2+(-3a)*y, 
+(-a+b)*x2+(-4b)*y2+(2a)*y, 
+(4a2)*xy+(2a+2b)*y2+(-2b)*y, 
+(4a+4b)*y2+(2b)*y		;
+*/	
+// M_simpl not minimal.
+/*ideal polys = (2a-2b)*x2+(-b)*y2+(4a)*y, 
+(4a2)*xy+(-4a-4b)*y2+(4b)*y	;
+*/	
 ideal null_ideal = 0		;
 	list nonnull_list = list()	;
 	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;

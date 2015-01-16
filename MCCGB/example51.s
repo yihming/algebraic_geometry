@@ -2,7 +2,7 @@
 LIB "simulation.lib"		;
 
 // The output file name.
-link out = "example51_lex.mp";
+link out = "example51_grlex.mp";
 
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
@@ -19,7 +19,7 @@ int sim_times = 20		;
 intvec sim_option = 1, 1, 1, 1, 0	;
 
 // lex order.
-ring r = (0, a, b, c), (x, y), lp;
+ring r = (0, a, b, c), (x, y), dp;
 
 ideal polys = ax-b, by-a, cx2-y, cy2-x;
 ideal null_ideal = 0		;

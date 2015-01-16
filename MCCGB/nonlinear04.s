@@ -20,9 +20,11 @@ intvec sim_option = 1, 1, 1, 1, 0	;
 
 // degree reversed lex order.
 ring R = (0, a, b), (x, y), Dp;
-	ideal I = (a-b)*x2, ay, a-b;
+	
+ideal I = (a-b)*x2, by2, ay;
+	
 
-	ideal J = a2x2, a2-b2 ;
+	ideal J = a2xy, (a+b)*y2, by;
 
 ideal polys = randomid(I, 2, 4) + randomid(J, 2, 4) ;
 	

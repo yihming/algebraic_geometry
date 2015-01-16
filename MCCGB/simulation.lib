@@ -71,7 +71,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   ideal G_origin;
   list Modcgs;
   (G_origin, Modcgs) = cgb_mod(F, E, N, 1, out);
-  /*
+  
   ideal M1;
   list cgs1;
   timer = 0;
@@ -79,17 +79,97 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   (M1, cgs1) = mcgbMain(E, N, 1, 1, F);
   int time_mcgbMain = timer - cnt_Time;
   check_validity(idealToList(M1), Modcgs);
-  */
-
+  
+  
   timer = 0;
-  int cnt_Time = timer;
+  cnt_Time = timer;
   ideal M2 = mcgbGenerate2(E, listToIdeal(N), F);
   int time_mcgbGenerate = timer - cnt_Time;
   check_validity(idealToList(M2), Modcgs);
-
-  //  printf("Time of mcgbMain: %s;", string(time_mcgbMain));
-  printf("Time of mcgbGnerate: %s.", string(time_mcgbGenerate));
   
+  printf("Time of mcgbMain: %s;", string(time_mcgbMain));
+  show(M1);
+  printf("Time of mcgbGnerate: %s.", string(time_mcgbGenerate));
+  show(M2);
+  
+}
+
+/*
+Output result of mcgbMain algorithm.
+ */
+proc simulate12(ideal E, list N, ideal F, int sim_times, link out, int debug_mode, intvec sim_option) {
+  def BR = basering;
+  system("--no-warn", 1);
+  system("--ticks-per-sec", 1000);
+
+  set_global_rings_mcgb();
+  set_global_rings();
+  set_global_objects();
+  exportto(Top, debug_mode);
+  exportto(Top, out);
+
+  int i;
+  ideal G_origin;
+  list Modcgs;
+  (G_origin, Modcgs) = cgb_mod(F, E, N, 1, out);
+  list all_polys = idealToList(G_origin);
+
+  setring @RP;
+  def G = imap(BR, G_origin);
+  def Modcgs = imap(BR, Modcgs);
+  list G_list = idealToList(G);
+
+  int is_essential;
+  list BL;
+  for (i = 1; i <= size(G); i++) {
+    printf("Check %s:", showParamPoly(G[i]));
+    (is_essential, BL) = checkEssential(G[i], G_list, Modcgs, 1);
+    if (is_essential) {
+      printf("ESSENTIAL!");
+    } else {
+      printf("NON-ESSENTIAL!");
+    }
+  }
+
+  setring BR;
+  
+  printf("CHECK FINISHED!");
+
+  ideal M;
+  list cgs_m;
+  (M, cgs_m) = mcgbMain(E, N, 1, 1, F);
+  all_polys = mergeList(all_polys, idealToList(M));
+  all_polys = sortSetAsce(all_polys);
+
+  
+  // Print the ring configuration.
+  fprintf(out, newline + "+++++++++++++++++++++");
+  fprintf(out, "The given ring is:");
+  fprintf(out, "%s"+newline, BR);
+
+  // Print the given parametric ideal.
+  fprintf(out, "F = {");
+  if (size(F) > 0) {
+    for (i = 1; i < size(F); i++) {
+      fprintf(out, "%s, ", F[i]);
+    }
+    fprintf(out, "%s" + newline + "}." + newline, F[size(F)]);
+  } else {
+    fprintf(out, newline + "}." + newline);
+  }
+
+  // Print the given parameter space.
+  fprintf(out, "E = {%s}." + newline, E);
+  fprintf(out, "N = {%s}." + newline, string(N));
+
+  showCCGB(M, all_polys, out);
+  check_validity(idealToList(M), Modcgs);
+
+  fprintf(out, "------------------" + newline);
+  fprintf(out, "%s" + newline, StringModCGS_mod(F, Modcgs, 1));
+  fprintf(out, "%s" + newline, StringCGB(G_origin, all_polys));
+
+  close(out);
 }
 
 /*
@@ -255,7 +335,7 @@ proc simulate3(ideal E, list N, ideal F, int sim_times, link out, int debug_mode
 /*
 Record Time used.
  */
-proc simulate1(ideal E, list N, ideal F, int sim_times, link out, int debug_mode, intvec sim_option) {
+proc simulate11(ideal E, list N, ideal F, int sim_times, link out, int debug_mode, intvec sim_option) {
   def BR = basering;
   system("--no-warn", 1);
   system("--ticks-per-sec", 1000);
@@ -361,7 +441,7 @@ proc simulate1(ideal E, list N, ideal F, int sim_times, link out, int debug_mode
   fprintf(time_res, "Percentage of MCGB: %s / %s.", string(time_cnt_MCGB), string(time_cnt_MCGB + time_cnt_KSW));
   fprintf(time_res, "Total time of M_simpl: %s ms;", string(time_cnt_MSIMPL + time_cnt_KSW));
   fprintf(time_res, "Percentage of M_simpl: %s / %s.", string(time_cnt_MSIMPL), string(time_cnt_MSIMPL + time_cnt_KSW));
- 
+  
   ideal MCGB_step;
   list cgs_step;
   (MCGB_step, cgs_step) = getMCGBNew1(E, listToIdeal(N), F, 1);

@@ -1022,7 +1022,7 @@ proc cgb_mod(ideal Polys, ideal Equ, list DisEqu, int choice_flag, link out)
   // BR is R[U][X].
   def BR = basering;
 
-  //  option(redSB);
+  option(redSB);
 
   set_global_rings();
 

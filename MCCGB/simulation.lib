@@ -160,6 +160,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   
   fprintf(out, "---------- KSW --------" + newline);
   fprintf(out, "%s" + newline, StringModCGS_mod(F, Modcgs, 1));
+  G_origin = sortSetAsce(G_origin);
   fprintf(out, "%s" + newline, StringCGB(G_origin, all_polys));
   
 }

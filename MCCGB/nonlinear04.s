@@ -28,8 +28,9 @@ ideal J = a2xy, ay2, by;
 
 //ideal polys = randomid(I, 1, 4) + randomid(J, 1, 4) ;
 
-ideal polys = (a-b)*x2+(-3b)*y2+(3a)*y, 
-	(2a2)*xy+(-a)*y2+(-4b)*y	;
+// Experiment Example in Completion draft.
+//ideal polys = (a-b)*x2+(-3b)*y2+(3a)*y, 
+//	(2a2)*xy+(-a)*y2+(-4b)*y	;
 	
 	
 // M_compl not CGB.
@@ -39,9 +40,9 @@ ideal polys = (a-b)*x2+(-3b)*y2+(3a)*y,
 (4a+4b)*y2+(2b)*y		;
 */	
 // M_simpl not minimal.
-/*ideal polys = (2a-2b)*x2+(-b)*y2+(4a)*y, 
+ideal polys = (2a-2b)*x2+(-b)*y2+(4a)*y, 
 (4a2)*xy+(-4a-4b)*y2+(4b)*y	;
-*/	
+	
 ideal null_ideal = 0		;
 	list nonnull_list = list()	;
 	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;

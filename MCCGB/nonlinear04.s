@@ -19,7 +19,7 @@ int sim_times = 50	;
 intvec sim_option = 1, 1, 1, 1, 0	;
 
 // degree reversed lex order.
-ring R = (0, a, b), (x, y), Dp;
+ring R = (0, a, b, c), (x, y), Dp;
 	
 ideal I = (a-b)*x2, by2, ay;
 	
@@ -30,7 +30,9 @@ ideal J = a2xy, ay2, by;
 
 // Experiment Example in Completion draft.
 ideal polys = (a-b)*x2+(-b)*y2+(a)*y, 
-	(a2)*xy+(-a)*y2+(-b)*y	;
+	 axy+(-a)*y2+(-b)*y	;
+//	ideal polys = (a-b)*x2 - by2 + ay ,
+//	a2y2-ay2-by		;
 	
 	
 // M_compl not CGB.

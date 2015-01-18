@@ -25,7 +25,9 @@ proc insertSTuples(poly f, ideal E, list N) {
       break;
     }
     E = E + ideal(koeff);
-    f = f - lm_X(f);
+    poly f_nonzero, f_zero;
+    (f_nonzero, f_zero) = simplifyPoly(f, E, N);
+    f = f_nonzero;
   }
 
   STMAP = insert(STMAP, list(f_old, st), size(STMAP));
@@ -638,6 +640,44 @@ proc reduceFaithSegment(poly h, poly h_nz, ideal G, ideal G_nz, ideal E, list N)
   }
 }
 
+proc reduceFaithSegmentNew(poly h, poly h_nz, ideal G, ideal G_nz, ideal E, list N) {
+  if (size(G_nz) == 0) {
+    return (list(list(h, h_nz, 1)));
+  }
+
+  list pd_struct = pseudoDivi(h_nz, G_nz);
+  poly rem = pd_struct[1];
+  ideal quots = pd_struct[2];
+  poly m = pd_struct[3];
+
+  if (checkPolyNull(rem, E, N)) {
+    return (list(list(0, 0, 1)));
+  } else {
+    int i;
+    poly p = 0;
+    for (i = 1; i <= size(G); i++) {
+      if (quots[i] != 0) {
+	p = p + quots[i] * G[i];
+      }
+    }
+    poly rem_faith = m * h - p;
+    
+    if (checkPolyNonNull(rem, E, N)) {
+      return (list(list(rem_faith, rem, m)));
+    } else {
+      poly teiler = getFirstNonDeterminedCoef(rem, E, N);
+      list rem_list = reduceFaithSegment(rem_faith, rem, G, G_nz, )
+    }
+
+  }
+}
+
+proc getFirstNonDeterminedCoef(poly f, ideal E, list N) {
+  if (f == 0) {
+    return (0);
+  }
+}
+
 proc simplifyBasis(ideal G, ideal E, list N) {
   if (size(G) == 0) {
     return (G);
@@ -712,7 +752,7 @@ proc mcgbGenerate2(ideal E, ideal N_ideal, ideal F) {
     def G = imap(BR, G);
     ring_flag = 1;
   }
-  
+  debug_mode = 1;
   // Construct specialized tuples of each poly in G.
   int i, j;
 
@@ -726,6 +766,7 @@ proc mcgbGenerate2(ideal E, ideal N_ideal, ideal F) {
   buildNFMAPFromSTMAP();
 
   // Remove redundant poly.
+  /*
   ideal M = G;
   for (i = 1; i <= size(G); i++) {
     if (isRedundant(G[i], M)) {
@@ -734,7 +775,7 @@ proc mcgbGenerate2(ideal E, ideal N_ideal, ideal F) {
     }
   }
   G = M;
-
+  */
   // Initialize the list of critical pairs to be checked.
   buildCPairsFromSTMAP();
 
@@ -780,6 +821,7 @@ proc mcgbGenerate2(ideal E, ideal N_ideal, ideal F) {
 	fprintf(out, "σ(rem) != 0.");
       }
       nf = paramMonic(nf);
+      /*
       ideal M = G;
       if (defined(debug_mode) && debug_mode == 1) {
 	fprintf(out, "Remove Redundant Poly:");
@@ -804,6 +846,7 @@ proc mcgbGenerate2(ideal E, ideal N_ideal, ideal F) {
 	}
       }
       G = M;
+      */
       if (defined(debug_mode) && debug_mode == 1) {
 	fprintf(out, "Now, we have:");
 	fprintf(out, "%s", showParamIdeal(G));

@@ -19,13 +19,15 @@ int sim_times = 20		;
 intvec sim_option = 1, 1, 1, 1, 0	;
 
 // lex order.
-ring r = (0, u, v), (x, y, z), lp;
+//ring r = (0, u, v), (x, y, z), lp;
+//ring R = (0, u), (z, y, x), lp	;
+	ring R = (0, u, v), (y, x), lp ;
 //ideal I = ux, uy, uz, vx, vy, vz;
 
 //ideal polys = randomid(I, 2, 4);
 
-ideal polys = vx + y + (u+v)*z,
-	(v-u)*x -y + (-v)*z;
+//ideal polys = uz+x, (u+1)*y-x	;
+ideal polys = vxy+ux2+x, uy2+x2	;
 
 ideal null_ideal = 0		;
 list nonnull_list = list()		;

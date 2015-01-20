@@ -19,8 +19,8 @@ intvec sim_option = 1,0,1,1,1	;
 	
 ring r = (0, a, b), (x, y, u, v), Dp;
 
-ideal polys = (a-1)*u - b*(x-1), (a-1)*(x+1)+bu,
-		(a+1)*v - b*(y+1), (a+1)*(y-1) + bv ;
+//ideal polys = (a-1)*u - b*(x-1), (a-1)*(x+1)+bu,
+//		(a+1)*v - b*(y+1), (a+1)*(y-1) + bv ;
 /*	ideal polys = (a2+2a+b2+1)*v+(-2ab-2b),
 	(a2-2a+b2+1)*u+(2ab-2b),
 	(a2-2a+b2+1)*x+(a2-2a-b2+1),
@@ -34,8 +34,8 @@ ideal polys = (a-1)*u - b*(x-1), (a-1)*(x+1)+bu,
 	(b)*x+(-a+1)*u+(-b),
 	 (a-1)*x+(b)*u+(a-1);
 */	
-//ideal polys  =(a-1)*u2 - b*(x2-1), (a-1)*(x2+1)+bu2,
-//	(a+1)*v2 - b*(y2+y), (a+1)*(y2-1) + bv2 ;
+ideal polys  =(a-1)*u2 - b*(x2-1), (a-1)*(x2+1)+bu2,
+	(a+1)*v2 - b*(y2+y), (a+1)*(y2-1) + bv2 ;
 	
 ideal null_ideal = 0		;
 list nonnull_list = list()	;

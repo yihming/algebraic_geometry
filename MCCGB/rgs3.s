@@ -2,7 +2,7 @@
 LIB "simulation.lib";
 
 // The output file name.
-link out = "nonlinear01_lex.mp";
+link out = "rgs3.mp";
 
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
@@ -19,25 +19,14 @@ int sim_times = 20	;
 intvec sim_option = 1, 1, 1, 1, 0	;
 
 // degree reversed lex order.
-ring R = (0, a, b), (x, y, z), lp;
+ring R = (0, a1, a2, a3, a4), (x1, x2, x3, x4), lp;
 
-ideal I = ax2y, b2x2y, a2x2, by3;
-
-	
-//ideal polys = (-4a-2b2)*x2y+(2b)*y3,
-//(-3a-4b2)*x2y+(2a2)*x2+(2b)*y3	;
-
-	ideal polys = (a-2b)*x+y2+(a+b)*z,
-	a2x+y+bz		;
-	
-//ideal polys = (a3+a2b+ab2+b3)*x2 + (a2+b2+1)*x + (a-b)*(b+2) ;
-//ideal polys = randomid(I, 2, 4);
-
+ideal polys = x4 - (a4 - a2),
+	x1 + x2 + x3 + x4 + (a1 + a3 + a4),
+	x1*x3 + x1*x4 + x2*x3 + x3*x4 - (a1*a4 + a1*a3 + a3*a4),
+	x1*x3*x4 - a1*a3*a4	;
 	
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
 	
 simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
-//simulate_CGB(null_ideal, nonnull_list, polys, sim_times, out, debug_mode) ;
-//simulate_LeastMCGB(null_ideal, nonnull_list, polys, sim_times, out, debug_mode) ;
-//simulate_CCGB(null_ideal, nonnull_list, polys, sim_times, out, debug_mode) ;

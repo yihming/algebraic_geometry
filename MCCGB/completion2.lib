@@ -724,9 +724,6 @@ proc purifyBasis(ideal G, int n) {
     return (ideal());
   }
 
-  show(G);
-  show(n);
-
   int i;
   ideal G_new;
   for (i = 1; i <= n; i++) {
@@ -782,7 +779,6 @@ proc mcgbGenerate2(ideal E, ideal N_ideal, ideal F) {
 
   // Construct specialized tuples of each poly in G.
   int i, j;
-  debug_mode = 1;
   list STMAP;
   list CPairs;
   list NFMAP;
@@ -815,8 +811,6 @@ proc mcgbGenerate2(ideal E, ideal N_ideal, ideal F) {
   
   list cp;
   while (size(CPairs) > 0) {
-    show(size(CPairs));
-    showParamIdeal(G);
     cp = selectCPair();
     
     if (defined(debug_mode) && debug_mode == 1) {

@@ -567,23 +567,28 @@ proc Get_MDBasis(ideal GB, int choice_flag) {
   poly p1, p0;
   for (i = 1; i <= size(GB); i++) {
     (p1, p0) = polyToTuple(GB[i]);
-    G_tuple = insert(G_tuple, list(p1, p0), size(G_tuple));
+    if (p1 != 0 && (p1 + p0 != 0)) {
+      G_tuple = insert(G_tuple, list(p1, p0), size(G_tuple));
+    }
   }
 
   G_tuple = sortPolyAsceByFaith(G_tuple);
   list mdb_tuple = removeLPPXRedundancy(G_tuple);
+  //  printf("New Branch!");
+  //  for (i = 1; i <= size(mdb_tuple); i++) {
+  //    printf("[%s   ,   %s];", string(mdb_tuple[i][1]), string(mdb_tuple[i][2]));
+  //  }
 
   list mdbasis;
   poly lc_prod = 1;
   for (i = 1; i <= size(mdb_tuple); i++) {
     mdbasis = insert(mdbasis, tupleToAuxPoly(mdb_tuple[i]), size(mdbasis));
     lc_prod = lc_prod * leadcoef_U(mdb_tuple[i][1]);
+    
   }
 
 
-
   list lc_factors = idealToList(factorize(lc_prod, 1));
-
   return (mdbasis, lc_factors);
   
 }
@@ -900,13 +905,14 @@ proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu, int choice_flag)
 
   // randomize the order of LeadCoeffFactors.
   LeadCoeffFactors = randomize(LeadCoeffFactors);
-
+  
   // sort LeadCoefFactors.
   //LeadCoeffFactors = sortLCAsce(LeadCoeffFactors);
 
   for (i = 1; i <= size(LeadCoeffFactors); i++)
   {
     //CGB = CGB + cgb_mod_main(AllVarPolys, newEqu + LeadCoeffFactors[i], newDisEqu + tempDisEqu);
+    show(newEqu + LeadCoeffFactors[i]);
     CGB = CGB + cgb_mod_main(MPolys, newEqu + LeadCoeffFactors[i], newDisEqu + tempDisEqu, choice_flag);
     tempDisEqu = tempDisEqu + list(LeadCoeffFactors[i]);
   }

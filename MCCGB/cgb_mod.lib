@@ -504,6 +504,19 @@ proc polyToTuple(poly f) {
   return (f1, f0);
 }
 
+proc showAuxPoly(poly p) {
+  // Basering is AXU.
+  ideal U = groebner(ideal(Auxiliary[1] - 1, Auxiliary[2]));
+  ideal V = groebner(ideal(Auxiliary[1], Auxiliary[2] - 1));
+
+  poly p1, p0;
+  p1 = reduce(p, U);
+  p0 = reduce(p, V);
+  string res;
+  res = res + "[ " + showParamPoly(p1) + " , " + showParamPoly(p0) + " ]";
+  return (res);
+}
+
 proc tupleToAuxPoly(list tuple) {
   // Basering is @AXU.
   return (tuple[1] * Auxiliary[1] + tuple[2] * Auxiliary[2]);
@@ -861,6 +874,10 @@ proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu, int choice_flag)
   int trivial_flag = 0;
   MDBasis, LeadCoeffFactors = Get_MDBasis(AllVarPolys, choice_flag);
 
+  for (i = 1; i <= size(MDBasis); i++) {
+    printf("%s;", showAuxPoly(MDBasis[i]));
+  }
+  
   //trivial branches
   for (i = 1; i <= size(Gr); i++)
   {
@@ -870,7 +887,6 @@ proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu, int choice_flag)
       i++;
       continue;
     }
-
     if (Check_Consistence_CGB(newEqu, newDisEqu + list(tempP)))
     {
       Modcgs = Modcgs + list(list(newEqu, newDisEqu + list(tempP), list(MGr[i]), GB));
@@ -893,6 +909,10 @@ proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu, int choice_flag)
   //major branch
   if (Check_Consistence_CGB(newEqu, newDisEqu + LeadCoeffFactors))
   {
+    printf("========= New Branch ==================");
+    printf("E = <%s>;", newEqu);
+    printf("N = {%s};", newDisEqu + LeadCoeffFactors);
+    printf("G = {%s}.", GB);
     Modcgs = Modcgs + list(list(newEqu, newDisEqu + LeadCoeffFactors, MDBasis, GB));
     for (i = 1; i <= size(MDBasis); i++)
     {
@@ -911,8 +931,7 @@ proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu, int choice_flag)
 
   for (i = 1; i <= size(LeadCoeffFactors); i++)
   {
-    //CGB = CGB + cgb_mod_main(AllVarPolys, newEqu + LeadCoeffFactors[i], newDisEqu + tempDisEqu);
-    show(newEqu + LeadCoeffFactors[i]);
+    //CGB = CGB + cgb_mod_main(AllVarPolys, newEqu + LeadCoeffFactors[i], newDisEqu + tempDisEqu, choice_flag);
     CGB = CGB + cgb_mod_main(MPolys, newEqu + LeadCoeffFactors[i], newDisEqu + tempDisEqu, choice_flag);
     tempDisEqu = tempDisEqu + list(LeadCoeffFactors[i]);
   }

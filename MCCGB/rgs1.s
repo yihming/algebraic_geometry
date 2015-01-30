@@ -19,7 +19,7 @@ int sim_times = 20	;
 intvec sim_option = 1, 1, 1, 1, 0	;
 
 // degree reversed lex order.
-ring R = (0, a0, a1, a2, b0, b1, b2), (x), rp;
+ring R = (0, b2, b1, b0, a2, a1, a0), (x), lp;
 
 ideal polys = a0*x^2 + a1*x+a2, b0*x^2+b1*x+b2 ;
 	

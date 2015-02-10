@@ -6,7 +6,7 @@ link out = "rgs1.mp";
 
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
-int debug_mode = 0;
+int debug_mode = 1;
 
 // Times of running Algorithm 1 to generate different MCGBs.
 int sim_times = 20	;

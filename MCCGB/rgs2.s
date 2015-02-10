@@ -19,7 +19,8 @@ int sim_times = 20	;
 intvec sim_option = 1, 1, 1, 1, 0	;
 
 // degree reversed lex order.
-ring R = (0, u, v), (x, y), rp;
+	//ring R = (0, u, v), (x, y), rp;
+ring R = (0, v, u), (y, x), lp	;
 
 ideal polys = vxy + ux2 + x, uy2 + x2 ;
 	

@@ -12,6 +12,27 @@ structures:
     (2, 3) -- segment of this form
 */
 
+proc getSTuples(poly f, ideal E, list N) {
+  list st;
+  poly koeff;
+  poly f_old = f;
+
+  while (f != 0) {
+    koeff = leadcoef_U(f);
+    if (Check_Consistence_CGB(E, N + list(koeff))) {
+      st = insert(st, list(f, E, N + list(koeff)), size(st));
+    } else {
+      break;
+    }
+    E = E + ideal(koeff);
+    poly f_nonzero, f_zero;
+    (f_nonzero, f_zero) = simplifyPoly(f, E, N);
+    f = f_nonzero;
+  }
+
+  return (st);
+}
+
 proc insertSTuples(poly f, ideal E, list N) {
   list st;
   poly koeff;
@@ -100,6 +121,8 @@ each element:
     (1, 2) -- (g, g_nz)
 (3, 4) -- the intersected segment (E, N)
 5 -- LCM of LT(f_nz) and LT(g_nz);
+6 -- ideal of h and its specialized form:
+    (1, 2) -- (sp_faith(f_nz, g_nz), sp(f_nz, g_nz))
 Sorted due to the normal selection strategy.
 
 */
@@ -119,7 +142,7 @@ proc insertCPair(list cp) {
   } else {
     int i;
     int inserted_flag = 0;
-    poly lti;
+
     for (i = 1; i <= size(CPairs); i++) {
       if (cp[5] <= CPairs[i][5]) {
 	CPairs = insert(CPairs, cp, i - 1);
@@ -639,39 +662,6 @@ proc reduceFaithSegment(poly h, poly h_nz, ideal G, ideal G_nz, ideal E, list N)
     return (rem_faith, rem, m);
   }
 }
-/*
-proc reduceFaithSegmentNew(poly h, poly h_nz, ideal G, ideal G_nz, ideal E, list N) {
-  if (size(G_nz) == 0) {
-    return (list(list(h, h_nz, 1)));
-  }
-
-  list pd_struct = pseudoDivi(h_nz, G_nz);
-  poly rem = pd_struct[1];
-  ideal quots = pd_struct[2];
-  poly m = pd_struct[3];
-
-  if (checkPolyNull(rem, E, N)) {
-    return (list(list(0, 0, 1)));
-  } else {
-    int i;
-    poly p = 0;
-    for (i = 1; i <= size(G); i++) {
-      if (quots[i] != 0) {
-	p = p + quots[i] * G[i];
-      }
-    }
-    poly rem_faith = m * h - p;
-    
-    if (checkPolyNonNull(rem, E, N)) {
-      return (list(list(rem_faith, rem, m)));
-    } else {
-      poly teiler = getFirstNonDeterminedCoef(rem, E, N);
-      list rem_list = reduceFaithSegment(rem_faith, rem, G, G_nz, )
-    }
-
-  }
-}
-*/
 
 proc getFirstNonDeterminedCoef(poly f, ideal E, list N) {
   if (f == 0) {
@@ -832,6 +822,209 @@ proc mcgbGenerate2(ideal E, ideal N_ideal, ideal F) {
     if (defined(debug_mode) && debug_mode == 1) {
       fprintf(out, "σ(G) = [%s].", showParamIdeal(G_nz));
     }
+    poly nf, nf_nz, teiler;
+    (nf, nf_nz, teiler) = reduceFaithSegment(sp, sp_nz, G, G_nz, E_cur, N_cur);
+    if (defined(debug_mode) && debug_mode == 1) {
+      fprintf(out, "σ(rem) = %s,", showParamPoly(nf_nz));
+      fprintf(out, "rem = %s,", showParamPoly(nf));
+      fprintf(out, "m = %s.", teiler);
+    }
+    if (nf_nz != 0) {
+      // Remove redundant poly.
+      
+      if (defined(debug_mode) && debug_mode == 1) {
+	fprintf(out, "σ(rem) != 0.");
+      }
+      nf = paramMonic(nf);
+      
+      ideal M = G;
+      if (defined(debug_mode) && debug_mode == 1) {
+	fprintf(out, "Remove Redundant Poly:");
+      }
+      for (i = 1; i <= size(G); i++) {
+	if (isRedundant(G[i], insertPolyToIdeal(M, nf))) {
+	  if (defined(debug_mode) && debug_mode == 1) {
+	    fprintf(out, "%s is redundant.", showParamPoly(G[i]));
+	  }
+	  M = deletePolyFromIdeal(M, G[i]);
+	  if (defined(debug_mode) && debug_mode == 1) {
+	    fprintf(out, "After removal:");
+	    fprintf(out, "%s", showParamIdeal(M));
+	  }
+	  deleteSTuples(G[i]);
+	  deleteCPairsByPoly(G[i]);
+	  if (defined(debug_mode) && debug_mode == 1) {
+	    fprintf(out, "%s", showSTMAP());
+	    fprintf(out, "%s", showCPairs());
+	    fprintf(out, "%s", showNFMAP());
+	  }
+	}
+      }
+      G = M;
+      
+      if (defined(debug_mode) && debug_mode == 1) {
+	fprintf(out, "Now, we have:");
+	fprintf(out, "%s", showParamIdeal(G));
+      }
+
+      // Add new CPairs and poly.
+      if (defined(debug_mode) && debug_mode == 1) {
+	fprintf(out, "Add %s:", showParamPoly(nf));
+      }
+      insertSTuples(nf, E, N);
+      buildCPairsWithPoly(G, nf);
+      insertNFList(nf);
+      G = insertPolyToIdeal(G, nf);
+      G = sortSetDesc(G);
+      if (defined(debug_mode) && debug_mode == 1) {
+	fprintf(out, "Finally:");
+	fprintf(out, "%s", showParamIdeal(G));
+	fprintf(out, "%s", showSTMAP());
+	fprintf(out, "%s", showCPairs());
+	fprintf(out, "%s", showNFMAP());
+      }
+    }
+  }
+
+  ideal MCGB = G;
+
+  if (defined(debug_mode) && debug_mode == 1) {
+    fprintf(out, "====================");
+    fprintf(out, "%s", showParamIdeal(MCGB));
+  }
+  if (ring_flag) {
+    setring BR;
+    def MCGB = imap(@RP, MCGB);
+  }
+  
+  return (MCGB);
+}
+
+proc isAmbiguous(poly f, ideal E, list N) {
+  // Basering is @RP.
+  if (f == 0) { return (0);}
+  
+  poly lcf = leadcoef_U(f);
+  if (!checkNull(lcf, E, N) && !checkNonNull(lcf, E, N)) {
+    return (1);
+  }
+
+  return (0);
+}
+
+proc mcgbGenerate3(ideal E, ideal N_ideal, ideal F) {
+  set_global_rings();
+  set_global_rings_mcgb();
+  set_global_objects();
+
+  if (size(F) <= 1) {
+    return (F);
+  }
+
+  if (size(N_ideal) == 0) {
+    N_ideal = 1;
+  }
+
+  list N = idealToList(N_ideal);
+  option(redSB);
+
+  def G = makeSetParamMonic(F);
+  G = sortSetDesc(G);
+
+  def BR = basering;
+  int ring_flag = 0;
+  if (nameof(BR) != "@RP") {
+    setring @RP;
+    def E = imap(BR, E);
+    def N_ideal = imap(BR, N_ideal);
+    list N = idealToList(N_ideal);
+    def G = imap(BR, G);
+    ring_flag = 1;
+  }
+
+  // Construct specialized tuples of each poly in G.
+  int i, j;
+  list STMAP;
+  list CPairs;
+  list NFMAP;
+  
+  export(STMAP, CPairs, NFMAP);
+
+  buildSTMAPFromBasis(G, E, N);
+  buildNFMAPFromSTMAP();
+
+  // Remove redundant poly.
+  
+  ideal M = G;
+  for (i = 1; i <= size(G); i++) {
+    if (isRedundant(G[i], M)) {
+      M = deletePolyFromIdeal(M, G[i]);
+      deleteSTuples(G[i]);
+    }
+  }
+  G = M;
+  
+  // Initialize the list of critical pairs to be checked.
+  buildCPairsFromSTMAP();
+
+  if (defined(debug_mode) && debug_mode == 1) {
+    fprintf(out, "Initially, ");
+    fprintf(out, "%s", showSTMAP());
+    fprintf(out, "%s", showCPairs());
+    fprintf(out, "%s", showNFMAP());
+  }
+  
+  list cp;
+  while (size(CPairs) > 0) {
+    cp = selectCPair();
+    
+    if (defined(debug_mode) && debug_mode == 1) {
+      fprintf(out, "----------------------");
+      fprintf(out, "%s", showCP(cp));
+    }
+    
+
+    poly sp, sp_nz;
+    ideal E_cur = cp[3];
+    list N_cur = cp[4];
+    (sp, sp_nz) = getFaithSPolyFromCPair(cp);
+    if (defined(debug_mode) && debug_mode == 1) {
+      fprintf(out, "S-Poly = %s.", showParamPoly(sp_nz));
+    }
+
+    if (isAmbiguous(sp_nz, E_cur, N_cur)) {
+      list st_sp = getSTuples(sp_nz, E_cur, N_cur);
+      for (i = 1; i <= size(st_sp); i++) {
+	insertCPair(list(cp[1], cp[2], st_sp[i][2], st_sp[i][3], cp[5], ideal(sp, st_sp[i][1])));
+      }
+      continue;
+    }
+    
+    ideal G_nz, G_faith;
+    (G_faith, G_nz) = simplifyBasisFaith(G, E_cur, N_cur);
+    if (defined(debug_mode) && debug_mode == 1) {
+      fprintf(out, "σ(G) = [%s].", showParamIdeal(G_nz));
+    }
+
+    // Check ambiguity.
+    poly lcf = 1;
+    for (i = 1; i <= size(G_nz); i++) {
+      lcf = lcf * leadcoef_U(G_nz[i]);
+    }
+    
+    if (isAmbiguous(lcf, E_cur, N_cur)) {
+      // G_nz is ambiguous.
+      ideal lcf_factors = factorize(lcf, 1);
+      poly lc_used = 1;
+      for (i = 1; i <= size(lcf_factors); i++) {
+	ideal E_new = E_cur + ideal(lcf_factors[i]);
+	list N_new = insert(N_cur, lc_used, size(N_cur));
+	insertCPair(list(cp[1], cp[2], E_new, N_new, cp[5], ideal(sp, sp_nz)));
+	lc_used = lc_used * lcf_factors[i];
+      }
+      continue;
+    }
+    
     poly nf, nf_nz, teiler;
     (nf, nf_nz, teiler) = reduceFaithSegment(sp, sp_nz, G, G_nz, E_cur, N_cur);
     if (defined(debug_mode) && debug_mode == 1) {

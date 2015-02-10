@@ -98,7 +98,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   list all_polys = idealToList(G_origin);
 
   exportto(Top, Modcgs);
-  /*      
+        
   ideal M1;
   list cgs1;
   timer = 0;
@@ -121,7 +121,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   
   timer = 0;
   cnt_Time = timer;
-  ideal M3 = mcgbGenerate2(E, listToIdeal(N), F);
+  ideal M3 = mcgbGenerate3(E, listToIdeal(N), F);
   int time_completion = timer - cnt_Time;
   all_polys = mergeList(all_polys, idealToList(M3));
   printf("Time of Completion: %s.", string(time_completion));
@@ -154,7 +154,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
     if (lessSet(idealToList(M3), idealToList(M2)) == 1) {
     printf("M_compl < M_simpl");
     }
-  */
+  
   fprintf(out, "---------- KSW --------" + newline);
   fprintf(out, "%s" + newline, StringModCGS_mod(F, Modcgs, 1));
   G_origin = sortSetAsce(G_origin);

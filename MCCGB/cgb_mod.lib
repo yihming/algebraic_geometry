@@ -619,10 +619,6 @@ proc Get_MDBasis(ideal E, list N, ideal GB, int choice_flag) {
 
   G_tuple = sortPolyAsceByFaith(G_tuple);
   list mdb_tuple = removeLPPXRedundancy(G_tuple);
-  //  printf("New Branch!");
-  //  for (i = 1; i <= size(mdb_tuple); i++) {
-  //    printf("[%s   ,   %s];", string(mdb_tuple[i][1]), string(mdb_tuple[i][2]));
-  //  }
 
   list mdbasis;
   poly lc_prod = 1;
@@ -902,24 +898,10 @@ proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu, int choice_flag)
 
   //get minimal Dickson basis
   AllVarPolys, Gr, MGr = Divides_MPolys(GB);
-  printf("-------- Show AllVarPolys --------------");
-  printf("%s", showAuxBasis(AllVarPolys));
-  printf("------- End showing AllVarPolys ------------------");
-  printf("----------- Show Gr ------------------");
-  //printf("%s", showAuxList(Gr));
-  show(Gr);
-  printf("---------- End showing Gr ----------------");
-  printf("-------------- Show MGr ------------------");
-  printf("%s", showAuxList(MGr));
-  printf("------------ End showing MGr -------------");
 
   int trivial_flag = 0;
   MDBasis, LeadCoeffFactors = Get_MDBasis(newEqu, DisEqu, AllVarPolys, choice_flag);
 
-  for (i = 1; i <= size(MDBasis); i++) {
-    printf("%s;", showAuxPoly(MDBasis[i]));
-  }
-  
   //trivial branches
   for (i = 1; i <= size(Gr); i++)
   {
@@ -931,10 +913,6 @@ proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu, int choice_flag)
     }
     if (Check_Consistence_CGB(newEqu, newDisEqu + list(tempP)))
     {
-      printf("====== Trivial Branch =================");
-      printf("E = <%s>,", newEqu);
-      printf("N = {%s},", newDisEqu + list(tempP));
-      printf("G = {%s}", showAuxPoly(MGr[i]));
       Modcgs = Modcgs + list(list(newEqu, newDisEqu + list(tempP), list(MGr[i]), GB));
       CGB = CGB + Remove_Aux(MGr[i]);
     }
@@ -955,10 +933,6 @@ proc cgb_mod_main(ideal MPolys, ideal Equ, list DisEqu, int choice_flag)
   //major branch
   if (Check_Consistence_CGB(newEqu, newDisEqu + LeadCoeffFactors))
   {
-    printf("========= New Branch ==================");
-    printf("E = <%s>;", newEqu);
-    printf("N = {%s};", newDisEqu + LeadCoeffFactors);
-    printf("%s", showAuxList(MDBasis));
     Modcgs = Modcgs + list(list(newEqu, newDisEqu + LeadCoeffFactors, MDBasis, GB));
     for (i = 1; i <= size(MDBasis); i++)
     {

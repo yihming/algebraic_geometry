@@ -1136,7 +1136,7 @@ proc cgb_mod(ideal Polys, ideal Equ, list DisEqu, int choice_flag, link out)
   // Remove auxiliary variables from Modcgs.
   Modcgs = remove_aux_from_modcgs(Modcgs);
 
-  if (defined(debug_mode) && debug_mode == 2) {
+  if (defined(debug_mode) && debug_mode == 1) {
     fprintf(out, "%snumber of checkes: %s", newline, newline) ;
     fprintf(out, "trivial checks: %s", string(Checks[2]))	    ;
     fprintf(out, "0-dim checks: %s", string(Checks[3]))	    ;

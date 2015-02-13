@@ -1960,6 +1960,37 @@ proc showRGB(ideal G, list global_polys, link out) {
   fprintf(out, "]."+newline);
 }
 
+proc showNullIdeal(ideal E) {
+  string res = "E = < ";
+  int i;
+
+  if (size(E) > 0) {
+    for (i = 1; i < size(E); i++) {
+      res = res + string(E[i]) + ", ";
+    }
+    res = res + string(E[size(E)]);
+  }
+
+  res = res + " >";
+
+  return (res);
+}
+
+proc showNonNullList(list N) {
+  string res = "N = { ";
+  int i;
+  
+  if (size(N) > 0) {
+    for (i = 1; i < size(N); i++) {
+      res = res + string(N[i]) + ","; 
+    }
+    res = res + string(N[size(N)]);
+  }
+
+  res = res + " }";
+
+  return (res);
+}
 
 proc simplifyPoly(poly g, ideal E, list N) {
   int ring_flag = 0;
@@ -2585,8 +2616,13 @@ proc reduceOneStep(poly f, ideal G) {
   for (i = 1; i <= size(G); i++) {
     (divisible_flag, term_idx) = isDivisible(terms_f, leadmonom(G[i]));
     if (divisible_flag) {
-      //fprintf(special_out, "%s is reduced by %s * %s.", showParamPoly(f), showParamPoly((leadcoef(f[term_idx]) / leadcoef(G[i])) * (leadmonom(f[term_idx]) / leadmonom(G[i]))), showParamPoly(G[i]));
+      if (defined(debug_mode) && debug_mode == 2) {
+	fprintf(dbg_out, "%s is reduced by %s * %s to:", showParamPoly(f), showParamPoly((leadcoef(f[term_idx]) / leadcoef(G[i])) * (leadmonom(f[term_idx]) / leadmonom(G[i]))), showParamPoly(G[i]));
+      }
       f = f - (leadcoef(f[term_idx]) / leadcoef(G[i])) * (leadmonom(f[term_idx]) / leadmonom(G[i])) * G[i];
+      if (defined(debug_mode) && debug_mode == 2) {
+	fprintf(dbg_out, "    %s.", showParamPoly(f));
+      }
       break;
     }
   }
@@ -2748,6 +2784,7 @@ proc getMCGBNew1(ideal E, ideal N, ideal F, int choice_flag, int opt_flag) {
   return (MCGB, cgs_mcgb);
 }
 
+/*
 proc getMCGBNew2(ideal E, ideal N, ideal F, int choice_flag, int opt_flag) {
   ideal G;
   list modcgs;
@@ -2905,6 +2942,8 @@ proc getMCGBNew2(ideal E, ideal N, ideal F, int choice_flag, int opt_flag) {
   return (MCGB, cgs_mcgb);
 }
 
+*/
+
 /*
  * MCGBSimpl algorithm with One-step reduction.
  */
@@ -3032,6 +3071,10 @@ proc getMCGBOneStep1(ideal E, ideal N, ideal F, int choice_flag, int opt_flag) {
 
 proc getMCGBOneStep1Comp(ideal E, list N, ideal G, list modcgs, int opt_flag) {
 
+  if (defined(debug_mode) && debug_mode == 2) {
+    fprintf(dbg_out, "+++++++++++  MCGB OneStep Simpl ++++++++++++++");
+  }
+  
   if (size(G) == 0 || size(modcgs) == 0) {
     return (ideal(), list());
   }
@@ -3066,8 +3109,9 @@ proc getMCGBOneStep1Comp(ideal E, list N, ideal G, list modcgs, int opt_flag) {
 
   for (i = 1; i <= size(G); i++) {
     poly cur_g = G[i];
-    if (defined(debug_mode) && debug_mode == 1) {
-      fprintf(out, "Now check g_%s = %s:", string(i), showParamPoly(cur_g));
+    if (defined(debug_mode) && debug_mode == 2) {
+      fprintf(dbg_out, "-------------------------------------");
+      fprintf(dbg_out, "Now check g_%s = %s:", string(i), showParamPoly(cur_g));
     }
     int is_essential;
     list BL;
@@ -3079,17 +3123,29 @@ proc getMCGBOneStep1Comp(ideal E, list N, ideal G, list modcgs, int opt_flag) {
     (is_essential, BL) = checkEssential(cur_g, M, modcgs, opt_flag);
     if (!is_essential) {
       // Remove cur_g from M.
+      if (defined(debug_mode) && debug_mode == 2) {
+	fprintf(dbg_out, "It's non-essential. Remove.");
+      }
       modcgs = updateCGS(modcgs, cur_g, BL);
       M = deletePolyFromList(M, cur_g);
     } else {
       // Try full reduction first.
+      if (defined(debug_mode) && debug_mode == 2) {
+	fprintf(dbg_out, "It's essential.");
+      }
       poly g_red = monic(reduce(cur_g, MRem_ideal));
+      if (defined(debug_mode) && debug_mode == 2) {
+	fprintf(dbg_out, "Its normal form is %s.", showParamPoly(g_red));
+      }
       if (g_red != cur_g) {
 	int done_flag = 0;
 	if (g_red != 0) {
 	  M_new = insert(M, g_red, size(M));
 	  (is_essential, BL) = checkEssential(cur_g, M_new, modcgs, opt_flag);
 	  if (!is_essential) {
+	    if (defined(debug_mode) && debug_mode == 2) {
+	      fprintf(dbg_out, "This normal form can substitute the original one.");
+	    }
 	    modcgs = updateCGS(modcgs, cur_g, BL);
 	    M = substPolyInList(M, cur_g, g_red);
 	    done_flag = 1;
@@ -3098,6 +3154,10 @@ proc getMCGBOneStep1Comp(ideal E, list N, ideal G, list modcgs, int opt_flag) {
 	
 	if (!done_flag) {
 	  // Try one-step reduction as long as essential.
+	  if (defined(debug_mode) && debug_mode == 2) {
+	    fprintf(dbg_out, "This normal form cannot substitute the original one.");
+	    fprintf(dbg_out, "Start the One-Step Reduction:");
+	  }
 	  int terminate_flag = 0;
 	  poly g_old = cur_g;
 	  poly g_new, g_final;
@@ -3105,22 +3165,38 @@ proc getMCGBOneStep1Comp(ideal E, list N, ideal G, list modcgs, int opt_flag) {
 	  while (!terminate_flag) {
 	    g_new = monic(reduceOneStep(g_old, MRem_ideal));
 	    if (g_new == g_old) {
+	      if (defined(debug_mode) && debug_mode == 2) {
+		fprintf(dbg_out, "%s is not reducible further.", showParamPoly(g_old));
+	      }
 	      break;
 	    }
 	    M_new = insert(M, g_new, size(M));
 	    (is_essential, BL_new) = checkEssential(cur_g, M_new, modcgs, opt_flag);
 	    if (is_essential) {
+	      if (defined(debug_mode) && debug_mode == 2) {
+		fprintf(dbg_out, "%s does not maintain CGBness.", showParamPoly(g_new));
+	      }
 	      terminate_flag = 1;
 	      BL_final = BL_old;
 	      g_final = g_old;
 	    } else {
+	      if (defined(debug_mode) && debug_mode == 2) {
+		fprintf(dbg_out, "%s maintains CGBness.", showParamPoly(g_new));
+	      }
 	      BL_old = BL_new;
 	      g_old = g_new;
 	    }
 	  } // End while.
 	  if (g_final != cur_g) {
+	    if (defined(debug_mode) && debug_mode == 2) {
+	      fprintf(dbg_out, "%s can substitute %s.", showParamPoly(g_final), showParamPoly(cur_g));
+	    }
 	    modcgs = updateCGS(modcgs, cur_g, BL_final);
 	    M = substPolyInList(M, cur_g, g_final);
+	  } else {
+	    if (defined(debug_mode) && debug_mode == 2) {
+	      fprintf(dbg_out, "%s remains the same after one-step reduction.", showParamPoly(cur_g));
+	    }
 	  }
 	}
       } 

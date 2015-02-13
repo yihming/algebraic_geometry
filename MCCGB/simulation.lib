@@ -55,7 +55,7 @@ proc sucheBeispiel(ideal G, list Modcgs, ideal M1, list cgs_m1, ideal M_simpl, l
 /*
 Test with optmized mcgbGenerate().
  */
-proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode, intvec sim_option) {
+proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, int debug_mode, intvec sim_option) {
   def BR = basering;
   system("--no-warn", 1);
   system("--ticks-per-sec", 1000);
@@ -63,10 +63,9 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   set_global_rings_mcgb();
   set_global_rings();
   set_global_objects();
-  link special_out = "fdfsfsfi";
   exportto(Top, debug_mode);
-  exportto(Top, special_out);
   exportto(Top, out);
+  exportto(Top, dbg_out);
 
   fprintf(out, newline + "+++++++++++++++++++++");
   fprintf(out, "The given ring is:");

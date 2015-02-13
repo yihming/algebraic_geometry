@@ -2,11 +2,12 @@
 LIB "simulation.lib";
 
 // The output file name.
-link out = "nonlinear02_glex.mp";
+	link out = "nonlinear02_glex.mp";
+link dbg_out = "nonlinear02.debug"	;
 
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
-int debug_mode = 0;
+int debug_mode = 2;
 
 // Times of running Algorithm 1 to generate different MCGBs.
 int sim_times = 50	;
@@ -36,7 +37,7 @@ ring R = (0, a, b), (x, y, z), Dp;
 	
 ideal null_ideal = 0		;
 	list nonnull_list = list()	;
-	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+	simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
 
 	/*
 	int i				;

@@ -463,7 +463,7 @@ proc showParamPoly(poly f) {
 }
 
 proc showParamIdeal(ideal G) {
-  string res = "G = [" + newline;
+  string res = "[" + newline;
   if (size(G) > 0) {
     int i;
     for (i = 1; i <= size(G); i++) {

@@ -412,7 +412,7 @@ proc computeNF(list nf, ideal G) {
 
   if (defined(debug_mode) && debug_mode == 2) {
     fprintf(dbg_out, "Reduce %s", showParamPoly(h));
-    fprintf(dbg_out, "by Basis: [%s].", showParamIdeal(G_nz));
+    fprintf(dbg_out, "by Basis: %s.", showParamIdeal(G_nz));
     fprintf(dbg_out, "Under: ");
     fprintf(dbg_out, "    %s,", showNullIdeal(E));
     fprintf(dbg_out, "    %s.", showNonNullList(N));
@@ -680,17 +680,47 @@ proc reduceFaithSegment(poly h, poly h_nz, ideal G, ideal G_nz, ideal E, list N)
   ideal quots = pd_struct[2];
   poly m = pd_struct[3];
 
+  string res = "(" + showParamPoly(m) + ") * "
+    + "(" + showParamPoly(h_nz) + " ) = ";
+  res = res + "(" + showParamPoly(rem) + ")";
+
+  if (size(quots) > 0) {
+    int i;
+    for (i = 1; i <= size(G); i++) {
+      if (quots[i] != 0) {
+	res = res + "+ ( " + showParamPoly(quots[i]) + " ) * σ(G)["
+          + string(i) + "] ";
+      }
+    }
+  }
+
+  if (defined(debug_mode) && debug_mode == 2) {
+    fprintf(dbg_out, "%s.", res);
+  }
+
   if (checkPolyNull(rem, E, N)) {
     return (0, 0, 1);
   } else {
     int i;
     poly p = 0;
+
+    if (defined(debug_mode) && debug_mode == 2) {
+      fprintf(dbg_out, "Recovering the Faithful Version of Normal Form:");
+    }
+
+    res = "NF = (" + showParamPoly(m) + ") * (" + showParamPoly(h) + ") ";
+
     for (i = 1; i <= size(G); i++) {
       if (quots[i] != 0) {
 	p = p + quots[i] * G[i];
+	res = res + "- ( " + showParamPoly(quots[i]) + " ) * G[" + string(i) + "] ";
       }
     }
     poly rem_faith = m * h - p;
+
+    if (defined(debug_mode) && debug_mode == 2) {
+      fprintf(dbg_out, "%s.", res);
+    }
 
     return (rem_faith, rem, m);
   }
@@ -771,8 +801,10 @@ proc reduceUnderSegment(poly h, ideal G, ideal E, list N) {
   if (size(quots) > 0) {
     int i;
     for (i = 1; i <= size(G); i++) {
-      res = res + "+ ( " + showParamPoly(quots[i]) + " ) * G["
-	+ string(i) + "] ";
+      if (quots[i] != 0) {
+	res = res + "+ ( " + showParamPoly(quots[i]) + " ) * G["
+	  + string(i) + "] ";
+      }
     }
   }
 
@@ -1077,7 +1109,8 @@ proc mcgbGenerate3(ideal E, ideal N_ideal, ideal F) {
     ideal G_nz, G_faith;
     (G_faith, G_nz) = simplifyBasisFaith(G, E_cur, N_cur);
     if (defined(debug_mode) && debug_mode == 2) {
-      fprintf(dbg_out, "σ(G) = [%s].", showParamIdeal(G_nz));
+      fprintf(dbg_out, "G = %s.", showParamIdeal(G));
+      fprintf(dbg_out, "σ(G) = %s.", showParamIdeal(G_nz));
     }
 
     // Check ambiguity.
@@ -1089,14 +1122,19 @@ proc mcgbGenerate3(ideal E, ideal N_ideal, ideal F) {
     if (isAmbiguous(lcf, E_cur, N_cur)) {
       // G_nz is ambiguous.
       if (defined(debug_mode) && debug_mode == 2) {
-	fprintf(dbg_out, "Specialized Basis is AMBIGUOUS!");
+	fprintf(dbg_out, "Specialized Basis is AMBIGUOUS! Replace CriticalPair by its split cp's:");
       }
       ideal lcf_factors = factorize(lcf, 1);
       poly lc_used = 1;
       for (i = 1; i <= size(lcf_factors); i++) {
 	ideal E_new = E_cur + ideal(lcf_factors[i]);
 	list N_new = insert(N_cur, lc_used, size(N_cur));
-	insertCPair(list(cp[1], cp[2], E_new, N_new, cp[5], ideal(sp, sp_nz)));
+	list cp_split = cp[1], cp[2], E_new, N_new, cp[5], ideal(sp, sp_nz);
+	insertCPair(cp_split);
+	if (defined(debug_mode) && debug_mode == 2) {
+	  fprintf(dbg_out, "Insert split CP:");
+	  fprintf(dbg_out, "%s", showCP(cp_split));
+	}
 	lc_used = lc_used * lcf_factors[i];
       }
       continue;

@@ -1,6 +1,7 @@
 *.given
 *~
 *.homog
+*.debug
 *.tar.gz
 *.GC
 *.mp.*

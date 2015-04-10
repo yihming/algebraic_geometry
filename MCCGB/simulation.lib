@@ -54,8 +54,9 @@ proc sucheBeispiel(ideal G, list Modcgs, ideal M1, list cgs_m1, ideal M_simpl, l
 
 /*
 Test with optmized mcgbGenerate().
+YIMING!
  */
-proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, int debug_mode, intvec sim_option) {
+proc simulate5(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, int debug_mode, intvec sim_option) {
   def BR = basering;
   system("--no-warn", 1);
   system("--ticks-per-sec", 1000);
@@ -717,7 +718,7 @@ proc simulate1(ideal E, list N, ideal F, int sim_times, link out, int debug_mode
 /*
 For Completion
  */
-proc simulate5(ideal E, list N, ideal F, int sim_times, link out, int debug_mode, intvec sim_option) {
+proc simulate8(ideal E, list N, ideal F, int sim_times, link out, int debug_mode, intvec sim_option) {
   def BR = basering;
   system("--no-warn", 1);
 
@@ -767,7 +768,7 @@ proc simulate5(ideal E, list N, ideal F, int sim_times, link out, int debug_mode
   list Modcgs;
   (G_origin, Modcgs) = cgb_mod(F, E, N, 1, out);
 
-  ideal G_comp = mcgbGenerateComp(E, N, F, 0);
+  ideal G_comp = getMCGBComp(E, N, F, 0);
   list all_polys = idealToList(G_comp);
 
   all_polys = sortSetAsce(all_polys);
@@ -783,7 +784,7 @@ proc simulate5(ideal E, list N, ideal F, int sim_times, link out, int debug_mode
 /*
 Compare KSWCGS and CGS from MCGB.
  */
-proc simulate5(ideal E, list N, ideal F, int sim_times, link out, int debug_mode, intvec sim_option) {
+proc simulate15(ideal E, list N, ideal F, int sim_times, link out, int debug_mode, intvec sim_option) {
   def BR = basering;
   system("--no-warn", 1);
 
@@ -836,8 +837,8 @@ proc simulate5(ideal E, list N, ideal F, int sim_times, link out, int debug_mode
   
   ideal M;
   list cgs_m;
-  //(M, cgs_m) = getMCGBComp(E, listToIdeal(N), G_origin, Modcgs);
-  (M, cgs_m) = mcgbMainComp(G_origin, Modcgs);
+  (M, cgs_m) = getMCGBComp(E, listToIdeal(N), G_origin, Modcgs, 0);
+  //(M, cgs_m) = mcgbMainComp(G_origin, Modcgs);
   all_polys = mergeList(all_polys, idealToList(M));
 
   list cgs_recover = buildCGS(M);
@@ -864,6 +865,70 @@ proc simulate5(ideal E, list N, ideal F, int sim_times, link out, int debug_mode
   fprintf(out, "============= Recovered ================");
   showCCGB(M, all_polys, out);
   fprintf(out, "%s" + newline, StringModCGS_mod(F, cgs_recover, 0));
+
+
+  close(out);
+}
+
+/*
+Compute KSWCGS only.
+ */
+
+proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode, intvec sim_option) {
+  def BR = basering;
+  system("--no-warn", 1);
+
+  exportto(Top, out);
+  exportto(Top, debug_mode);
+  open(out);
+
+
+  int gen_simpl_flag = 1;
+  
+  int i, j;
+
+  // Print the ring configuration.
+  fprintf(out, "The given ring is:");
+  fprintf(out, "%s" + newline, BR);
+
+
+  // Print the given parametric ideal.
+  fprintf(out, "F = {");
+  if (size(F) > 0) {
+    for (i = 1; i < size(F); i++) {
+      fprintf(out, "%s, ", F[i]);
+    }
+    fprintf(out, "%s" + newline + "}." + newline, F[size(F)]);
+  } else {
+    fprintf(out, newline + "}." + newline);
+  }
+
+  // Print the given parameter space.
+  fprintf(out, "E = {%s}." + newline, E);
+  fprintf(out, "N = {%s}." + newline, string(N));
+
+  // KSWCGB and KSWCGS.
+
+  set_global_rings_mcgb();
+  
+
+  
+  set_global_rings();
+
+
+
+  ideal G_origin;
+  list Modcgs;
+  (G_origin, Modcgs) = cgb_mod(F, E, N, 1, out);
+  G_origin = sortSetAsce(G_origin);
+  list all_polys = idealToList(G_origin);
+
+  exportto(Top, Modcgs);
+  
+  all_polys = sortSetAsce(all_polys);
+  
+  fprintf(out, "%s" + newline, StringCGB(G_origin, all_polys));
+  fprintf(out, "%s" + newline, StringModCGS_mod(F, Modcgs, 0));
 
 
   close(out);

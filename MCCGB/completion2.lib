@@ -568,14 +568,6 @@ proc showNFList(poly f) {
   return (res);
 }
 
-/*
-vSBLIST -- map of specialized bases.
-type: list
-structures:
-(1, 2) -- segment (E, N)
-3 -- ideal of specialized basis under (E, N)
- */
-
 proc isRedundant(poly f, ideal G) {
   if (size(G) <= 1) {
     return (0);
@@ -724,6 +716,14 @@ proc reduceFaithSegment(poly h, poly h_nz, ideal G, ideal G_nz, ideal E, list N)
 
     return (rem_faith, rem, m);
   }
+}
+
+proc reduceFaithSegmentOneStep(poly h, poly h_nz, ideal G, ideal G_nz, ideal E, list N) {
+  if (size(G_nz) == 0 || h_nz == 0) {
+    return (h, h_nz);
+  }
+
+  G = 
 }
 
 proc getFirstNonDeterminedCoef(poly f, ideal E, list N) {
@@ -1241,8 +1241,6 @@ proc mcgbGenerate3(ideal E, ideal N_ideal, ideal F) {
 /*
  *  Change the redundancy removal.
  */
-
-proc 
 
 proc mcgbGenerate4(ideal E, ideal N_ideal, ideal F) {
   set_global_rings();

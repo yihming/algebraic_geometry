@@ -2,7 +2,7 @@
 LIB "simulation.lib";
 
 // The output file name.
-	link out = "nonlinear02_glex.mp";
+link out = "nonlinear02_glex.mp";
 link dbg_out = "nonlinear02.debug"	;
 
 // 0 -- no intermediate debug information is printed to the output file;

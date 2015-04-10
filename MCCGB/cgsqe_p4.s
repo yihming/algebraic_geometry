@@ -2,7 +2,7 @@
 LIB "simulation.lib";
 
 // The output file name.
-link out = "temp_test.mp"			  ;
+link out = "cgsqe_p4.mp"			  ;
 
 	
 // 0 -- no intermediate debug information is printed to the output file;
@@ -20,11 +20,14 @@ int sim_times = 20	;
 intvec sim_option = 1, 1, 1, 1, 0	;
 
 
-ring R = (0, a, b, c), (x, y, z), Dp	;
+ring R = (0, a, b, c, d, e, f, g, h, i, j), (auxX, u, x, y, z, w, v, u), Dp	;
 
 set_global_rings_mcgb()		;
 	
-ideal polys = ax+1, by+1, cz+1	;
+ideal polys = axyz+bwvu - 1,
+	cxy + yz + dzw + wv + evu + ux + f + 1,
+	gy + hw + iu + 1,
+	(jxw+2)*auxX - 1	;
 	
 ideal null_ideal = 0		;
 list nonnull_list = list()	;

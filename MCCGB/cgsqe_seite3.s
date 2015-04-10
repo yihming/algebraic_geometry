@@ -2,7 +2,7 @@
 LIB "simulation.lib";
 
 // The output file name.
-link out = "temp_test.mp"			  ;
+link out = "cgsqe_seite3.mp"			  ;
 
 	
 // 0 -- no intermediate debug information is printed to the output file;
@@ -20,13 +20,19 @@ int sim_times = 20	;
 intvec sim_option = 1, 1, 1, 1, 0	;
 
 
-ring R = (0, a, b, c), (x, y, z), Dp	;
+ring R = (0, c1, c2), (u, x1, x2, y1, y2, m, h2, w), Dp	;
 
 set_global_rings_mcgb()		;
 	
-ideal polys = ax+1, by+1, cz+1	;
+ideal polys = c1*(c1-1)+h2*c2,
+	(m*c1-1)*c1+m*c2^2,
+	((1+w*(c1-1)) - x1)^2 + (w*c2-x2)^2 - ((1+w*(c1-1))+x1-2*c1)^2 - (w*c2+x2)^2,
+	((1+w*(c1-1))+x1-2*c1)^2 + (w*c2+x2)^2 - ((1+w*(c1-1))+x1-2)^2 - (w*c2+x2)^2,
+	((1+w*(c1-1)) - y1)^2 + (w*c2-y2)^2 - ((1+w*(c1-1))+y1-2*m*c1)^2 - (w*c2+y2-2*m*c2)^2,
+	((1+w*(c1-1))+y1-2*m*c1)^2 + (w*c2+y2-2*m*c2)^2 - ((1+w*(c1-1))+y1-2*c1)^2 - (w*c2+y2-2*c2)^2,
+	((y1-c1)*(y2-x2) - (y2-h2)*(y1-x1))*u-1 ;
 	
 ideal null_ideal = 0		;
-list nonnull_list = list()	;
+list nonnull_list = c2	;
 	
 simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;

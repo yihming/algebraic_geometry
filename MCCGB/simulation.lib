@@ -871,7 +871,8 @@ proc simulate15(ideal E, list N, ideal F, int sim_times, link out, int debug_mod
 }
 
 /*
-Compute KSWCGS only.
+Berechnen nur KSWCGS mit sowohl FaithKSW 
+    als auch Montes' Durchführung.
  */
 
 proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode, intvec sim_option) {
@@ -926,10 +927,48 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode,
   exportto(Top, Modcgs);
   
   all_polys = sortSetAsce(all_polys);
-  
+
+  // Print CGS computed by FaithKSW.
   fprintf(out, "%s" + newline, StringCGB(G_origin, all_polys));
   fprintf(out, "%s" + newline, StringModCGS_mod(F, Modcgs, 0));
 
+  // Print CGS computed by Montes.
+  list cgs_montes = KSW(F);
+  showMontesCGS(cgs_montes, out);
+  
 
   close(out);
+}
+
+proc showMontesCGS(list cgs, link out) {
+  if (size(cgs) == 0) {
+    return;
+  }
+
+  fprintf(out, newline+"CGS computed by Montes' Implementation:"+newline);
+  int i, j;
+  for (i = 1; i <= size(cgs); i++) {
+    fprintf(out, "Branch %s:" +newline, string(i));
+    // Print null conditions.
+    for (j = 1; j <= size(cgs[i][1]); j++) {
+      if (cgs[i][1][j] != 0) {
+	fprintf(out, "%s = 0, ", cgs[i][1][j]);
+      }
+    }
+
+    // Print non-null conditions.
+    for (j = 1; j <= size(cgs[i][2]); j++) {
+      if (cgs[i][2][j] != 1) {
+	fprintf(out, "%s != 0, ", cgs[i][2][j]);
+      }
+    }
+    fprintf(out, "." + newline);
+
+    // Print the corresponding Groebner basis.
+    fprintf(out, "Groebner basis:" + newline + "[" + newline);
+    for (j = 1; j <= size(cgs[i][3]); j++) {
+      fprintf(out, "%s,"+newline, cgs[i][3][j]);
+    }
+    fprintf(out, "]."+newline+newline);
+  }
 }

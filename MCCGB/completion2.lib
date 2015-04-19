@@ -676,6 +676,7 @@ proc reduceFaithSegment(poly h, poly h_nz, ideal G, ideal G_nz, ideal E, list N)
     + "(" + showParamPoly(h_nz) + " ) = ";
   res = res + "(" + showParamPoly(rem) + ")";
 
+  /*
   if (size(quots) > 0) {
     int i;
     for (i = 1; i <= size(G); i++) {
@@ -685,6 +686,8 @@ proc reduceFaithSegment(poly h, poly h_nz, ideal G, ideal G_nz, ideal E, list N)
       }
     }
   }
+  */
+  
 
   if (defined(debug_mode) && debug_mode == 2) {
     fprintf(dbg_out, "%s.", res);
@@ -702,12 +705,14 @@ proc reduceFaithSegment(poly h, poly h_nz, ideal G, ideal G_nz, ideal E, list N)
 
     res = "NF = (" + showParamPoly(m) + ") * (" + showParamPoly(h) + ") ";
 
+    /*
     for (i = 1; i <= size(G); i++) {
       if (quots[i] != 0) {
 	p = p + quots[i] * G[i];
 	res = res + "- ( " + showParamPoly(quots[i]) + " ) * G[" + string(i) + "] ";
       }
     }
+    */
     poly rem_faith = m * h - p;
 
     if (defined(debug_mode) && debug_mode == 2) {
@@ -1050,7 +1055,7 @@ proc mcgbGenerate3(ideal E, ideal N_ideal, ideal F) {
   list NFMAP;
   
   export(STMAP, CPairs, NFMAP);
-
+  fprintf(dbg_out, "Preprocessing is finished!");
   buildSTMAPFromBasis(G, E, N);
   buildNFMAPFromSTMAP();
 

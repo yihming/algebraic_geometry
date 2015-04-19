@@ -56,7 +56,7 @@ proc sucheBeispiel(ideal G, list Modcgs, ideal M1, list cgs_m1, ideal M_simpl, l
 Test with optmized mcgbGenerate().
 YIMING!
  */
-proc simulate5(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, int debug_mode, intvec sim_option) {
+proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, int debug_mode, intvec sim_option) {
   def BR = basering;
   system("--no-warn", 1);
   system("--ticks-per-sec", 1000);
@@ -157,10 +157,11 @@ proc simulate5(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, 
   check_validity(idealToList(M3), Modcgs);
 
   // Print M4.
+  /*
   fprintf(out, "------------------ M_completion ----------" + newline);
   showCCGB(M4, all_polys, out);
   check_validity(idealToList(M4), Modcgs);
-    
+  */
   // Compare M1, M2, M3 and M4.
     
   if (lessSet(idealToList(M2), idealToList(M1)) == 1) {
@@ -170,7 +171,7 @@ proc simulate5(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, 
   if (lessSet(idealToList(M3), idealToList(M2)) == 1) {
     printf("M_onestep < M_simpl");
   }
-
+  /*
   int cmp34 = lessSet(idealToList(M4), idealToList(M3));
   if (cmp34 == 1) {
     printf("M_completion < M_onestep");
@@ -181,7 +182,7 @@ proc simulate5(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, 
       printf("M_onestep == M_competion");
     }
   }
-
+  */
     
   fprintf(out, "---------- KSW --------" + newline);
   fprintf(out, "%s" + newline, StringModCGS_mod(F, Modcgs, 1));
@@ -875,7 +876,7 @@ Berechnen nur KSWCGS mit sowohl FaithKSW
     als auch Montes' Durchführung.
  */
 
-proc simulate(ideal E, list N, ideal F, int sim_times, link out, int debug_mode, intvec sim_option) {
+proc simulate5(ideal E, list N, ideal F, int sim_times, link out, int debug_mode, intvec sim_option) {
   def BR = basering;
   system("--no-warn", 1);
 

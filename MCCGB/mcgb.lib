@@ -7,6 +7,28 @@ LIB "cgb_mod.lib";
 LIB "buchtrace.lib";
 LIB "mcgbcheck.lib";
 
+proc makeNullIdealSQF(ideal E) {
+  if (size(E) == 0) {
+    return (E);
+  }
+
+  int i, j;
+  ideal I_tmp;
+  poly prod = 1;
+  for (i = 1; i <= size(E); i++) {
+    I_tmp = factorize(E[i], 1);
+    if (size(I_tmp) == 1) {
+      E[i] = I_tmp[1];
+    } else {
+      for (j = 1; j <= size(I_tmp); j++) {
+	prod = prod * I_tmp[j];
+      }
+      E[i] = prod;
+    }
+  }
+
+  return (E);
+}
 
 proc set_global_rings_mcgb() {
   // Basering is K[U][X].

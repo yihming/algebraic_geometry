@@ -3,7 +3,8 @@ LIB "simulation.lib"		;
 
 // The output file name.
 link out = "s20.mp";
-
+link dbg_out = "s20.debug"	;
+	
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
 int debug_mode = 0;
@@ -26,4 +27,4 @@ ideal polys=14-12*e2-110*f2-2*e3-10*f3-P1, 2397-2200*e2+240*f2-200*e3+40*f3-20*Q
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
 
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;

@@ -4,7 +4,6 @@ LIB "simulation.lib";
 // The output file name.
 link dbg_out = "nonlinear01.debug" ;
 link out = "nonlinear01_lex.mp";
-link dbg_out = "nonlinear01_lex.debug" ;
 
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.

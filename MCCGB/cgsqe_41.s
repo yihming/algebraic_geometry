@@ -3,7 +3,7 @@ LIB "simulation.lib";
 
 // The output file name.
 link out = "cgsqe_41.mp"			  ;
-
+link dbg_out = "cgsqe_41.debug"			  ;
 	
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
@@ -29,4 +29,4 @@ ideal polys = ax+1, by+1, cz+1	;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
 	
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;

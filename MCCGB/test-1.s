@@ -2,7 +2,8 @@
 LIB "simulation.lib"		;
 	
 // The output file name.
-link out = "test-1_grlex.mp";
+link out = "test-1_lex.mp";
+link dbg_out = "test-1.debug"	;
 
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
@@ -19,7 +20,7 @@ int sim_times = 20		;
 intvec sim_option = 1, 1, 1, 1, 0	;
 
 // lex order.
-ring r = (0, u, v), (y, x, z), dp;
+ring r = (0, u, v), (y, x, z), lp;
 
 ideal polys = (u-v)*y + vx + (u+v)*z,
 	(u+v)*y + (-u+v)*x + (-v)*z;
@@ -27,5 +28,5 @@ ideal polys = (u-v)*y + vx + (u+v)*z,
 ideal null_ideal = 0  ;
 list nonnull_list = list()	;
 
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
 

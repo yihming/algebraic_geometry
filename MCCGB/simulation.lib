@@ -98,7 +98,40 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, i
   list all_polys = idealToList(G_origin);
 
   exportto(Top, Modcgs);
-          
+
+
+  // Look for examples where CRT gives smaller polys.
+  setring @AXU;
+  def F = imap(@R, F);
+  def Modcgs = imap(@R, Modcgs);
+  ideal E_refined, I, GI;
+  int j;
+  poly fold, fnonzero, fnew;
+  for (i = 1; i <= size(Modcgs); i++) {
+    E_refined = makeNullIdealSQF(Modcgs[i][1]);
+    I = auxU * F + auxV * E_refined + ideal(auxU + auxV - 1);
+    GI = std(I);
+    for (j = 1; j <= size(Modcgs[i][3]); j++) {
+      fnonzero = auxV * Modcgs[i][3][j][1];
+      fold = Modcgs[i][3][j][1] + Modcgs[i][3][j][2];
+      fnew = reduce(fold, GI);
+      if (fnew != fold) {
+	printf("Get one example in Branch %s:", string(i));
+	printf("In E = <%s>,", string(E_refined));
+	printf("bar(f) = %s,", showParamPoly(fnonzero));
+	printf("f = %s,", showParamPoly(fold));
+	printf("h = %s.", showParamPoly(fnew));
+	if (lesspoly(fnew, fold)) {
+	  printf("h < f.");
+	} else {
+	  printf("h > f.");
+	}
+      }
+    }
+  }
+  setring @R;
+  
+  
   ideal M1;
   list cgs1;
   timer = 0;
@@ -128,14 +161,14 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, i
   printf("Time of MCGBOneStep: %s.", string(time_onestep + time_KSW));
   
   
-  
+  /*
   timer = 0;
   cnt_Time = timer;
   ideal M4 = mcgbGenerate3(E, listToIdeal(N), F);
   int time_completion = timer - cnt_Time;
   all_polys = mergeList(all_polys, idealToList(M4));
   printf("Time of Completion: %s.", string(time_completion));
-  
+  */
 
   all_polys = sortSetAsce(all_polys);
 

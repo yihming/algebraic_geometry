@@ -3,7 +3,8 @@ LIB "simulation.lib";
 
 // The output file name.
 link out = "rgs1.mp";
-
+link dbg_out = "rgs1.debug"	;
+	
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
 int debug_mode = 1;
@@ -27,4 +28,4 @@ ideal polys = a0*x^2 + a1*x+a2, b0*x^2+b1*x+b2 ;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
 	
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;

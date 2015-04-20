@@ -3,7 +3,8 @@ LIB "simulation.lib"		;
 
 // The output file name.
 link out = "test_yxz_lex.mp";
-
+link dbg_out = "test_yxz.debug"	;
+	
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
 int debug_mode = 0;
@@ -30,5 +31,5 @@ ideal polys = (u-v)*x + vx + (u+v)*z,
 
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
 	

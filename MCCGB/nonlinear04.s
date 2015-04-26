@@ -27,11 +27,11 @@ ideal I = (a-b)*x2, by2, ay;
 
 ideal J = a2xy, ay2, by;
 
-//ideal polys = randomid(I, 1, 4) + randomid(J, 1, 4) ;
+ideal polys = randomid(I, 1, 4) + randomid(J, 1, 4) ;
 
 // Experiment Example in Completion draft.
-ideal polys = (a-b)*x2+(-b)*y2+(a)*y, 
-	 axy+(-a)*y2+(-b)*y	;
+//ideal polys = (a-b)*x2+(-b)*y2+(a)*y, 
+//	 axy+(-a)*y2+(-b)*y	;
 //	ideal polys = (a-b)*x2 - by2 + ay ,
 //	a2y2-ay2-by		;
 	

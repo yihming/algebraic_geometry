@@ -2657,6 +2657,53 @@ proc reduceOneStep(poly f, ideal G) {
   return (f);
 }
 
+proc reduceOneStepAll(poly f, ideal G) {
+  if (size(G) == 0 || f == 0) {
+    return (f);
+  }
+  
+  int ring_flag = 0;
+  if (nameof(basering) != "@RP") {
+    def BR = basering;
+    setring @RP;
+    def f = imap(BR, f);
+    def G = imap(BR, G);
+    ring_flag = 1;
+  }
+
+  G = sortSetAsce(G);
+  int i;
+
+  list terms_f = getTerms(f);
+  int term_idx, divisible_flag;
+
+  list red_res_list;
+
+  poly f_onered;
+  for (i = 1; i <= size(G); i++) {
+    (divisible_flag, term_idx) = isDivisible(terms_f, leadmonom(G[i]));
+    if (divisible_flag) {
+      if (defined(debug_mode) && debug_mode == 2) {
+	fprintf(dbg_out, "%s is reduced by %s * %s to:", showParamPoly(f), showParamPoly((leadcoef(f[term_idx]) / leadcoef(G[i])) * (leadmonom(f[term_idx]) / leadmonom(G[i]))), showParamPoly(G[i]));
+      }
+      f_onered = f - (leadcoef(f[term_idx]) / leadcoef(G[i])) * (leadmonom(f[term_idx]) / leadmonom(G[i])) * G[i];
+      if (defined(debug_mode) && debug_mode == 2) {
+	fprintf(dbg_out, "    %s.", showParamPoly(f));
+      }
+      red_res_list = insert(red_res_list, f_onered, size(red_res_list));
+    }
+  }
+
+  poly g = minListPoly(red_res_list);
+  
+  if (ring_flag) {
+    setring BR;
+    def g = imap(@RP, g);
+  }
+  
+  return (g);
+}
+
 proc mergeList(list L1, list L2) {
   if (size(L1) == 0) {
     return (L2);
@@ -3219,6 +3266,134 @@ proc getMCGBOneStep1Comp(ideal E, list N, ideal G, list modcgs, int opt_flag) {
 	    if (defined(debug_mode) && debug_mode == 2) {
 	      fprintf(dbg_out, "%s remains the same after one-step reduction.", showParamPoly(cur_g));
 	    }
+	  }
+	}
+      } 
+      
+    } // End if.
+
+    
+  } // End for.
+
+  ideal M_ideal;
+  for (i = 1; i <= size(M); i++) {
+    M_ideal = insertPolyToIdeal(M_ideal, M[i]);
+  }
+
+  def MCGB = M_ideal;
+  def cgs_mcgb = modcgs;
+  
+  // Switch back to BR.
+  if (ring_flag) {
+    setring BR;
+    def MCGB = imap(@RP, MCGB);
+    def cgs_mcgb = imap(@RP, cgs_mcgb);
+  }
+
+  return (MCGB, cgs_mcgb);
+}
+
+/*
+One-step exhaustively with RGB for reduction.
+ */
+proc getMCGBOneStep2(ideal E, ideal N, ideal F, int choice_flag, int opt_flag) {
+  ideal G;
+  list modcgs;
+
+  (G, modcgs) = cgb_mod(F, E, idealToList(N), choice_flag, out);
+
+  if (size(G) == 0 || size(modcgs) == 0) {
+    return (ideal(), list());
+  }
+
+  set_global_rings_mcgb();
+  set_global_objects();
+
+  def RGB = getRGB(F);
+  
+  G = purifyCGB(G);
+  G = sortSetDesc(G);
+  def CGB = G;
+  exportto(Top, CGB);
+
+  
+  int ring_flag = 0;
+  if (nameof(basering) != "@RP") {
+    def BR = basering;
+    setring @RP;
+    def G = imap(BR, G);
+    def modcgs = imap(BR, modcgs);
+    def RGB = imap(BR, RGB);
+    def CGB = G;
+    exportto(Top, CGB);
+    ring_flag = 1;
+  }
+  
+
+  list M;
+  int i, j;
+
+  for (i = 1; i <= size(G); i++) {
+    M = insert(M, G[i], size(M));
+  }
+
+  for (i = 1; i <= size(G); i++) {
+    poly cur_g = G[i];
+    if (defined(debug_mode) && debug_mode == 1) {
+      fprintf(out, "Now check g_%s = %s:", string(i), showParamPoly(cur_g));
+    }
+    int is_essential;
+    list BL;
+    list modcgs_new;
+    list M_new;
+
+    ideal MRem_ideal = listToIdeal(deletePolyFromList(M, cur_g));
+
+    (is_essential, BL) = checkEssential(cur_g, M, modcgs, opt_flag);
+    if (!is_essential) {
+      // Remove cur_g from M.
+      modcgs = updateCGS(modcgs, cur_g, BL);
+      M = deletePolyFromList(M, cur_g);
+    } else {
+      // Try full reduction first.
+      poly g_red = monic(reduce(cur_g, MRem_ideal));
+      if (g_red != cur_g) {
+	int done_flag = 0;
+	if (g_red != 0) {
+	  M_new = insert(M, g_red, size(M));
+	  (is_essential, BL) = checkEssential(cur_g, M_new, modcgs, opt_flag);
+	  if (!is_essential) {
+	    modcgs = updateCGS(modcgs, cur_g, BL);
+	    M = substPolyInList(M, cur_g, g_red);
+	    done_flag = 1;
+	  }
+	}
+	
+	if (!done_flag) {
+	  // Try one-step reduction as long as essential.
+	  int terminate_flag = 0;
+	  poly g_old = cur_g;
+	  poly g_new, g_final;
+	  list BL_old, BL_new, BL_final;
+	  while (!terminate_flag) {
+	    g_new = monic(reduceOneStep(g_old, MRem_ideal));
+	    if (g_new == g_old) {
+	      break;
+	    }
+	    M_new = insert(M, g_new, size(M));
+	    (is_essential, BL_new) = checkEssential(cur_g, M_new, modcgs, opt_flag);
+	    if (is_essential) {
+	      terminate_flag = 1;
+	      BL_final = BL_old;
+	      g_final = g_old;
+	    } else {
+	      BL_old = BL_new;
+	      g_old = g_new;
+	    }
+	  } // End while.
+	  if (g_final != cur_g) {
+	    modcgs = updateCGS(modcgs, cur_g, BL_final);
+	    M = substPolyInList(M, cur_g, g_final);
 	  }
 	}
       } 

@@ -430,6 +430,7 @@ proc computeNF(list nf, ideal G) {
     }
     if (rem != 0) {
       nf_new = insert(nf_new, list(E, N + list(m), rem, m), size(nf_new));
+      break;
     }
     E = E + ideal(m);
     G_nz = simplifyBasis(G_nz, E, N);
@@ -1055,7 +1056,6 @@ proc mcgbGenerate3(ideal E, ideal N_ideal, ideal F) {
   list NFMAP;
   
   export(STMAP, CPairs, NFMAP);
-  fprintf(dbg_out, "Preprocessing is finished!");
   buildSTMAPFromBasis(G, E, N);
   buildNFMAPFromSTMAP();
 
@@ -1077,17 +1077,19 @@ proc mcgbGenerate3(ideal E, ideal N_ideal, ideal F) {
     fprintf(dbg_out, "Initially, ");
     fprintf(dbg_out, "%s", showSTMAP());
     fprintf(dbg_out, "%s", showCPairs());
-    //fprintf(out, "%s", showNFMAP());
+    fprintf(dbg_out, "%s", showNFMAP());
   }
   
   list cp;
+  fprintf(dbg_out, "Preprocessing is finished!");
+
   while (size(CPairs) > 0) {
     
     cp = selectCPair();
 
     if (defined(debug_mode) && debug_mode == 2) {
       fprintf(dbg_out, "----------------------");
-      //fprintf(out, "%s", showCP(cp));
+      fprintf(dbg_out, "%s", showCP(cp));
       fprintf(dbg_out, "Select critical pair:");
       fprintf(dbg_out, "%s" + newline, showCP(cp));
     }
@@ -1181,9 +1183,9 @@ proc mcgbGenerate3(ideal E, ideal N_ideal, ideal F) {
 	  deleteSTuples(G[i]);
 	  deleteCPairsByPoly(G[i]);
 	  if (defined(debug_mode) && debug_mode == 2) {
-	    //fprintf(out, "%s", showSTMAP());
-	    //fprintf(out, "%s", showCPairs());
-	    //fprintf(out, "%s", showNFMAP());
+	    fprintf(dbg_out, "%s", showSTMAP());
+	    fprintf(dbg_out, "%s", showCPairs());
+	    fprintf(dbg_out, "%s", showNFMAP());
 	  }
 	}
 	
@@ -1216,10 +1218,10 @@ proc mcgbGenerate3(ideal E, ideal N_ideal, ideal F) {
       G = sortSetDesc(G);
       if (defined(debug_mode) && debug_mode == 2) {
 	fprintf(dbg_out, "Finally:");
-	//fprintf(out, "%s", showParamIdeal(G));
-	//fprintf(out, "%s", showSTMAP());
-	//fprintf(out, "%s", showCPairs());
-	//fprintf(out, "%s", showNFMAP());
+	fprintf(dbg_out, "%s", showParamIdeal(G));
+	fprintf(dbg_out, "%s", showSTMAP());
+	fprintf(dbg_out, "%s", showCPairs());
+	fprintf(dbg_out, "%s", showNFMAP());
       }
     }
 

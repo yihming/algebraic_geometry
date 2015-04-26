@@ -161,14 +161,14 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, i
   printf("Time of MCGBOneStep: %s.", string(time_onestep + time_KSW));
   
   
-  /*
+  
   timer = 0;
   cnt_Time = timer;
   ideal M4 = mcgbGenerate3(E, listToIdeal(N), F);
   int time_completion = timer - cnt_Time;
   all_polys = mergeList(all_polys, idealToList(M4));
   printf("Time of Completion: %s.", string(time_completion));
-  */
+  
 
   all_polys = sortSetAsce(all_polys);
 
@@ -190,11 +190,11 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, i
   check_validity(idealToList(M3), Modcgs);
 
   // Print M4.
-  /*
+  
   fprintf(out, "------------------ M_completion ----------" + newline);
   showCCGB(M4, all_polys, out);
   check_validity(idealToList(M4), Modcgs);
-  */
+  
   // Compare M1, M2, M3 and M4.
     
   if (lessSet(idealToList(M2), idealToList(M1)) == 1) {
@@ -204,7 +204,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, i
   if (lessSet(idealToList(M3), idealToList(M2)) == 1) {
     printf("M_onestep < M_simpl");
   }
-  /*
+  
   int cmp34 = lessSet(idealToList(M4), idealToList(M3));
   if (cmp34 == 1) {
     printf("M_completion < M_onestep");
@@ -215,7 +215,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, i
       printf("M_onestep == M_competion");
     }
   }
-  */
+  
     
   fprintf(out, "---------- KSW --------" + newline);
   fprintf(out, "%s" + newline, StringModCGS_mod(F, Modcgs, 1));

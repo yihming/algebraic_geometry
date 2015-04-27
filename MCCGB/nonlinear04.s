@@ -20,20 +20,24 @@ int sim_times = 50	;
 intvec sim_option = 1, 1, 1, 1, 0	;
 
 // degree reversed lex order.
-ring R = (0, a, b, c), (x, y), Dp;
+ring R = (0, a, b, c), (x, y), dp;
 	
 ideal I = (a-b)*x2, by2, ay;
 	
 
 ideal J = a2xy, ay2, by;
 
-ideal polys = randomid(I, 1, 4) + randomid(J, 1, 4) ;
+//ideal polys = randomid(I, 1, 4) + randomid(J, 1, 4) ;
 
 // Experiment Example in Completion draft.
 //ideal polys = (a-b)*x2+(-b)*y2+(a)*y, 
 //	 axy+(-a)*y2+(-b)*y	;
 //	ideal polys = (a-b)*x2 - by2 + ay ,
 //	a2y2-ay2-by		;
+
+// Example where completion is faster than MCGBSimplOne.
+ideal polys = (-3a+3b)*x2+(-b)*y2+(3a)*y, 
+(-4a2)*xy+(3a)*y2+(4b)*y	;
 	
 	
 // M_compl not CGB.

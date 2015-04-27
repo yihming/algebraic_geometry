@@ -161,18 +161,34 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, i
   printf("Time of MCGBOneStep: %s.", string(time_onestep + time_KSW));
   
   
-  
   timer = 0;
   cnt_Time = timer;
   ideal M4 = mcgbGenerate3(E, listToIdeal(N), F);
   int time_completion = timer - cnt_Time;
   all_polys = mergeList(all_polys, idealToList(M4));
   printf("Time of Completion: %s.", string(time_completion));
-  
+  /*
+  ideal M5;
+  list cgs5;
+  timer = 0;
+  cnt_Time = timer;
+  (M5, cgs5) = getMCGBOneStep2Comp(E, listToIdeal(N), G_origin, Modcgs, 1);
+  int time_onestepall = timer - cnt_Time;
+  all_polys = mergeList(all_polys, idealToList(M5));
+  printf("Time of MCGBOneStepAll: %s.", string(time_onestepall + time_KSW));
 
+  ideal M6;
+  list cgs6;
+  timer = 0;
+  cnt_Time = timer;
+  (M6, cgs6) = getMCGBOneStepMitRGBComp(E, listToIdeal(N), F, G_origin, Modcgs, 1);
+  int time_rgbred = timer - cnt_Time;
+  all_polys = mergeList(all_polys, idealToList(M6));
+  printf("Time of MCGBOneStepAllMitRGB: %s.", string(time_rgbred + time_KSW));
+  */
   all_polys = sortSetAsce(all_polys);
 
-    
+      
   // Print M1.
   fprintf(out, "--------- mcgbMain -------------" + newline);
   showCCGB(M1, all_polys, out);
@@ -188,15 +204,27 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, i
   fprintf(out, "------------- M_onestep ------------" + newline);
   showCCGB(M3, all_polys, out);
   check_validity(idealToList(M3), Modcgs);
-
+  
   // Print M4.
   
   fprintf(out, "------------------ M_completion ----------" + newline);
   showCCGB(M4, all_polys, out);
   check_validity(idealToList(M4), Modcgs);
   
+  // Print M5.
+  /*
+  fprintf(out, "------------------ M_onestepall ----------" + newline);
+  showCCGB(M5, all_polys, out);
+  check_validity(idealToList(M5), Modcgs);
+  */
+  // Print M6.
+  /*
+  fprintf(out, "-------------- M_onestepMitRGB -----------" + newline);
+  showCCGB(M6, all_polys, out);
+  check_validity(idealToList(M6), Modcgs);
+  */
   // Compare M1, M2, M3 and M4.
-    
+  
   if (lessSet(idealToList(M2), idealToList(M1)) == 1) {
     printf("M_simpl < M");
   }
@@ -215,8 +243,29 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, i
       printf("M_onestep == M_competion");
     }
   }
+  /*
+  int cmp35 = lessSet(idealToList(M3), idealToList(M5));
+  if (cmp35 == 1) {
+    printf("M_onestep < M_onestepall");
+  } else {
+    if (cmp35 == 0) {
+      printf("M_onestepall < M_onestep");
+    } else {
+      printf("M_onestep == M_onestepall");
+    }
+  }
   
-    
+  int cmp36 = lessSet(idealToList(M3), idealToList(M6));
+  if (cmp36 == 1) {
+    printf("M_onestep < M_onestepRGB");
+  } else {
+    if (cmp36 == 0) {
+      printf("M_onestepRGB < M_onestep");
+    } else {
+      printf("M_onestep == M_onestepRGB");
+    }
+  }
+  */
   fprintf(out, "---------- KSW --------" + newline);
   fprintf(out, "%s" + newline, StringModCGS_mod(F, Modcgs, 1));
   G_origin = sortSetAsce(G_origin);

@@ -283,7 +283,9 @@ proc selectCPair() {
   }
 
   list cp = CPairs[1];
+  //list cp = CPairs[size(CPairs)];
   CPairs = delete(CPairs, 1);
+  //CPairs = delete(CPairs, size(CPairs));
   
   return (cp);
 }
@@ -400,62 +402,95 @@ proc deleteNFList(poly f) {
   }
 }
 
-proc computeNF(list nf, ideal G) {
-  ideal E = nf[1];
-  list N = nf[2];
-  poly h = nf[3];
 
-  ideal G_nz = simplifyBasis(G, E, N);
-  //G_nz = purifyBasis(G_nz, size(G));
-  poly rem, m;
-  list nf_new;
+proc computeNFUnderSegment(poly h, ideal E, list N, ideal G) {
+  // Basering is @RP.
+  if (!Check_Consistence_CGB(E, N)) {
+    return (list());
+  }
+  
+  if (isAmbiguous(h, E, N)) {
+    // h is ambiguous.
+    if (defined(debug_mode) && debug_mode == 2) {
+      fprintf(dbg_out, "%s is AMBIGUOUS!", showParamPoly(h));
+    }
+    list N_new = insert(N, leadcoef_U(h), size(N));
+    list nfl1 = computeNFUnderSegment(h, E, N_new, G);
 
+    poly h_new, care_nicht;
+    ideal E_new = E + ideal(leadcoef_U(h));
+    (h_new, care_nicht) = simplifyPoly(h, E_new, N);
+    list nfl2 = computeNFUnderSegment(h_new, E_new, N, G);
+
+    return (nfl1 + nfl2);
+  }
+
+  if (isAmbiguousBasis(G, E, N)) {
+    // G is ambiguous.
+    poly lcf = getLCFBasis(G);
+    if (defined(debug_mode) && debug_mode == 2) {
+      fprintf(dbg_out, "Basis is AMBIGUOUS due to LC %s!", showParamPoly(lcf));
+    }
+    list N_new = insert(N, lcf, size(N));
+    list nfl1 = computeNFUnderSegment(h, E, N_new, G);
+
+    ideal lcf_factors = factorize(lcf, 1);
+    poly lc_used = 1;
+    int i;
+    list nfl2, nfl_part;
+    for (i = 1; i <= size(lcf_factors); i++) {
+      ideal E_new = E + ideal(lcf_factors[i]);
+      list N_new = insert(N, lc_used, size(N));
+      ideal G_nz = simplifyBasis(G, E_new, N_new);
+      poly h_new, care_nicht;
+      (h_new, care_nicht) = simplifyPoly(h, E_new, N_new);
+      nfl_part = computeNFUnderSegment(h_new, E_new, N_new, G_nz);
+      nfl2 = nfl2 + nfl_part;
+      lc_used = lc_used * lcf_factors[i];
+    }
+
+    return (nfl1 + nfl2);
+  }
+
+  // Both h and G are unambiguous.
   if (defined(debug_mode) && debug_mode == 2) {
     fprintf(dbg_out, "Reduce %s", showParamPoly(h));
-    fprintf(dbg_out, "by Basis: %s.", showParamIdeal(G_nz));
+    fprintf(dbg_out, "by Basis: %s.", showParamIdeal(G));
     fprintf(dbg_out, "Under: ");
     fprintf(dbg_out, "    %s,", showNullIdeal(E));
     fprintf(dbg_out, "    %s.", showNonNullList(N));
   }
-  
-  (rem, m) = reduceUnderSegment(h, G_nz, E, N);
+  poly rem, m;
+  (rem, m) = reduceUnderSegment(h, G, E, N);
+
   if (defined(debug_mode) && debug_mode == 2) {
     fprintf(dbg_out, "After Reduction:");
     fprintf(dbg_out, "  Remainder is: %s;", showParamPoly(rem));
     fprintf(dbg_out, "  Factor is: %s.", showParamPoly(m));
   }
-  while (!checkNonNull(m, E, N)) {
-    if (defined(debug_mode) && debug_mode == 2) {
-      fprintf(dbg_out, "Factor is AMBIGUOUS.");
-    }
-    if (rem != 0) {
-      nf_new = insert(nf_new, list(E, N + list(m), rem, m), size(nf_new));
-      break;
-    }
-    E = E + ideal(m);
-    G_nz = simplifyBasis(G_nz, E, N);
-    poly care_nicht;
-    (h, care_nicht) = simplifyPoly(h, E, N);
-    if (defined(debug_mode) && debug_mode == 2) {
-      fprintf(dbg_out, "Reduce %s", showParamPoly(h));
-      fprintf(dbg_out, "by Basis: [%s].", showParamIdeal(G_nz));
-      fprintf(dbg_out, "Under: ");
-      fprintf(dbg_out, "    %s,", showNullIdeal(E));
-      fprintf(dbg_out, "    %s.", showNonNullList(N));
-    }
-    (rem, m) = reduceUnderSegment(h, G_nz, E, N);
-    if (defined(debug_mode) && debug_mode == 2) {
-      fprintf(dbg_out, "After Reduction:");
-      fprintf(dbg_out, "  Remainder is: %s;", showParamPoly(rem));
-      fprintf(dbg_out, "  Facgtor is: %s.", showParamPoly(m));
-    }
+
+
+  // Depends on rem.
+  poly care_nicht, rem_new;
+  (rem_new, care_nicht) = simplifyPoly(rem, E, N);
+  if (rem_new == 0) {
+    return (list());
+  } else {
+    list nf_new = E, N, rem, m;
+    return (list(nf_new));
   }
 
-  if (rem != 0) {
-    nf_new = insert(nf_new, list(E, N, rem, m), size(nf_new));
-  }
+}
 
-  return (nf_new);
+proc computeNF(list nf, ideal G) {
+  // Basering is @RP.
+  ideal E = nf[1];
+  list N = nf[2];
+  poly h = nf[3];
+
+  ideal G_nz = simplifyBasis(G, E, N);
+  list nfl = computeNFUnderSegment(h, E, N, G_nz);
+  return (nfl);
 }
 
 proc computeNFList(poly f, ideal G) {
@@ -471,14 +506,14 @@ proc computeNFList(poly f, ideal G) {
   int i;
   list nfl_new;
   list nfl_old = NFMAP[idx][2];
-  list nfl_new = nfl_old;
+  list nfl_remained = nfl_old;
+  list nfl_new;
   list nfl;
   for (i = 1; i <= size(nfl_old); i++) {
-    nfl_new = delete(nfl_new, 1);
     nfl = computeNF(nfl_old[i], G);
-    
+    nfl_remained = delete(nfl_remained, 1);
     if (size(nfl) > 0) {
-      nfl_new = nfl_new + nfl;
+      nfl_new = nfl_new + nfl + nfl_remained;
       break;
     }
     
@@ -581,7 +616,7 @@ proc isRedundant(poly f, ideal G) {
   }
 
   if (defined(debug_mode) && debug_mode == 2) {
-    fprintf(dbg_out, "  Check %s now:", showParamPoly(f));
+    fprintf(dbg_out, "  Check Redundancy of %s now:", showParamPoly(f));
   }
   G = deletePolyFromIdeal(G, f);
   
@@ -677,7 +712,7 @@ proc reduceFaithSegment(poly h, poly h_nz, ideal G, ideal G_nz, ideal E, list N)
     + "(" + showParamPoly(h_nz) + " ) = ";
   res = res + "(" + showParamPoly(rem) + ")";
 
-  /*
+  /*  
   if (size(quots) > 0) {
     int i;
     for (i = 1; i <= size(G); i++) {
@@ -687,12 +722,13 @@ proc reduceFaithSegment(poly h, poly h_nz, ideal G, ideal G_nz, ideal E, list N)
       }
     }
   }
-  */
+  
   
 
   if (defined(debug_mode) && debug_mode == 2) {
     fprintf(dbg_out, "%s.", res);
   }
+  */
 
   if (checkPolyNull(rem, E, N)) {
     return (0, 0, 1);
@@ -706,19 +742,22 @@ proc reduceFaithSegment(poly h, poly h_nz, ideal G, ideal G_nz, ideal E, list N)
 
     res = "NF = (" + showParamPoly(m) + ") * (" + showParamPoly(h) + ") ";
 
-    /*
+    
     for (i = 1; i <= size(G); i++) {
       if (quots[i] != 0) {
 	p = p + quots[i] * G[i];
-	res = res + "- ( " + showParamPoly(quots[i]) + " ) * G[" + string(i) + "] ";
+	//res = res + "- ( " + showParamPoly(quots[i]) + " ) * G[" + string(i) + "] ";
       }
     }
-    */
+    
+    
     poly rem_faith = m * h - p;
 
+    /*
     if (defined(debug_mode) && debug_mode == 2) {
       fprintf(dbg_out, "%s.", res);
     }
+    */
 
     return (rem_faith, rem, m);
   }
@@ -1014,6 +1053,73 @@ proc isAmbiguous(poly f, ideal E, list N) {
   return (0);
 }
 
+proc getLCFBasis(ideal G) {
+  // Basering is @RP.
+  if (size(G) == 0) {
+    return (0);
+  }
+
+  int i;
+  poly lcf = 1;
+  for (i = 1; i <= size(G); i++) {
+    lcf = lcf * leadcoef_U(G[i]);
+  }
+
+  return (lcf);
+}
+
+proc isAmbiguousBasis(ideal G, ideal E, list N) {
+  // Basering is @RP.
+  if (size(G) == 0) {
+    return (0);
+  }
+
+  int i;
+  poly lcf = 1;
+  for (i = 1; i <= size(G); i++) {
+    lcf = lcf * leadcoef_U(G[i]);
+  }
+
+  if (isAmbiguous(lcf, E, N)) {
+    return (1);
+  }
+
+  return (0);
+}
+
+proc getCPairsFromBasis(list cp, poly sp, poly sp_nz, ideal E, list N, ideal G) {
+  // Basering is @RP.
+  // G is ambiguous.
+  if (!Check_Consistence_CGB(E, N)) {
+    return (list());
+  }
+
+  if (!isAmbiguousBasis(G, E, N)) {
+    return (list(cp));
+  }
+  
+  poly lcf = getLCFBasis(G);
+  list cp1 = cp[1], cp[2], E, insert(N, lcf, size(N)), cp[5], ideal(sp, sp_nz);
+  
+  ideal lcf_factors = factorize(lcf, 1);
+  poly lc_used = 1;
+  int i;
+  list cpl = list(cp1);
+  list cp_new;
+  for (i = 1; i <= size(lcf_factors); i++) {
+    ideal E_new = E + ideal(lcf_factors[i]);
+    list N_new = insert(N, lc_used, size(N));
+    ideal G_nz = simplifyBasis(G, E_new, N_new);
+    //list cpl_new = getCPairsFromBasis(cp, sp, sp_nz, E_new, N_new, G_nz);
+    if (Check_Consistence_CGB(E_new, N_new)) {
+      cp_new = cp[1], cp[2], E_new, N_new, cp[5], ideal(sp, sp_nz);
+      cpl = cpl + list(cp_new);
+    }
+    lc_used = lc_used * lcf_factors[i];
+  }
+  return (cpl);
+}
+
 proc mcgbGenerate3(ideal E, ideal N_ideal, ideal F) {
   set_global_rings();
   set_global_rings_mcgb();
@@ -1084,12 +1190,14 @@ proc mcgbGenerate3(ideal E, ideal N_ideal, ideal F) {
   fprintf(dbg_out, "Preprocessing is finished!");
 
   while (size(CPairs) > 0) {
-    
+    print(string(size(CPairs)));
+    if (defined(debug_mode) && debug_mode == 2) {
+      fprintf(dbg_out, "|CPairs| = %s.", string(size(CPairs)));
+    }
     cp = selectCPair();
 
     if (defined(debug_mode) && debug_mode == 2) {
       fprintf(dbg_out, "----------------------");
-      fprintf(dbg_out, "%s", showCP(cp));
       fprintf(dbg_out, "Select critical pair:");
       fprintf(dbg_out, "%s" + newline, showCP(cp));
     }
@@ -1103,12 +1211,18 @@ proc mcgbGenerate3(ideal E, ideal N_ideal, ideal F) {
     }
 
     if (isAmbiguous(sp_nz, E_cur, N_cur)) {
+      // S-Poly is ambiguous.
       if (defined(debug_mode) && debug_mode == 2) {
 	fprintf(dbg_out, "%s is AMBIGUOUS!", showParamPoly(sp_nz));
       }
       list st_sp = getSTuples(sp_nz, E_cur, N_cur);
+      list new_cp;
       for (i = 1; i <= size(st_sp); i++) {
-	insertCPair(list(cp[1], cp[2], st_sp[i][2], st_sp[i][3], cp[5], ideal(sp, st_sp[i][1])));
+	new_cp = list(cp[1], cp[2], st_sp[i][2], st_sp[i][3], cp[5], ideal(sp, st_sp[i][1]));
+	if (defined(debug_mode) && debug_mode == 2) {
+	  fprintf(dbg_out, "Add CP %s.", showCP(new_cp));
+	}
+	insertCPair(new_cp);
       }
       continue;
     }
@@ -1121,28 +1235,17 @@ proc mcgbGenerate3(ideal E, ideal N_ideal, ideal F) {
     }
 
     // Check ambiguity.
-    poly lcf = 1;
-    for (i = 1; i <= size(G_nz); i++) {
-      lcf = lcf * leadcoef_U(G_nz[i]);
-    }
     
-    if (isAmbiguous(lcf, E_cur, N_cur)) {
+    if (isAmbiguousBasis(G_nz, E_cur, N_cur)) {
       // G_nz is ambiguous.
       if (defined(debug_mode) && debug_mode == 2) {
 	fprintf(dbg_out, "Specialized Basis is AMBIGUOUS! Replace CriticalPair by its split cp's:");
       }
-      ideal lcf_factors = factorize(lcf, 1);
-      poly lc_used = 1;
-      for (i = 1; i <= size(lcf_factors); i++) {
-	ideal E_new = E_cur + ideal(lcf_factors[i]);
-	list N_new = insert(N_cur, lc_used, size(N_cur));
-	list cp_split = cp[1], cp[2], E_new, N_new, cp[5], ideal(sp, sp_nz);
-	insertCPair(cp_split);
-	if (defined(debug_mode) && debug_mode == 2) {
-	  fprintf(dbg_out, "Insert split CP:");
-	  fprintf(dbg_out, "%s", showCP(cp_split));
+      list cp_split = getCPairsFromBasis(cp, sp, sp_nz, E_cur, N_cur, G_nz);
+      if (size(cp_split) > 0) {
+	for (i = 1; i <= size(cp_split); i++) {
+	  insertCPair(cp_split[i]);
 	}
-	lc_used = lc_used * lcf_factors[i];
       }
       continue;
     }
@@ -1170,6 +1273,9 @@ proc mcgbGenerate3(ideal E, ideal N_ideal, ideal F) {
 	fprintf(dbg_out, "Remove Redundant Poly:");
       }
       for (i = 1; i <= size(G); i++) {
+	if (defined(debug_mode) && debug_mode == 2) {
+	  fprintf(dbg_out, "Consider Poly: %s:", showParamPoly(G[i]));
+	}
 	if (isRedundant(G[i], insertPolyToIdeal(M, nf))) {
 	  if (defined(debug_mode) && debug_mode == 2) {
 	    fprintf(dbg_out, "%s is redundant.", showParamPoly(G[i]));
@@ -1209,7 +1315,6 @@ proc mcgbGenerate3(ideal E, ideal N_ideal, ideal F) {
 	fprintf(dbg_out, "Add %s to G:", showParamPoly(nf));
       }
 
-      // YIMING: Bug here.
       insertSTuples(nf, E, N);
 
       buildCPairsWithPoly(G, nf);
@@ -1295,6 +1400,8 @@ proc mcgbGenerate4(ideal E, ideal N_ideal, ideal F) {
   buildSTMAPFromBasis(G, E, N);
   buildNFMAPFromSTMAP();
 
+  print(showNFMAP());
+  
   // Remove redundant poly.
   
   ideal M = G;
@@ -1313,7 +1420,7 @@ proc mcgbGenerate4(ideal E, ideal N_ideal, ideal F) {
     fprintf(dbg_out, "Initially, ");
     fprintf(dbg_out, "%s", showSTMAP());
     fprintf(dbg_out, "%s", showCPairs());
-    //fprintf(out, "%s", showNFMAP());
+    fprintf(out, "%s", showNFMAP());
   }
   
   list cp;

@@ -3,7 +3,7 @@ LIB "simulation.lib"		;
 
 // The output file name.
 link out = "s03.mp";
-link out = "s03.debug"		;
+link dbg_out = "s03.debug"		;
 	
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.

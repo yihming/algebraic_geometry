@@ -604,6 +604,23 @@ proc showNFList(poly f) {
   return (res);
 }
 
+proc basisContainsTrivial(ideal G) {
+  // Basering is @RP.
+  // G is unambiguous.
+  if (size(G) == 0) {
+    return (0);
+  }
+
+  int i;
+  for (i = 1; i <= size(G); i++) {
+    if (lppX(G[i]) == 1) {
+      return (1);
+    }
+  }
+
+  return (0);
+}
+
 proc isRedundant(poly f, ideal G) {
   if (size(G) <= 1) {
     return (0);
@@ -1253,6 +1270,12 @@ proc mcgbGenerate3(ideal E, ideal N_ideal, ideal F) {
     if (defined(debug_mode) && debug_mode == 2) {
       fprintf(dbg_out, "Both S-Poly and Specialized Basis are UNAMBIGUOUS!");
     }
+
+    if (basisContainsTrivial(G_nz)) {
+      // G_nz contains trivial poly, so sp_nz is guaranteed to be reduced to 0.
+      continue;
+    }
+
     poly nf, nf_nz, teiler;
     (nf, nf_nz, teiler) = reduceFaithSegment(sp, sp_nz, G, G_nz, E_cur, N_cur);
     if (defined(debug_mode) && debug_mode == 2) {

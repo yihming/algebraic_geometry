@@ -101,7 +101,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, i
 
 
   // Look for examples where CRT gives smaller polys.
-  setring @AXU;
+  /*  setring @AXU;
   def F = imap(@R, F);
   def Modcgs = imap(@R, Modcgs);
   ideal E_refined, I, GI;
@@ -130,8 +130,8 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, i
     }
   }
   setring @R;
-  
-  
+  */
+  /*
   ideal M1;
   list cgs1;
   timer = 0;
@@ -140,7 +140,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, i
   int time_mcgb = timer - cnt_Time;
   all_polys = mergeList(all_polys, idealToList(M1));
   printf("Time of MCGBMain: %s.", string(time_KSW + time_mcgb));
-
+  */
   
   ideal M2;
   list cgs2;
@@ -150,7 +150,8 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, i
   int time_simpl = timer - cnt_Time;
   all_polys = mergeList(all_polys, idealToList(M2));
   printf("Time of MCGBSimpl: %s.", string(time_KSW + time_simpl));
-
+  fprintf(out, "Time of MCGBSimpl: %s.", string(time_KSW + time_simpl));
+  /*
   ideal M3;
   list cgs3;
   timer = 0;
@@ -159,7 +160,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, i
   int time_onestep = timer - cnt_Time;
   all_polys = mergeList(all_polys, idealToList(M3));
   printf("Time of MCGBOneStep: %s.", string(time_onestep + time_KSW));
-  
+  */
   
   timer = 0;
   cnt_Time = timer;
@@ -167,6 +168,10 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, i
   int time_completion = timer - cnt_Time;
   all_polys = mergeList(all_polys, idealToList(M4));
   printf("Time of Completion: %s.", string(time_completion));
+  fprintf(out, "Time of Completion: %s.", string(time_completion));
+
+  
+
   /*
   ideal M5;
   list cgs5;
@@ -176,7 +181,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, i
   int time_onestepall = timer - cnt_Time;
   all_polys = mergeList(all_polys, idealToList(M5));
   printf("Time of MCGBOneStepAll: %s.", string(time_onestepall + time_KSW));
-
+  
   ideal M6;
   list cgs6;
   timer = 0;
@@ -190,27 +195,32 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, i
 
       
   // Print M1.
+  /*
   fprintf(out, "--------- mcgbMain -------------" + newline);
   showCCGB(M1, all_polys, out);
   check_validity(idealToList(M1), Modcgs);
-  
+  */
   
   // Print M2.
+  
   fprintf(out, "---------- M_simpl ---------------" + newline);
   showCCGB(M2, all_polys, out);
   check_validity(idealToList(M2), Modcgs);
   
   // Print M3.
+  /*
   fprintf(out, "------------- M_onestep ------------" + newline);
   showCCGB(M3, all_polys, out);
   check_validity(idealToList(M3), Modcgs);
-  
+  */
   // Print M4.
   
   fprintf(out, "------------------ M_completion ----------" + newline);
   showCCGB(M4, all_polys, out);
   check_validity(idealToList(M4), Modcgs);
   
+
+
   // Print M5.
   /*
   fprintf(out, "------------------ M_onestepall ----------" + newline);
@@ -224,7 +234,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, i
   check_validity(idealToList(M6), Modcgs);
   */
   // Compare M1, M2, M3 and M4.
-  
+  /*
   if (lessSet(idealToList(M2), idealToList(M1)) == 1) {
     printf("M_simpl < M");
   }
@@ -243,7 +253,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, i
       printf("M_onestep == M_competion");
     }
   }
-  /*
+  
   int cmp35 = lessSet(idealToList(M3), idealToList(M5));
   if (cmp35 == 1) {
     printf("M_onestep < M_onestepall");
@@ -266,12 +276,29 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, i
     }
   }
   */
+
+
+
+
   fprintf(out, "---------- KSW --------" + newline);
   fprintf(out, "%s" + newline, StringModCGS_mod(F, Modcgs, 1));
   G_origin = sortSetAsce(G_origin);
   fprintf(out, "%s" + newline, StringCGB(G_origin, all_polys));
   show(size(G_origin));
-    
+
+  // Groebner Cover
+  timer = 0;
+  cnt_Time = timer;
+  def GC = grobcov(F);
+  int time_gc = timer - cnt_Time;
+  printf("Time of Groebner Cover: %s.", string(time_gc));
+  fprintf(out, "Time of Groebner Cover: %s.", string(time_gc));
+
+  // Show Groebner Cover.
+  fprintf(out, "---------------- Groebner Cover ---------------" + newline); 
+  fprintf(out, "%s.", GC);
+
+  close(out);
 }
 
 /*

@@ -6,10 +6,12 @@ link out;
 
 int debug_mode = 0;
 int sim_times = 20;
-
+link dbg_out = "temptemp.debug"		;
+	
 intvec sim_option = 1, 0, 1, 1, 0;
 
 // bad_test.s:
+/*
 print("=========== bad_test starts ==============") ;
 	// lex order.
 print("------ lex ---------")	;
@@ -22,7 +24,7 @@ ideal polys = (a-1)*u - b*(x-1), (a-1)*(x+1)+bu,
 	(a+1)*v - b*(y+1), (a+1)*(y-1) + bv ;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
 	// grlex order.
 print("------ grlex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -32,7 +34,8 @@ ideal polys = (a-1)*u - b*(x-1), (a-1)*(x+1)+bu,
 	(a+1)*v - b*(y+1), (a+1)*(y-1) + bv ;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// glex order.
 print("------ glex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -42,7 +45,8 @@ ideal polys = (a-1)*u - b*(x-1), (a-1)*(x+1)+bu,
 	(a+1)*v - b*(y+1), (a+1)*(y-1) + bv ;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 
 print("=========== bad_test finished ==============" + newline) ;
 	
@@ -56,7 +60,8 @@ out = "example51_lex.mp"		     ;
 ideal polys = ax-b, by-a, cx2-y, cy2-x;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// grlex order.
 print("------ grlex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -65,7 +70,8 @@ out = "example51_grlex.mp"		     ;
 ideal polys = ax-b, by-a, cx2-y, cy2-x;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// glex order.
 print("------ glex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -74,7 +80,8 @@ out = "example51_gradelex.mp"		     ;
 ideal polys = ax-b, by-a, cx2-y, cy2-x;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 
 print("=========== example51 finished ==============" + newline) ;
 	
@@ -91,7 +98,8 @@ ideal polys = -x2y+(-3u)*x+z3+(-4v)*z,
 	-2*xy+(-2u)*xz+(-4v2)*z		;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// grlex order.
 print("------ grlex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -103,7 +111,8 @@ ideal polys = -x2y+(-3u)*x+z3+(-4v)*z,
 	-2*xy+(-2u)*xz+(-4v2)*z		;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// glex order.
 print("------ glex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -115,7 +124,8 @@ ideal polys = -x2y+(-3u)*x+z3+(-4v)*z,
 	-2*xy+(-2u)*xz+(-4v2)*z		;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 
 print("=========== higher_1 finished ==============" + newline) ;
 	
@@ -131,7 +141,8 @@ ideal polys = -4*x2y-4*z3+(v)*z,
 	(3u)*xz+(4v)*x+(-4v2)*z		;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// grlex order.
 print("------ grlex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -142,7 +153,8 @@ ideal polys = -4*x2y-4*z3+(v)*z,
 	(3u)*xz+(4v)*x+(-4v2)*z		;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// glex order.
 print("------ glex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -153,7 +165,8 @@ ideal polys = -4*x2y-4*z3+(v)*z,
 	(3u)*xz+(4v)*x+(-4v2)*z		;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 
 print("=========== higher_2 finished ==============" + newline) ;
 	
@@ -169,7 +182,8 @@ ideal polys = (u)*x2y+(2u)*x2+3*yz+(-2uv)*x,
 	-yz+(-v)*x			;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// grlex order.
 print("------ grlex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -180,7 +194,8 @@ ideal polys = (u)*x2y+(2u)*x2+3*yz+(-2uv)*x,
 	-yz+(-v)*x			;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// glex order.
 print("------ glex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -191,7 +206,8 @@ ideal polys = (u)*x2y+(2u)*x2+3*yz+(-2uv)*x,
 	-yz+(-v)*x			;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 
 print("=========== higher_3 finished ==============" + newline) ;
 	
@@ -206,7 +222,8 @@ ideal polys = vx + (u-v)*y + (u+v)*z,
 	(v-u)*x + (u+v)*y + (-v)*z;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// grlex order.
 print("------ grlex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -216,7 +233,8 @@ ideal polys = vx + (u-v)*y + (u+v)*z,
 	(v-u)*x + (u+v)*y + (-v)*z;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// glex order.
 print("------ glex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -226,7 +244,8 @@ ideal polys = vx + (u-v)*y + (u+v)*z,
 	(v-u)*x + (u+v)*y + (-v)*z;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 
 print("=========== linear finished ==============" + newline) ;
 
@@ -240,7 +259,8 @@ out = "montes_1_lex.mp"		     ;
 ideal polys = ax + b, cx + d;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// grlex order.
 print("------ grlex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -249,7 +269,9 @@ out = "montes_1_grlex.mp"		     ;
 ideal polys = ax + b, cx + d;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+
 	// glex order.
 print("------ glex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -258,7 +280,8 @@ out = "montes_1_gradelex.mp"		     ;
 ideal polys = ax + b, cx + d;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 print("=========== montes_1 finished ==============" + newline) ;
 
 // montes_2.s:
@@ -271,7 +294,8 @@ out = "montes_2_lex.mp"		     ;
 ideal polys = u2x + u, ux2 + x;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// grlex order.
 print("------ grlex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -280,7 +304,8 @@ out = "montes_2_grlex.mp"		     ;
 ideal polys = u2x + u, ux2 + x;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// glex order.
 print("------ glex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -289,7 +314,8 @@ out = "montes_2_gradelex.mp"		     ;
 ideal polys = u2x + u, ux2 + x;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 print("=========== montes_2 finished ==============" + newline) ;
 
 // montes_3.s:
@@ -302,7 +328,8 @@ out = "montes_3_lex.mp"		     ;
 ideal polys = a*x^2*y + a + 3*b^2, a*b*x*y - a*c*x*y + a*b*x + 5*c;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// grlex order.
 print("------ grlex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -311,7 +338,8 @@ out = "montes_3_grlex.mp"		     ;
 ideal polys = a*x^2*y + a + 3*b^2, a*b*x*y - a*c*x*y + a*b*x + 5*c;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// glex order.
 print("------ glex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -320,7 +348,8 @@ out = "montes_3_gradelex.mp"		     ;
 ideal polys = a*x^2*y + a + 3*b^2, a*b*x*y - a*c*x*y + a*b*x + 5*c;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 print("=========== montes_3 finished ==============" + newline) ;
 
 // montes_mccgs.s:
@@ -333,7 +362,8 @@ out = "montes_mccgs_lex.mp"		     ;
 ideal polys = x2 + by2 + 2cxy + dx, 2x + 2cy + d, 2by + 2cx;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// grlex order.
 print("------ grlex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -342,7 +372,8 @@ out = "montes_mccgs_grlex.mp"		     ;
 ideal polys = x2 + by2 + 2cxy + dx, 2x + 2cy + d, 2by + 2cx;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// glex order.
 print("------ glex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -351,12 +382,13 @@ out = "montes_mccgs_gradelex.mp"		     ;
 ideal polys = x2 + by2 + 2cxy + dx, 2x + 2cy + d, 2by + 2cx;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 print("=========== montes_mccgs finished ==============" + newline) ;
-
+*/
 
 // montes_wibmer_5.s:
-print("=========== montes_wibmer_5 starts ==============") ;
+/*print("=========== montes_wibmer_5 starts ==============") ;
 	// lex order.
 print("------ lex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -367,7 +399,8 @@ ideal polys = (a-1)*y(2) - b*(x(2)-1), (a-1)*(x(2)+1)+b*y(2),
 	      (x(3)-a)^2 + y(3)^2 - (x(2) - a)^2 - y(2)^2;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// grlex order.
 print("------ grlex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -378,7 +411,8 @@ ideal polys = (a-1)*y(2) - b*(x(2)-1), (a-1)*(x(2)+1)+b*y(2),
 	      (x(3)-a)^2 + y(3)^2 - (x(2) - a)^2 - y(2)^2;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// glex order.
 print("------ glex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -389,7 +423,8 @@ ideal polys = (a-1)*y(2) - b*(x(2)-1), (a-1)*(x(2)+1)+b*y(2),
 	      (x(3)-a)^2 + y(3)^2 - (x(2) - a)^2 - y(2)^2;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 print("=========== montes_wibmer_5 finished ==============" + newline) ;	
 	
 // sato_suzuki_1.s:
@@ -402,8 +437,10 @@ out = "sato_suzuki_1_lex.mp"		     ;
 ideal polys = x^3 - a, y^4 - b, x + y - z;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// grlex order.
+*/
 print("------ grlex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
 ring R = (0, a, b), (x, y, z), dp;
@@ -411,7 +448,8 @@ out = "sato_suzuki_1_grlex.mp"		     ;
 ideal polys = x^3 - a, y^4 - b, x + y - z;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// glex order.
 print("------ glex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -420,7 +458,8 @@ out = "sato_suzuki_1_gradelex.mp"		     ;
 ideal polys = x^3 - a, y^4 - b, x + y - z;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 print("=========== sato_suzuki_1 finished ==============" + newline) ;	
 	
 // sit21.s:
@@ -434,7 +473,8 @@ ideal polys = (-a+b)*z1 + a *z2 + (a^2-1)*z3,
 	b * z1 + (a^2+1)*z2 + a^3 * z3 ;
 ideal null_ideal = 0  ;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// grlex order.
 print("------ grlex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -444,7 +484,8 @@ ideal polys = (-a+b)*z1 + a *z2 + (a^2-1)*z3,
 	b * z1 + (a^2+1)*z2 + a^3 * z3 ;
 ideal null_ideal = 0  ;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// glex order.
 print("------ glex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -454,7 +495,8 @@ ideal polys = (-a+b)*z1 + a *z2 + (a^2-1)*z3,
 	b * z1 + (a^2+1)*z2 + a^3 * z3 ;
 ideal null_ideal = 0  ;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 print("=========== sit21 finished ==============" + newline) ;
 
 // sit23.s:
@@ -468,7 +510,8 @@ ideal polys = x * z1 + x^2 * z2 - 1,
 	(x^2+1)*z1 + x^3 * z2	;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// grlex order.
 print("------ grlex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -478,7 +521,8 @@ ideal polys = x * z1 + x^2 * z2 - 1,
 	(x^2+1)*z1 + x^3 * z2	;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// glex order.
 print("------ glex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -488,7 +532,8 @@ ideal polys = x * z1 + x^2 * z2 - 1,
 	(x^2+1)*z1 + x^3 * z2	;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 print("=========== sit23 finished ==============" + newline) ;
 
 // sit.s:
@@ -501,7 +546,8 @@ out = "sit_lex.mp"		     ;
 ideal polys = ax + by - u, cx + dy - v	;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// grlex order.
 print("------ grlex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -510,7 +556,8 @@ out = "sit_grlex.mp"		     ;
 ideal polys = ax + by - u, cx + dy - v	;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// glex order.
 print("------ glex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -519,7 +566,8 @@ out = "sit_gradelex.mp"		     ;
 ideal polys = ax + by - u, cx + dy - v	;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 print("=========== sit finished ==============" + newline) ;
 
 // test.s:
@@ -533,7 +581,8 @@ ideal polys = vx + y + (u+v)*z,
 	(v-u)*x -y + (-v)*z;
 ideal null_ideal = 0		;
 list nonnull_list = list()		;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// grlex order.
 print("------ grlex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -543,7 +592,8 @@ ideal polys = vx + y + (u+v)*z,
 	(v-u)*x -y + (-v)*z;
 ideal null_ideal = 0		;
 list nonnull_list = list()		;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// glex order.
 print("------ glex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -553,7 +603,8 @@ ideal polys = vx + y + (u+v)*z,
 	(v-u)*x -y + (-v)*z;
 ideal null_ideal = 0		;
 list nonnull_list = list()		;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 print("=========== test finished ==============" + newline) ;
 
 // test-1.s:
@@ -567,7 +618,8 @@ ideal polys = (u-v)*y + vx + (u+v)*z,
 	(u+v)*y + (-u+v)*x + (-v)*z;
 ideal null_ideal = 0  ;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// grlex order.
 print("------ grlex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -577,7 +629,8 @@ ideal polys = (u-v)*y + vx + (u+v)*z,
 	(u+v)*y + (-u+v)*x + (-v)*z;
 ideal null_ideal = 0  ;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// glex order.
 print("------ glex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -587,7 +640,8 @@ ideal polys = (u-v)*y + vx + (u+v)*z,
 	(u+v)*y + (-u+v)*x + (-v)*z;
 ideal null_ideal = 0  ;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 print("=========== test-1 finished ==============" + newline) ;
 
 // test_xyz.s:
@@ -601,7 +655,8 @@ ideal polys = vx + y + (u+v)*z,
 	(v-u)*x -y + (-v)*z;
 ideal null_ideal = 0  ;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// grlex order.
 print("------ grlex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -611,7 +666,8 @@ ideal polys = vx + y + (u+v)*z,
 	(v-u)*x -y + (-v)*z;
 ideal null_ideal = 0  ;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// glex order.
 print("------ glex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -621,7 +677,8 @@ ideal polys = vx + y + (u+v)*z,
 	(v-u)*x -y + (-v)*z;
 ideal null_ideal = 0  ;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 print("=========== test_xyz finished ==============" + newline) ;
 
 // test_yxz.s:
@@ -635,7 +692,8 @@ ideal polys = (u-v)*x + vx + (u+v)*z,
 	(u+v)*y + (-u+v)*x + (-v)*z;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// grlex order.
 print("------ grlex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -645,7 +703,8 @@ ideal polys = (u-v)*x + vx + (u+v)*z,
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
 out = "test_yxz_grlex.mp"		     ;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// glex order.
 print("------ glex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -655,7 +714,8 @@ ideal polys = (u-v)*x + vx + (u+v)*z,
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
 out = "test_yxz_gradelex.mp"		     ;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 print("=========== test_yxz finished ==============" + newline) ;
 
 // weispfenning_1.s:
@@ -668,7 +728,8 @@ out = "weispfenning_1_lex.mp"		     ;
 ideal polys = u*x, v*x;
 ideal null_ideal = 0  ;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// grlex order.
 print("------ grlex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -677,7 +738,8 @@ ideal polys = u*x, v*x;
 ideal null_ideal = 0  ;
 list nonnull_list = list()	;
 out = "weispfenning_1_grlex.mp"		     ;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// glex order.
 print("------ glex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -686,7 +748,8 @@ ideal polys = u*x, v*x;
 ideal null_ideal = 0  ;
 list nonnull_list = list()	;
 out = "weispfenning_1_gradelex.mp"		     ;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 print("=========== weispfenning_1 finished ==============" + newline) ;
 
 // weispfenning_2.s:
@@ -699,7 +762,8 @@ out = "weispfenning_2_lex.mp";
 ideal polys = u*y + x, v*z + x + 1;
 ideal null_ideal = 0  ;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// grlex order.
 print("------ grlex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -708,7 +772,8 @@ out = "weispfenning_2_grlex.mp"		     ;
 ideal polys = u*y + x, v*z + x + 1;
 ideal null_ideal = 0  ;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// glex order.
 print("------ glex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -717,7 +782,8 @@ out = "weispfenning_2_gradelex.mp"		     ;
 ideal polys = u*y + x, v*z + x + 1;
 ideal null_ideal = 0  ;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 print("=========== weispfenning_2 finished ==============" + newline) ;
 
 // weispfenning_3.s:
@@ -730,7 +796,8 @@ out = "weispfenning_3_lex.mp";
 ideal polys = (u^2 + 1)*y + x^3 - 1, (u^2 + 1)*z + x^2 - 1;
 ideal null_ideal = 0  ;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// grlex order.
 print("------ grlex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -739,7 +806,8 @@ out = "weispfenning_3_grlex.mp"		     ;
 ideal polys = (u^2 + 1)*y + x^3 - 1, (u^2 + 1)*z + x^2 - 1;
 ideal null_ideal = 0  ;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// glex order.
 print("------ glex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -748,7 +816,8 @@ out = "weispfenning_3_gradelex.mp"		     ;
 ideal polys = (u^2 + 1)*y + x^3 - 1, (u^2 + 1)*z + x^2 - 1;
 ideal null_ideal = 0  ;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 print("=========== weispfenning_3 finished ==============" + newline) ;
 	
 // weispfenning_4.s:
@@ -761,7 +830,8 @@ out = "weispfenning_4_lex.mp";
 ideal polys = y + u*x + v, u*y + x + v;
 ideal null_ideal = 0  ;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// grlex order.
 print("------ grlex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -770,7 +840,8 @@ out = "weispfenning_4_grlex.mp"		     ;
 ideal polys = y + u*x + v, u*y + x + v;
 ideal null_ideal = 0  ;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// glex order.
 print("------ glex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -779,7 +850,8 @@ out = "weispfenning_4_gradelex.mp"		     ;
 ideal polys = y + u*x + v, u*y + x + v;
 ideal null_ideal = 0  ;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 print("=========== weispfenning_4 finished ==============" + newline) ;	
 
 // quadratic.s:
@@ -792,7 +864,8 @@ out = "quadratic_lex.mp";
 ideal polys = (a3-b3)*x2 + (a2+b2+1)*x + (ab+2a-b2-2b) ;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// grlex order.
 print("------ grlex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -801,7 +874,8 @@ out = "quadratic_grlex.mp"		     ;
 ideal polys = (a3-b3)*x2 + (a2+b2+1)*x + (ab+2a-b2-2b) ;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// glex order.
 print("------ glex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -810,7 +884,8 @@ out = "quadratic_gradelex.mp"		     ;
 ideal polys = (a3-b3)*x2 + (a2+b2+1)*x + (ab+2a-b2-2b) ;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 print("=========== quadratic finished ==============" + newline) ;
 
 // ctd.s:
@@ -823,7 +898,8 @@ out = "ctd_lex.mp";
 ideal polys = vxy + ux2 + x, uy2 + x2;	
 ideal null_ideal = 0		     ;
 list nonnull_list = list()	     ;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 
 	// gradelex order.
 print("----------- gradelex -------------") ;
@@ -833,7 +909,8 @@ out = "ctd_gradelex.mp";
 ideal polys = vxy + ux2 + x, uy2 + x2;	
 ideal null_ideal = 0		     ;
 list nonnull_list = list()	     ;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 
 // grlex order.
 print("----------- grlex -------------") ;
@@ -843,7 +920,8 @@ out = "ctd_grlex.mp";
 ideal polys = vxy + ux2 + x, uy2 + x2;	
 ideal null_ideal = 0		     ;
 list nonnull_list = list()	     ;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;	
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;	
 print("=========== ctd ends ==============") ;
 	
 // wibmer_11.s:
@@ -856,7 +934,8 @@ out = "wibmer_11_lex.mp";
 ideal polys = u(1)*x, (u(2)^2 - 1)*x^2 + x;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// grlex order.
 print("------ grlex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -865,7 +944,8 @@ out = "wibmer_11_grlex.mp"		     ;
 ideal polys = u(1)*x, (u(2)^2 - 1)*x^2 + x;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 	// glex order.
 print("------ glex ---------")	;
 kill R, @R, @RP, @P, @RUA, @U, @AXU;
@@ -874,7 +954,8 @@ out = "wibmer_11_gradelex.mp"		     ;
 ideal polys = u(1)*x, (u(2)^2 - 1)*x^2 + x;
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 print("=========== wibmer_11 finished ==============" + newline) ;
 
 print("=========== miller-sturmfels starts ==============") ;
@@ -885,5 +966,6 @@ ideal polys = g11^2*x1^2 + 2*g11*g12*x1*x2 + g12^2*x2^2,
 	g21^2*x1^2 + 2 * g21*g22*x1*x2 + g22^2*x2^2 ;	
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//	simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
 print("=========== miller-sturmfels finished ==============" + newline) ;

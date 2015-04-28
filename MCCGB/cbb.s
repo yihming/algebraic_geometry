@@ -2,7 +2,8 @@ LIB "simulation.lib"		;
 
 // The output file name.
 link out = "cbb.mp";
-
+link dbg_out = "cbb.debug"	;
+	
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
 int debug_mode = 0;
@@ -28,4 +29,4 @@ ideal polys = x^2-z^2-6*x+4*z+5,
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
 	
-simulate(null_ideal, nonnull_list, polys, sim_times, out, debug_mode, sim_option) ;
+simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;

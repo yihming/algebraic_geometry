@@ -13,6 +13,8 @@ structures:
 */
 
 proc getSTuples(poly f, ideal E, list N) {
+  //timer = 0;
+  int cnt_Time = timer;
   list st;
   poly koeff;
   poly f_old = f;
@@ -30,6 +32,8 @@ proc getSTuples(poly f, ideal E, list N) {
     f = f_nonzero;
   }
 
+  int time_getst = timer - cnt_Time;
+  //  fprintf(time_out, "Time getSTuples: %s.", string(time_getst));
   return (st);
 }
 
@@ -75,6 +79,7 @@ proc deleteSTuples(poly f) {
 }
 
 proc searchSTuples(poly f) {
+  printf(showParamPoly(f));
   f = paramMonic(f);
   int i;
   if (size(STMAP) == 0) {
@@ -242,11 +247,14 @@ proc sortCPairs() {
 }
 
 proc buildCPairsFromSTMAP() {
+  //timer = 0;
+  int cnt_Time = timer;
   if (size(CPairs) != 0) {
     CPairs = list();
   }
   
   if (size(STMAP) <= 1) {
+    //    fprintf(time_out, "Time buildCPairsFromSTMAP: %s.", string(timer - cnt_Time));
     return ();
   }
 
@@ -258,6 +266,8 @@ proc buildCPairsFromSTMAP() {
   }
 
   sortCPairs();
+  int time_here = timer - cnt_Time;
+  //  fprintf(time_out, "Time buildCPairsFromSTMAP: %s.", string(time_here));
 }
 
 proc deleteCPairsByPoly(poly f) {
@@ -405,7 +415,10 @@ proc deleteNFList(poly f) {
 
 proc computeNFUnderSegment(poly h, ideal E, list N, ideal G) {
   // Basering is @RP.
+  //timer = 0;
+  int cnt_Time = timer;
   if (!Check_Consistence_CGB(E, N)) {
+    //    fprintf(time_out, "Time computeNFUnderSegment: %s.", string(timer - cnt_Time));
     return (list());
   }
   
@@ -421,7 +434,7 @@ proc computeNFUnderSegment(poly h, ideal E, list N, ideal G) {
     ideal E_new = E + ideal(leadcoef_U(h));
     (h_new, care_nicht) = simplifyPoly(h, E_new, N);
     list nfl2 = computeNFUnderSegment(h_new, E_new, N, G);
-
+    //    fprintf(time_out, "Time computeNFUnderSegment: %s.", string(timer - cnt_Time));
     return (nfl1 + nfl2);
   }
 
@@ -448,7 +461,7 @@ proc computeNFUnderSegment(poly h, ideal E, list N, ideal G) {
       nfl2 = nfl2 + nfl_part;
       lc_used = lc_used * lcf_factors[i];
     }
-
+    //    fprintf(time_out, "Time computeNFUnderSegment: %s.", string(timer - cnt_Time));
     return (nfl1 + nfl2);
   }
 
@@ -474,9 +487,11 @@ proc computeNFUnderSegment(poly h, ideal E, list N, ideal G) {
   poly care_nicht, rem_new;
   (rem_new, care_nicht) = simplifyPoly(rem, E, N);
   if (rem_new == 0) {
+    //    fprintf(time_out, "Time computeNFUnderSegment: %s.", string(timer - cnt_Time));
     return (list());
   } else {
     list nf_new = E, N, rem, m;
+    //    fprintf(time_out, "Time computeNFUnderSegment: %s.", string(timer - cnt_Time));
     return (list(nf_new));
   }
 
@@ -494,12 +509,15 @@ proc computeNF(list nf, ideal G) {
 }
 
 proc computeNFList(poly f, ideal G) {
+  //timer = 0;
+  int cnt_Time = timer;
   int idx = searchNFList(f);
   if (idx == -1) {
     ERROR("Out of index bound!");
   }
 
   if (size(NFMAP[idx][2]) == 0) {
+    //    fprintf(time_out, "Time computeNFList: %s.", string(timer - cnt_Time));
     return (list());
   }
 
@@ -518,6 +536,7 @@ proc computeNFList(poly f, ideal G) {
     }
     
   }
+  //  fprintf(time_out, "Time computeNFList: %s.", string(timer - cnt_Time));
   return (nfl_new);
 }
 
@@ -622,6 +641,8 @@ proc basisContainsTrivial(ideal G) {
 }
 
 proc isRedundant(poly f, ideal G) {
+  //timer = 0;
+  int cnt_Time = timer;
   if (size(G) <= 1) {
     return (0);
   }
@@ -629,16 +650,19 @@ proc isRedundant(poly f, ideal G) {
   int idx = searchNFList(f);
   
   if (idx == -1) {
+    //    fprintf(time_out, "Time isRedundant: %s.", string(timer - cnt_Time));
     return (1);
   }
 
   if (defined(debug_mode) && debug_mode == 2) {
-    fprintf(dbg_out, "  Check Redundancy of %s now:", showParamPoly(f));
+    //    fprintf(dbg_out, "  Check Redundancy of %s now:", showParamPoly(f));
   }
   G = deletePolyFromIdeal(G, f);
   
   int redundant_flag = updateNFMAP(f, G);
 
+  int time_isredundant = timer - cnt_Time;
+  //  fprintf(time_out, "Time isRedundant: %s.", string(time_isredundant));
   return (redundant_flag);
   
 }
@@ -716,7 +740,10 @@ proc getFaithSPolyFromCPair(list cp) {
 }
 
 proc reduceFaithSegment(poly h, poly h_nz, ideal G, ideal G_nz, ideal E, list N) {
+  //timer = 0;
+  int cnt_Time = timer;
   if (size(G_nz) == 0) {
+    //    fprintf(time_out, "Time reduceFaithSegment: %s.", string(timer - cnt_Time));
     return (h, h_nz, 1);
   }
 
@@ -748,7 +775,8 @@ proc reduceFaithSegment(poly h, poly h_nz, ideal G, ideal G_nz, ideal E, list N)
   */
 
   if (checkPolyNull(rem, E, N)) {
-    return (0, 0, 1);
+    //    fprintf(time_out, "Time reduceFaithSegment: %s.", string(timer - cnt_Time));
+    return (0, 0, m);
   } else {
     int i;
     poly p = 0;
@@ -766,16 +794,21 @@ proc reduceFaithSegment(poly h, poly h_nz, ideal G, ideal G_nz, ideal E, list N)
 	//res = res + "- ( " + showParamPoly(quots[i]) + " ) * G[" + string(i) + "] ";
       }
     }
-    
-    
     poly rem_faith = m * h - p;
+    
+    fprintf(time_out, "-----------------------");
+    fprintf(time_out, "h_nz = %s,", showParamPoly(rem));
+    fprintf(time_out, "h = %s,", showParamPoly(rem_faith));
+    fprintf(time_out, "%s,", showNullIdeal(E));
+    fprintf(time_out, "%s.", showNonNullList(N));
+    fprintf(time_out, "-------------------------");
 
     /*
     if (defined(debug_mode) && debug_mode == 2) {
       fprintf(dbg_out, "%s.", res);
     }
     */
-
+    //    fprintf(time_out, "Time reduceFaithSegment: %s.", string(timer - cnt_Time));
     return (rem_faith, rem, m);
   }
 }
@@ -795,7 +828,10 @@ proc getFirstNonDeterminedCoef(poly f, ideal E, list N) {
 }
 
 proc simplifyBasisFaith(ideal G, ideal E, list N) {
+  //timer = 0;
+  int cnt_Time =timer;
   if (size(G) == 0) {
+    //fprintf(time_out, "Time simplifyBasisFaith: %s.", string(timer - cnt_Time));
     return (ideal(), ideal());
   }
 
@@ -811,12 +847,16 @@ proc simplifyBasisFaith(ideal G, ideal E, list N) {
     }
   }
 
+  //  fprintf(time_out, "Time simplifyBasisFaith: %s.", string(timer - cnt_Time));
   return (listToIdeal(L_faith), listToIdeal(L_nz));
 }
 
 
 proc simplifyBasis(ideal G, ideal E, list N) {
+  //timer = 0;
+  int cnt_Time = timer;
   if (size(G) == 0) {
+    //    fprintf(time_out, "Time simplifyBasis: %s.", string(timer - cnt_Time));
     return (G);
   }
 
@@ -829,7 +869,7 @@ proc simplifyBasis(ideal G, ideal E, list N) {
       L = insert(L, f_nonzero, size(L));
     }
   }
-
+  //  fprintf(time_out, "Time simplifyBasis: %s.", string(timer - cnt_Time));
   return (listToIdeal(L));
 }
 
@@ -1060,13 +1100,17 @@ proc mcgbGenerate2(ideal E, ideal N_ideal, ideal F) {
 
 proc isAmbiguous(poly f, ideal E, list N) {
   // Basering is @RP.
+  //timer = 0;
+  int cnt_Time = timer;
   if (f == 0) { return (0);}
   
   poly lcf = leadcoef_U(f);
   if (!checkNull(lcf, E, N) && !checkNonNull(lcf, E, N)) {
+    //    fprintf(time_out, "Time isAmbiguous: %s.", string(timer - cnt_Time));
     return (1);
   }
 
+  //  fprintf(time_out, "Time isAmbiguous: %s.", string(timer - cnt_Time));
   return (0);
 }
 
@@ -1086,8 +1130,11 @@ proc getLCFBasis(ideal G) {
 }
 
 proc isAmbiguousBasis(ideal G, ideal E, list N) {
+  //timer = 0;
+  int cnt_Time = timer;
   // Basering is @RP.
   if (size(G) == 0) {
+    //    fprintf(time_out, "Time isAmbiguousBasis: %s.", string(timer - cnt_Time));
     return (0);
   }
 
@@ -1098,20 +1145,25 @@ proc isAmbiguousBasis(ideal G, ideal E, list N) {
   }
 
   if (isAmbiguous(lcf, E, N)) {
+    //    fprintf(time_out, "Time isAmbiguousBasis: %s.", string(timer - cnt_Time));
     return (1);
   }
-
+  //  fprintf(time_out, "Time isAmbiguousBasis: %s.", string(timer - cnt_Time));
   return (0);
 }
 
 proc getCPairsFromBasis(list cp, poly sp, poly sp_nz, ideal E, list N, ideal G) {
   // Basering is @RP.
   // G is ambiguous.
+  //timer = 0;
+  int cnt_Time = timer;
   if (!Check_Consistence_CGB(E, N)) {
+    //    fprintf(time_out, "Time getCPairsFromBasis: %s.", string(timer - cnt_Time));
     return (list());
   }
 
   if (!isAmbiguousBasis(G, E, N)) {
+    //    fprintf(time_out, "Time getCPairsFromBasis: %s.", string(timer - cnt_Time));
     return (list(cp));
   }
   
@@ -1134,6 +1186,7 @@ proc getCPairsFromBasis(list cp, poly sp, poly sp_nz, ideal E, list N, ideal G) 
     }
     lc_used = lc_used * lcf_factors[i];
   }
+  //  fprintf(time_out, "Time getCPairsFromBasis: %s.", string(timer - cnt_Time));
   return (cpl);
 }
 
@@ -1179,22 +1232,35 @@ proc mcgbGenerate3(ideal E, ideal N_ideal, ideal F) {
   list NFMAP;
   
   export(STMAP, CPairs, NFMAP);
+  int cnt_Time = timer;
   buildSTMAPFromBasis(G, E, N);
   buildNFMAPFromSTMAP();
+  fprintf(time_out, "Time building STMAP and NFMAP: %s.", string(timer - cnt_Time));
 
   // Remove redundant poly.
-  
+  printf("Check Redundancy starts...");
+  cnt_Time = timer;
+  int cnt_redundant = 0;
   ideal M = G;
   for (i = 1; i <= size(G); i++) {
     if (isRedundant(G[i], M)) {
+      cnt_redundant = cnt_redundant + 1;
       M = deletePolyFromIdeal(M, G[i]);
       deleteSTuples(G[i]);
     }
   }
   G = M;
+  fprintf(time_out, "Time of removing redundancy: %s."+newline, string(timer - cnt_Time));
+  printf("Check Redundancy ends.");
+  fprintf(time_out, "******************");
+  fprintf(time_out, "%s redundant polys are marked.", string(cnt_redundant));
+  fprintf(time_out, "******************");
   
   // Initialize the list of critical pairs to be checked.
+  printf("construct critical pairs...");
+  cnt_Time = timer;
   buildCPairsFromSTMAP();
+  fprintf(time_out, "Time of constructing critical pairs from STMAP: %s.", string(timer - cnt_Time));
 
   if (defined(debug_mode) && debug_mode == 2) {
     fprintf(dbg_out, "Initially, ");
@@ -1202,11 +1268,17 @@ proc mcgbGenerate3(ideal E, ideal N_ideal, ideal F) {
     fprintf(dbg_out, "%s", showCPairs());
     fprintf(dbg_out, "%s", showNFMAP());
   }
+  printf("construct critical pairs finished.");
   
   list cp;
   fprintf(dbg_out, "Preprocessing is finished!");
+  printf("Preprocessing is finished.");
 
+  // Count of CPairs.
+  int cnt_cp = size(CPairs);
+  
   while (size(CPairs) > 0) {
+  
     print(string(size(CPairs)));
     if (defined(debug_mode) && debug_mode == 2) {
       fprintf(dbg_out, "|CPairs| = %s.", string(size(CPairs)));
@@ -1222,88 +1294,117 @@ proc mcgbGenerate3(ideal E, ideal N_ideal, ideal F) {
     poly sp, sp_nz;
     ideal E_cur = cp[3];
     list N_cur = cp[4];
+    cnt_Time = timer;
     (sp, sp_nz) = getFaithSPolyFromCPair(cp);
+    fprintf(time_out, "Time get faith S-Poly: %s." +newline, string(timer - cnt_Time));
     if (defined(debug_mode) && debug_mode == 2) {
       fprintf(dbg_out, "S-Poly = %s.", showParamPoly(sp_nz));
     }
 
+    cnt_Time = timer;
     if (isAmbiguous(sp_nz, E_cur, N_cur)) {
       // S-Poly is ambiguous.
+      fprintf(time_out, "Time checking ambi of s-poly: %s.", string(timer - cnt_Time));
       if (defined(debug_mode) && debug_mode == 2) {
 	fprintf(dbg_out, "%s is AMBIGUOUS!", showParamPoly(sp_nz));
       }
+      printf("S-Poly is ambiguous");
+      printf("Get new stuples...");
       list st_sp = getSTuples(sp_nz, E_cur, N_cur);
+      printf("Get new stuples finished.");
       list new_cp;
       for (i = 1; i <= size(st_sp); i++) {
 	new_cp = list(cp[1], cp[2], st_sp[i][2], st_sp[i][3], cp[5], ideal(sp, st_sp[i][1]));
+	cnt_cp = cnt_cp + 1;
 	if (defined(debug_mode) && debug_mode == 2) {
 	  fprintf(dbg_out, "Add CP %s.", showCP(new_cp));
 	}
 	insertCPair(new_cp);
       }
       continue;
+    } else {
+      fprintf(time_out, "Time checking ambi of s-poly: %s."+newline, string(timer - cnt_Time));
     }
     
     ideal G_nz, G_faith;
+    printf("compute specialized basis...");
+    cnt_Time = timer;
     (G_faith, G_nz) = simplifyBasisFaith(G, E_cur, N_cur);
+    fprintf(time_out, "Time simplify basis faith: %s"+newline, string(timer - cnt_Time));
+    printf("compute specialized basis finished.");
     if (defined(debug_mode) && debug_mode == 2) {
       fprintf(dbg_out, "G = %s.", showParamIdeal(G));
       fprintf(dbg_out, "σ(G) = %s.", showParamIdeal(G_nz));
     }
 
-    // Check ambiguity.
-    
+    // Check ambiguity of the basis.
+
+    cnt_Time = timer;
     if (isAmbiguousBasis(G_nz, E_cur, N_cur)) {
       // G_nz is ambiguous.
+      fprintf(time_out, "Time checking ambi of Basis: %s." +newline, string(timer - cnt_Time));
       if (defined(debug_mode) && debug_mode == 2) {
 	fprintf(dbg_out, "Specialized Basis is AMBIGUOUS! Replace CriticalPair by its split cp's:");
       }
       list cp_split = getCPairsFromBasis(cp, sp, sp_nz, E_cur, N_cur, G_nz);
       if (size(cp_split) > 0) {
 	for (i = 1; i <= size(cp_split); i++) {
+	  cnt_cp = cnt_cp + 1;
 	  insertCPair(cp_split[i]);
 	}
       }
       continue;
+    } else {
+      fprintf(time_out, "Time checking ambi of Basis: %s." + newline, string(timer - cnt_Time));
     }
 
     if (defined(debug_mode) && debug_mode == 2) {
       fprintf(dbg_out, "Both S-Poly and Specialized Basis are UNAMBIGUOUS!");
     }
 
+    // Both are unambiguous.
+    
     if (basisContainsTrivial(G_nz)) {
       // G_nz contains trivial poly, so sp_nz is guaranteed to be reduced to 0.
       continue;
     }
 
     poly nf, nf_nz, teiler;
+    cnt_Time = timer;
     (nf, nf_nz, teiler) = reduceFaithSegment(sp, sp_nz, G, G_nz, E_cur, N_cur);
+    fprintf(time_out, "Time of pseudo-divi while keeping faith: %s."+newline, string(timer - cnt_Time));
     if (defined(debug_mode) && debug_mode == 2) {
       fprintf(dbg_out, "σ(rem) = %s,", showParamPoly(nf_nz));
       fprintf(dbg_out, "rem = %s,", showParamPoly(nf));
       fprintf(dbg_out, "m = %s.", teiler);
     }
     if (nf_nz != 0) {
-      // Remove redundant poly.
-      
+      // A new poly is added. First, check redundancy.
+      printf("Remove Redundancy!");
+      cnt_Time = timer;
       if (defined(debug_mode) && debug_mode == 2) {
 	fprintf(dbg_out, "σ(rem) != 0.");
       }
       nf = paramMonic(nf);
-      
+  
+
       ideal M = G;
+      
       if (defined(debug_mode) && debug_mode == 2) {
 	fprintf(dbg_out, "Remove Redundant Poly:");
       }
+      int cnt_redundant = 0;
+      int old_num_cp = size(CPairs);
       for (i = 1; i <= size(G); i++) {
 	if (defined(debug_mode) && debug_mode == 2) {
 	  fprintf(dbg_out, "Consider Poly: %s:", showParamPoly(G[i]));
 	}
 	if (isRedundant(G[i], insertPolyToIdeal(M, nf))) {
+	  fprintf(time_out, "%s is redundant.", showParamPoly(G[i]));
 	  if (defined(debug_mode) && debug_mode == 2) {
 	    fprintf(dbg_out, "%s is redundant.", showParamPoly(G[i]));
 	  }
-
+	  cnt_redundant = cnt_redundant + 1;
 	  M = deletePolyFromIdeal(M, G[i]);
 	  if (defined(debug_mode) && debug_mode == 2) {
 	    fprintf(dbg_out, "After removal:");
@@ -1321,11 +1422,19 @@ proc mcgbGenerate3(ideal E, ideal N_ideal, ideal F) {
 
       }
 
+      int cnt_del_cp = old_num_cp - size(CPairs);
+
+      fprintf(time_out, "Time Remove redundant polys: %s" + newline, string(timer - cnt_Time));
       if (defined(debug_mode) && debug_mode == 2) {
 	fprintf(dbg_out, "After redundancy check: |CPair| = %s.", string(size(CPairs)));
       }
       
       G = M;
+
+      fprintf(time_out, "****************");
+      fprintf(time_out, "%s is added.", showParamPoly(nf));
+      fprintf(time_out, "%s polys are redundant; %s critical pairs are removed.", string(cnt_redundant), string(cnt_del_cp));
+      fprintf(time_out, "****************");
       
       if (defined(debug_mode) && debug_mode == 2) {
       	fprintf(dbg_out, "Now, we have:");
@@ -1337,13 +1446,17 @@ proc mcgbGenerate3(ideal E, ideal N_ideal, ideal F) {
       if (defined(debug_mode) && debug_mode == 2) {
 	fprintf(dbg_out, "Add %s to G:", showParamPoly(nf));
       }
-
+      cnt_Time = timer;
       insertSTuples(nf, E, N);
 
+      int old_num_cp = size(CPairs);
       buildCPairsWithPoly(G, nf);
+      cnt_cp = cnt_cp + (size(CPairs) - old_num_cp);
+      
       insertNFList(nf);
       G = insertPolyToIdeal(G, nf);
       G = sortSetDesc(G);
+      fprintf(time_out, "Time add new poly into basis: %s"+newline, string(timer - cnt_Time));
       if (defined(debug_mode) && debug_mode == 2) {
 	fprintf(dbg_out, "Finally:");
 	fprintf(dbg_out, "%s", showParamIdeal(G));
@@ -1359,6 +1472,8 @@ proc mcgbGenerate3(ideal E, ideal N_ideal, ideal F) {
     
   } // end while.
 
+  fprintf(time_out, "%s Critical Pairs are created!", string(cnt_cp));
+  
   ideal MCGB = G;
 
   if (defined(debug_mode) && debug_mode == 2) {
@@ -1373,10 +1488,174 @@ proc mcgbGenerate3(ideal E, ideal N_ideal, ideal F) {
   return (MCGB);
 }
 
-/*
- *  Change the redundancy removal.
- */
+proc redundantCriterion(poly f, poly h, poly h_nz) {
+  // Basering is @RP.
+  list term_list = getTerms(f);
+  poly t = lppX(h_nz);
+  int i;
 
+  ideal E;
+  for (i = 1; i <= size(term_list); i++) {
+    if (term_list[i] / t == 0) {
+      if (Check_Consistence_CGB(E, list(getCoefOfPP(f, term_list[i])))) {
+	return (0);
+      }
+    }
+    E = E + ideal(getCoefOfPP(f, term_list[i]));
+  }
+
+  return (1);
+}
+
+proc nonredundantBasis(ideal G, poly h, poly h_nz) {
+  // Basering is @RP.
+  if (size(G) == 0) {
+    return (G);
+  }
+
+  int i;
+  list TL;
+  ideal M;
+  for (i = 1; i <= size(G); i++) {
+    if (redundantCriterion(G[i], h, h_nz)) {
+      TL = insert(TL, G[i], size(TL));
+    } else {
+      M = insertPolyToIdeal(M, G[i]);
+    }
+  }
+  M = insertPolyToIdeal(M, h);
+
+  if (size(TL) == 0) {
+    return (G);
+  }
+
+  // Add polys in TL with some extra computation.
+  int j;
+  poly cur_f;
+  int idx_f;
+  list sp_f;
+  poly f_nz;
+  ideal E;
+  list N;
+  ideal M_nz, M_faith;
+  poly rem_faith, rem, m;
+  int red_flag;
+
+  TL = sortSetAsce(TL);
+  for (i = 1; i <= size(TL); i++) {
+    cur_f = TL[i];
+    idx_f = searchSTuples(cur_f);
+    sp_f = STMAP[idx_f][2];
+    red_flag = 1;
+
+    printf("There are %s stuples.", string(size(sp_f)));
+    for (j = 1; j <= size(sp_f); j++) {
+      // For each specialized tuple of cur_f.
+      f_nz = sp_f[j][1];
+      E = sp_f[j][2];
+      N = sp_f[j][3];
+
+      (M_faith, M_nz) = simplifyBasisFaith(M, E, N);
+      printf("*******************");
+      printf("Simplify %s by basis"+newline+"%s.", showParamPoly(cur_f), M_nz);
+
+      // Reduce.
+      (rem_faith, rem, m) = reduceFaithSegment(cur_f, f_nz, M_faith, M_nz, E, N);
+      printf("%s", showNullIdeal(E));
+      printf("%s", showNonNullList(N));
+      printf("rem = %s.", showParamPoly(rem));
+      printf("m = %s.", showParamPoly(m));
+      int term_flag = 0;
+      while (!checkNonNull(m , E, N)) {
+	// m is not determined to be non-zero.
+	if (!checkNull(rem, E, insert(N, m, size(N)))) {
+	  // rem can be non-zero.
+	  M = insertPolyToIdeal(M, cur_f);
+	  term_flag = 1;
+	  red_flag = 0;
+	  break;
+	}
+	E = E + ideal(m);
+	(M_faith, M_nz) = simplifyBasisFaith(M, E, N);
+	(rem_faith, rem, m) = reduceFaithSegment(cur_f, f_nz, M_faith, M_nz, E, N);
+      }
+      if (term_flag) {
+	break;
+      }
+      if (!checkNull(rem, E, N)) {
+	// rem can be non-zero.
+	printf("rem %s can be non-zero.", showParamPoly(rem));
+	M = insertPolyToIdeal(M, cur_f);
+	red_flag = 0;
+	break;
+      }
+    } // Endfor.
+    if (red_flag) {
+      // cur_f[i] is redundant.
+      printf("Poly %s is redundant!", showParamPoly(cur_f));
+      showSTMAP();
+      fprintf(time_out, "Poly %s is redundant!", showParamPoly(cur_f));
+      // Remove associated critical pairs.
+      searchSTuples(cur_f);
+      deleteSTuples(cur_f);
+      int cnt_cp_old = size(CPairs);
+      deleteCPairsByPoly(cur_f);
+      fprintf(time_out, "%s critical pairs are removed!"+newline, string(cnt_cp_old - size(CPairs)));
+    }
+  } // Endfor.
+
+  M = sortSetDesc(M);
+  return (M);
+}
+
+proc redundantCriterionFaith(poly f, poly h) {
+  // Basering is @RP.
+  list term_list_f = getTerms(f);
+  list term_list_h = getTerms(h);
+
+  int i, j;
+  poly cur_t;
+  ideal E_f, E_h;
+  for (i = 1; i <= size(term_list_f); i++) {
+    cur_t = term_list_f[i];
+    for (j = 1; j <= size(term_list_h); j++) {
+      if (cur_t / term_list_h[j] == 0) {
+	if (Check_Consistence_CGB(E_f, list(getCoefOfPP(f, cur_t)))
+	    && Check_Consistence_CGB(E_h, list(getCoefOfPP(h, term_list_h[j])))) {
+	  return (0);
+	}
+      }
+      E_h = E_h + ideal(getCoefOfPP(h, term_list_h[j]));
+    }
+    E_f = E_f + ideal(getCoefOfPP(f, cur_t));
+  }
+
+  return (1);
+}
+
+proc isRedundantFaster(poly f, ideal G) {
+  // Basering is @RP.
+  if (size(G) <= 1) {    
+    return (0);
+  }
+
+  int i;
+  list TL;
+  ideal M = deletePolyFromIdeal(G, f);
+  for (i = 1; i <= size(M); i++) {
+    if (!redundantCriterionFaith(f, M[i])) {
+      return (0);
+    }
+  }
+
+  // f is possible redundant.
+  int redundant_flag = updateNFMAP(f, G);
+  return (redundant_flag);
+}
+
+/*
+Change the redundancy checking procedure.
+ */
 proc mcgbGenerate4(ideal E, ideal N_ideal, ideal F) {
   set_global_rings();
   set_global_rings_mcgb();
@@ -1419,41 +1698,56 @@ proc mcgbGenerate4(ideal E, ideal N_ideal, ideal F) {
   list NFMAP;
   
   export(STMAP, CPairs, NFMAP);
-
+  int cnt_Time = timer;
   buildSTMAPFromBasis(G, E, N);
   buildNFMAPFromSTMAP();
+  fprintf(time_out, "Time building STMAP: %s.", string(timer - cnt_Time));
 
-  print(showNFMAP());
-  
   // Remove redundant poly.
-  
+  printf("Check Redundancy starts...");
+  cnt_Time = timer;
   ideal M = G;
   for (i = 1; i <= size(G); i++) {
-    if (isRedundant(G[i], M)) {
+    if (isRedundantFaster(G[i], M)) {
       M = deletePolyFromIdeal(M, G[i]);
       deleteSTuples(G[i]);
     }
   }
   G = M;
+  fprintf(time_out, "Time of removing redundancy: %s."+newline, string(timer - cnt_Time));
+  printf("Check Redundancy ends.");
   
   // Initialize the list of critical pairs to be checked.
+  printf("construct critical pairs...");
+  cnt_Time = timer;
   buildCPairsFromSTMAP();
+  fprintf(time_out, "Time of constructing critical pairs from STMAP: %s.", string(timer - cnt_Time));
 
   if (defined(debug_mode) && debug_mode == 2) {
     fprintf(dbg_out, "Initially, ");
     fprintf(dbg_out, "%s", showSTMAP());
     fprintf(dbg_out, "%s", showCPairs());
-    fprintf(out, "%s", showNFMAP());
+    fprintf(dbg_out, "%s", showNFMAP());
   }
+  printf("construct critical pairs finished.");
   
   list cp;
+  fprintf(dbg_out, "Preprocessing is finished!");
+  printf("Preprocessing is finished.");
+
+  // Count of CPairs.
+  int cnt_cp = size(CPairs);
+  
   while (size(CPairs) > 0) {
-    
+  
+    print(string(size(CPairs)));
+    if (defined(debug_mode) && debug_mode == 2) {
+      fprintf(dbg_out, "|CPairs| = %s.", string(size(CPairs)));
+    }
     cp = selectCPair();
 
     if (defined(debug_mode) && debug_mode == 2) {
       fprintf(dbg_out, "----------------------");
-      //fprintf(out, "%s", showCP(cp));
       fprintf(dbg_out, "Select critical pair:");
       fprintf(dbg_out, "%s" + newline, showCP(cp));
     }
@@ -1461,84 +1755,116 @@ proc mcgbGenerate4(ideal E, ideal N_ideal, ideal F) {
     poly sp, sp_nz;
     ideal E_cur = cp[3];
     list N_cur = cp[4];
+    cnt_Time = timer;
     (sp, sp_nz) = getFaithSPolyFromCPair(cp);
+    fprintf(time_out, "Time get faith S-Poly: %s." +newline, string(timer - cnt_Time));
     if (defined(debug_mode) && debug_mode == 2) {
       fprintf(dbg_out, "S-Poly = %s.", showParamPoly(sp_nz));
     }
 
+    cnt_Time = timer;
     if (isAmbiguous(sp_nz, E_cur, N_cur)) {
+      // S-Poly is ambiguous.
+      fprintf(time_out, "Time checking ambi of s-poly: %s.", string(timer - cnt_Time));
       if (defined(debug_mode) && debug_mode == 2) {
 	fprintf(dbg_out, "%s is AMBIGUOUS!", showParamPoly(sp_nz));
       }
+      printf("S-Poly is ambiguous");
+      printf("Get new stuples...");
       list st_sp = getSTuples(sp_nz, E_cur, N_cur);
+      printf("Get new stuples finished.");
+      list new_cp;
       for (i = 1; i <= size(st_sp); i++) {
-	insertCPair(list(cp[1], cp[2], st_sp[i][2], st_sp[i][3], cp[5], ideal(sp, st_sp[i][1])));
+	new_cp = list(cp[1], cp[2], st_sp[i][2], st_sp[i][3], cp[5], ideal(sp, st_sp[i][1]));
+	cnt_cp = cnt_cp + 1;
+	if (defined(debug_mode) && debug_mode == 2) {
+	  fprintf(dbg_out, "Add CP %s.", showCP(new_cp));
+	}
+	insertCPair(new_cp);
       }
       continue;
+    } else {
+      fprintf(time_out, "Time checking ambi of s-poly: %s."+newline, string(timer - cnt_Time));
     }
     
     ideal G_nz, G_faith;
+    printf("compute specialized basis...");
+    cnt_Time = timer;
     (G_faith, G_nz) = simplifyBasisFaith(G, E_cur, N_cur);
+    fprintf(time_out, "Time simplify basis faith: %s"+newline, string(timer - cnt_Time));
+    printf("compute specialized basis finished.");
     if (defined(debug_mode) && debug_mode == 2) {
       fprintf(dbg_out, "G = %s.", showParamIdeal(G));
       fprintf(dbg_out, "σ(G) = %s.", showParamIdeal(G_nz));
     }
 
-    // Check ambiguity.
-    poly lcf = 1;
-    for (i = 1; i <= size(G_nz); i++) {
-      lcf = lcf * leadcoef_U(G_nz[i]);
-    }
-    
-    if (isAmbiguous(lcf, E_cur, N_cur)) {
+    // Check ambiguity of the basis.
+
+    cnt_Time = timer;
+    if (isAmbiguousBasis(G_nz, E_cur, N_cur)) {
       // G_nz is ambiguous.
+      fprintf(time_out, "Time checking ambi of Basis: %s." +newline, string(timer - cnt_Time));
       if (defined(debug_mode) && debug_mode == 2) {
 	fprintf(dbg_out, "Specialized Basis is AMBIGUOUS! Replace CriticalPair by its split cp's:");
       }
-      ideal lcf_factors = factorize(lcf, 1);
-      poly lc_used = 1;
-      for (i = 1; i <= size(lcf_factors); i++) {
-	ideal E_new = E_cur + ideal(lcf_factors[i]);
-	list N_new = insert(N_cur, lc_used, size(N_cur));
-	list cp_split = cp[1], cp[2], E_new, N_new, cp[5], ideal(sp, sp_nz);
-	insertCPair(cp_split);
-	if (defined(debug_mode) && debug_mode == 2) {
-	  fprintf(dbg_out, "Insert split CP:");
-	  fprintf(dbg_out, "%s", showCP(cp_split));
+      list cp_split = getCPairsFromBasis(cp, sp, sp_nz, E_cur, N_cur, G_nz);
+      if (size(cp_split) > 0) {
+	for (i = 1; i <= size(cp_split); i++) {
+	  cnt_cp = cnt_cp + 1;
+	  insertCPair(cp_split[i]);
 	}
-	lc_used = lc_used * lcf_factors[i];
       }
       continue;
+    } else {
+      fprintf(time_out, "Time checking ambi of Basis: %s." + newline, string(timer - cnt_Time));
     }
 
     if (defined(debug_mode) && debug_mode == 2) {
       fprintf(dbg_out, "Both S-Poly and Specialized Basis are UNAMBIGUOUS!");
     }
+
+    // Both are unambiguous.
+    
+    if (basisContainsTrivial(G_nz)) {
+      // G_nz contains trivial poly, so sp_nz is guaranteed to be reduced to 0.
+      continue;
+    }
+
     poly nf, nf_nz, teiler;
+    cnt_Time = timer;
     (nf, nf_nz, teiler) = reduceFaithSegment(sp, sp_nz, G, G_nz, E_cur, N_cur);
+    fprintf(time_out, "Time of pseudo-divi while keeping faith: %s."+newline, string(timer - cnt_Time));
     if (defined(debug_mode) && debug_mode == 2) {
       fprintf(dbg_out, "σ(rem) = %s,", showParamPoly(nf_nz));
       fprintf(dbg_out, "rem = %s,", showParamPoly(nf));
       fprintf(dbg_out, "m = %s.", teiler);
     }
     if (nf_nz != 0) {
-      // Remove redundant poly.
-      
+      // A new poly is added. First, check redundancy.
+      printf("Remove Redundancy!");
+      cnt_Time = timer;
       if (defined(debug_mode) && debug_mode == 2) {
 	fprintf(dbg_out, "σ(rem) != 0.");
       }
       nf = paramMonic(nf);
-      
+  
+      /*
       ideal M = G;
+      
       if (defined(debug_mode) && debug_mode == 2) {
 	fprintf(dbg_out, "Remove Redundant Poly:");
       }
+      int cnt_redundant = 0;
+      int old_num_cp = size(CPairs);
       for (i = 1; i <= size(G); i++) {
-	if (isRedundant(G[i], insertPolyToIdeal(M, nf))) {
+	if (defined(debug_mode) && debug_mode == 2) {
+	  fprintf(dbg_out, "Consider Poly: %s:", showParamPoly(G[i]));
+	}
+	if (isRedundant2(G[i], M, nf)) {
 	  if (defined(debug_mode) && debug_mode == 2) {
 	    fprintf(dbg_out, "%s is redundant.", showParamPoly(G[i]));
 	  }
-
+	  cnt_redundant = cnt_redundant + 1;
 	  M = deletePolyFromIdeal(M, G[i]);
 	  if (defined(debug_mode) && debug_mode == 2) {
 	    fprintf(dbg_out, "After removal:");
@@ -1547,20 +1873,31 @@ proc mcgbGenerate4(ideal E, ideal N_ideal, ideal F) {
 	  deleteSTuples(G[i]);
 	  deleteCPairsByPoly(G[i]);
 	  if (defined(debug_mode) && debug_mode == 2) {
-	    //fprintf(out, "%s", showSTMAP());
-	    //fprintf(out, "%s", showCPairs());
-	    //fprintf(out, "%s", showNFMAP());
+	    fprintf(dbg_out, "%s", showSTMAP());
+	    fprintf(dbg_out, "%s", showCPairs());
+	    fprintf(dbg_out, "%s", showNFMAP());
 	  }
 	}
 	
 
       }
 
+      int cnt_del_cp = old_num_cp - size(CPairs);
+
+      fprintf(time_out, "Time Remove redundant polys: %s" + newline, string(timer - cnt_Time));
       if (defined(debug_mode) && debug_mode == 2) {
 	fprintf(dbg_out, "After redundancy check: |CPair| = %s.", string(size(CPairs)));
       }
       
       G = M;
+      */
+      G = nonredundantBasis(G, nf, nf_nz);
+      
+      fprintf(time_out, "****************");
+      fprintf(time_out, "%s is added.", showParamPoly(nf));
+      fprintf(time_out, "Whose non-zero part is: %s.", showParamPoly(nf_nz));
+      //      fprintf(time_out, "%s polys are redundant; %s critical pairs are removed.", string(cnt_redundant), string(cnt_del_cp));
+      fprintf(time_out, "****************");
       
       if (defined(debug_mode) && debug_mode == 2) {
       	fprintf(dbg_out, "Now, we have:");
@@ -1572,20 +1909,23 @@ proc mcgbGenerate4(ideal E, ideal N_ideal, ideal F) {
       if (defined(debug_mode) && debug_mode == 2) {
 	fprintf(dbg_out, "Add %s to G:", showParamPoly(nf));
       }
-
-      // YIMING: Bug here.
+      cnt_Time = timer;
       insertSTuples(nf, E, N);
 
+      int old_num_cp = size(CPairs);
       buildCPairsWithPoly(G, nf);
+      cnt_cp = cnt_cp + (size(CPairs) - old_num_cp);
+      
       insertNFList(nf);
       G = insertPolyToIdeal(G, nf);
       G = sortSetDesc(G);
+      fprintf(time_out, "Time add new poly into basis: %s"+newline, string(timer - cnt_Time));
       if (defined(debug_mode) && debug_mode == 2) {
 	fprintf(dbg_out, "Finally:");
-	//fprintf(out, "%s", showParamIdeal(G));
-	//fprintf(out, "%s", showSTMAP());
-	//fprintf(out, "%s", showCPairs());
-	//fprintf(out, "%s", showNFMAP());
+	fprintf(dbg_out, "%s", showParamIdeal(G));
+	fprintf(dbg_out, "%s", showSTMAP());
+	fprintf(dbg_out, "%s", showCPairs());
+	fprintf(dbg_out, "%s", showNFMAP());
       }
     }
 
@@ -1595,6 +1935,8 @@ proc mcgbGenerate4(ideal E, ideal N_ideal, ideal F) {
     
   } // end while.
 
+  fprintf(time_out, "%s Critical Pairs are created!", string(cnt_cp));
+  
   ideal MCGB = G;
 
   if (defined(debug_mode) && debug_mode == 2) {
@@ -1608,3 +1950,4 @@ proc mcgbGenerate4(ideal E, ideal N_ideal, ideal F) {
   
   return (MCGB);
 }
+

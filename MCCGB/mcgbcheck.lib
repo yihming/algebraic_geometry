@@ -257,6 +257,8 @@ proc termDivisible(poly p1, poly p2) {
 }
 
 proc pseudoDivi(poly f, ideal F) {
+  //timer = 0;
+  int cnt_Time = timer;
   int ring_flag = 0;
   if (nameof(basering) != "@R") {
     def BR = basering;
@@ -272,7 +274,7 @@ proc pseudoDivi(poly f, ideal F) {
     setring BR;
     def L = imap(@R, L);
   }
-
+  //  fprintf(time_out, "Time pseudoDivi: %s.", string(timer - cnt_Time));
   return (L);
 }
 

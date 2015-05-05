@@ -4,6 +4,7 @@ LIB "simulation.lib"		;
 // The output file name.
 link out = "s58.mp";
 link dbg_out = "s58.debug"	;
+link time_out = "s58.time"	;
 	
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.

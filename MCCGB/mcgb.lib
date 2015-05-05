@@ -217,6 +217,11 @@ proc checkNull(poly c, ideal E, list N)
 "
 {
   // Basering is @RP.
+
+  if (c == 0) {
+    return (1);
+  }
+  
   ideal E_res;
   list N_res;
   (E_res, N_res) = redRepN(E, N, c);
@@ -2015,6 +2020,8 @@ proc showNonNullList(list N) {
 }
 
 proc simplifyPoly(poly g, ideal E, list N) {
+  //timer = 0;
+  int cnt_Time = timer;
   int ring_flag = 0;
   list N_simpl = N;
   if (nameof(basering) != "@RP") {
@@ -2054,7 +2061,8 @@ proc simplifyPoly(poly g, ideal E, list N) {
     def g_nonzero = imap(@RP, g_nonzero);
     def g_zero = imap(@RP, g_zero);
   }
-  
+
+  //  fprintf(time_out, "Time simplifyPoly: %s.", string(timer - cnt_Time));
   return (g_nonzero, g_zero);
 }
 

@@ -1,6 +1,7 @@
 LIB "mcgb.lib";
 LIB "mcgbcheck.lib";
 LIB "completion2.lib";
+//LIB "completion2_alt.lib";
 LIB "buchtrace.lib";
 
 proc sucheBeispiel(ideal G, list Modcgs, ideal M1, list cgs_m1, ideal M_simpl, list cgs_simpl, ideal M_step) {
@@ -166,12 +167,14 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, l
   
   timer = 0;
   cnt_Time = timer;
-  //ideal M4 = mcgbGenerate3(E, listToIdeal(N), F);
-  ideal M4 = mcgbGenerate4(E, listToIdeal(N), F);
+  ideal M4 = mcgbGenerate3(E, listToIdeal(N), F);
+  int further_check = 0;
+  //ideal M4 = mcgbGenerate4(E, listToIdeal(N), F, further_check);
   int time_completion = timer - cnt_Time;
   all_polys = mergeList(all_polys, idealToList(M4));
   fprintf(time_out, "Time of Completion: %s.", string(time_completion));
-
+  printf("Time of Completion: %s.", string(time_completion));
+  
   
 
   /*

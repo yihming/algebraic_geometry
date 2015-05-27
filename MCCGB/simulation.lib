@@ -154,7 +154,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, l
   fprintf(time_out, "Time of KSW: %s.", string(time_KSW));
   fprintf(time_out, "Time of 2nd phase: %s.", string(time_simpl));
   fprintf(time_out, "Time of MCGBSimpl: %s.", string(time_KSW + time_simpl));
-  /*
+  
   ideal M3;
   list cgs3;
   timer = 0;
@@ -163,8 +163,8 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, l
   int time_onestep = timer - cnt_Time;
   all_polys = mergeList(all_polys, idealToList(M3));
   printf("Time of MCGBOneStep: %s.", string(time_onestep + time_KSW));
-  */
   
+  /*
   timer = 0;
   cnt_Time = timer;
   ideal M4 = mcgbGenerate3(E, listToIdeal(N), F);
@@ -174,7 +174,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, l
   all_polys = mergeList(all_polys, idealToList(M4));
   fprintf(time_out, "Time of Completion: %s.", string(time_completion));
   printf("Time of Completion: %s.", string(time_completion));
-  
+  */
   
 
   /*
@@ -213,17 +213,17 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, l
   check_validity(idealToList(M2), Modcgs);
   
   // Print M3.
-  /*
+  
   fprintf(out, "------------- M_onestep ------------" + newline);
   showCCGB(M3, all_polys, out);
   check_validity(idealToList(M3), Modcgs);
-  */
-  // Print M4.
   
+  // Print M4.
+  /*
   fprintf(out, "------------------ M_completion ----------" + newline);
   showCCGB(M4, all_polys, out);
   check_validity(idealToList(M4), Modcgs);
-  
+  */
 
 
   // Print M5.

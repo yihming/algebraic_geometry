@@ -738,6 +738,67 @@ proc getFaithSPolyFromCPair(list cp) {
   return (h_faith, h_nz);
 }
 
+proc reduceSTD(poly h, poly h_nz, ideal G, ideal G_nz) {
+  int ring_flag = 0;
+  if (nameof(basering) != "@RP") {
+    def BR = basering;
+    setring @RP;
+    def h = imap(BR, h);
+    def h_nz = imap(BR, h_nz);
+    def G = imap(BR, G);
+    def G_nz = imap(BR, G_nz);
+    ring_flag = 1;
+  }
+
+  if (size(G_nz) == 0) {
+    if (ring_flag) {
+      setring BR;
+    }
+    return (h, h_nz);
+  }
+
+  int i;
+  poly rem = h;
+  poly rem_nz = h_nz;
+  int reduced_flag = 0;
+
+  list tfs;
+  
+  while (!reduced_flag) {
+    show("Reducing");
+    show(rem_nz);
+    show(G);
+    reduced_flag = 1;
+    tfs = getTerms(rem_nz);
+    int divisible_flag;
+    int term_idx;
+    for (i = 1; i <= size(G_nz); i++) {
+      (divisible_flag, term_idx) = isDivisible(tfs, leadmonom(G_nz[i]));
+      if (divisible_flag) {
+	rem_nz = rem_nz - (leadcoef(rem_nz[term_idx]) / leadcoef(G_nz[i])) * (leadmonom(rem_nz[term_idx]) / leadmonom(G_nz[i])) * G_nz[i];
+	rem = rem - (leadcoef(rem_nz[term_idx]) / leadcoef(G_nz[i])) * (leadmonom(rem_nz[term_idx]) / leadmonom(G_nz[i])) * G[i];
+	reduced_flag = 0;
+      }
+    }
+  }
+
+  if (rem_nz == 0) {
+    if (ring_flag) {
+      setring BR;
+      def rem = imap(@RP, rem);
+      poly rem_nz = 0;
+    }
+    return (rem, rem_nz);
+  }
+
+  if (ring_flag) {
+    setring BR;
+    def rem = imap(@RP, rem);
+    def rem_nz = imap(@RP, rem_nz);
+  }
+  return (rem, rem_nz);
+}
+
 proc reduceFaithSegment(poly h, poly h_nz, ideal G, ideal G_nz, ideal E, list N) {
   //timer = 0;
   int cnt_Time = timer;
@@ -1208,10 +1269,13 @@ proc mcgbGenerate3(ideal E, ideal N_ideal, ideal F) {
   }
 
   list N = idealToList(N_ideal);
-  option(redSB);
+
+  // Compute constant polys in RGB.
+  def RGB = getRGB(F);
+  ideal G_trivial = getTrivialPolys(RGB);
 
   def G = makeSetParamMonic(F);
-  G = sortSetDesc(G);
+  //G = sortSetDesc(G);
 
   def BR = basering;
   int ring_flag = 0;
@@ -1221,6 +1285,7 @@ proc mcgbGenerate3(ideal E, ideal N_ideal, ideal F) {
     def N_ideal = imap(BR, N_ideal);
     list N = idealToList(N_ideal);
     def G = imap(BR, G);
+    def G_trivial = imap(BR, G_trivial);
     ring_flag = 1;
   }
 
@@ -1229,6 +1294,7 @@ proc mcgbGenerate3(ideal E, ideal N_ideal, ideal F) {
   list STMAP;
   list CPairs;
   list NFMAP;
+  G = sortSetDesc(G + G_trivial);
   
   export(STMAP, CPairs, NFMAP);
   int cnt_Time = timer;
@@ -1371,6 +1437,7 @@ proc mcgbGenerate3(ideal E, ideal N_ideal, ideal F) {
     poly nf, nf_nz, teiler;
     cnt_Time = timer;
     (nf, nf_nz, teiler) = reduceFaithSegment(sp, sp_nz, G, G_nz, E_cur, N_cur);
+    //(nf, nf_nz) = reduceSTD(sp, sp_nz, G, G_nz);
     //    fprintf(time_out, "Time of pseudo-divi while keeping faith: %s."+newline, string(timer - cnt_Time));
     if (defined(debug_mode) && debug_mode == 2) {
       fprintf(dbg_out, "σ(rem) = %s,", showParamPoly(nf_nz));
@@ -1717,7 +1784,7 @@ proc isRedundantFaster(poly f, ideal G, int further_check) {
 
 /*
 Change the redundancy checking procedure.
- */
+ 
 proc mcgbGenerate4(ideal E, ideal N_ideal, ideal F, int further_check) {
   set_global_rings();
   set_global_rings_mcgb();
@@ -1910,7 +1977,7 @@ proc mcgbGenerate4(ideal E, ideal N_ideal, ideal F, int further_check) {
       }
       nf = paramMonic(nf);
   
-      /*
+      /**
       ideal M = G;
       
       if (defined(debug_mode) && debug_mode == 2) {
@@ -1952,7 +2019,8 @@ proc mcgbGenerate4(ideal E, ideal N_ideal, ideal F, int further_check) {
       }
       
       G = M;
-      */
+      // Should add ending remark of multi-line comments.
+
       G = nonredundantBasis(G, nf, nf_nz, further_check);
       
       fprintf(time_out, "****************");
@@ -2012,4 +2080,4 @@ proc mcgbGenerate4(ideal E, ideal N_ideal, ideal F, int further_check) {
   
   return (MCGB);
 }
-
+*/

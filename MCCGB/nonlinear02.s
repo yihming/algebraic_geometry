@@ -4,6 +4,7 @@ LIB "simulation.lib";
 // The output file name.
 link out = "nonlinear02_glex.mp";
 link dbg_out = "nonlinear02.debug"	;
+link time_out = "nonlinear.time"	;
 
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
@@ -20,7 +21,7 @@ int sim_times = 50	;
 intvec sim_option = 1, 1, 1, 1, 0	;
 
 // degree reversed lex order.
-ring R = (0, a, b), (x, y, z), Dp;
+ring R = (0, a, b), (x, y), Dp;
 //	ideal I = ax2y, a2x2, a;
 
 //	ideal J = bxy2, ab2y2, b3-1 ;
@@ -37,7 +38,7 @@ ring R = (0, a, b), (x, y, z), Dp;
 */	
 ideal null_ideal = 0		;
 	list nonnull_list = list()	;
-	simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+	simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, time_out, debug_mode, sim_option) ;
 
 	/*
 	int i				;

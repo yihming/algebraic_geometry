@@ -1893,6 +1893,30 @@ proc ccgbMain(ideal E, list N, int choice_flag ideal F) {
   return (CCGB, CGSRed);
 }
 
+proc isTrivialPoly(poly f) {
+  if (lppX(f) == 1 || lppX(f) == 0) {
+    return (1);
+  } else {
+    return (0);
+  }
+}
+
+proc getTrivialPolys(ideal G) {
+  if (size(G) == 0) {
+    return (G);
+  }
+
+  list M;
+  int i;
+  for (i = 1; i <= size(G); i++) {
+    if (G[i] != 0 && isTrivialPoly(G[i])) {
+      M = insert(M, G[i], size(M));
+    }
+  }
+
+  return (listToIdeal(M));
+}
+
 proc getRGB(ideal F) {
   // Basering is @R.
   if (size(F) == 0) {return (ideal());}

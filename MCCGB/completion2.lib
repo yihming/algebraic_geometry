@@ -1305,6 +1305,7 @@ proc mcgbGenerate3(ideal E, ideal N_ideal, ideal F) {
   // Remove redundant poly.
   //  printf("Check Redundancy starts...");
   cnt_Time = timer;
+  // Temp test
   int cnt_redundant = 0;
   ideal M = G;
   for (i = 1; i <= size(G); i++) {

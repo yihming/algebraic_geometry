@@ -164,7 +164,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, l
   all_polys = mergeList(all_polys, idealToList(M3));
   printf("Time of MCGBOneStep: %s.", string(time_onestep + time_KSW));
   
-  /*
+  
   timer = 0;
   cnt_Time = timer;
   ideal M4 = mcgbGenerate3(E, listToIdeal(N), F);
@@ -174,7 +174,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, l
   all_polys = mergeList(all_polys, idealToList(M4));
   fprintf(time_out, "Time of Completion: %s.", string(time_completion));
   printf("Time of Completion: %s.", string(time_completion));
-  */
+  
   
 
   /*
@@ -219,11 +219,11 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, l
   check_validity(idealToList(M3), Modcgs);
   
   // Print M4.
-  /*
+  
   fprintf(out, "------------------ M_completion ----------" + newline);
   showCCGB(M4, all_polys, out);
   check_validity(idealToList(M4), Modcgs);
-  */
+  
 
 
   // Print M5.
@@ -286,7 +286,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, l
 
 
   fprintf(out, "---------- KSW --------" + newline);
-  fprintf(out, "%s" + newline, StringModCGS_mod(F, Modcgs, 1));
+  fprintf(out, "%s" + newline, StringModCGS_mod(F, Modcgs, 0));
   G_origin = sortSetAsce(G_origin);
   fprintf(out, "%s" + newline, StringCGB(G_origin, all_polys));
   show(size(G_origin));

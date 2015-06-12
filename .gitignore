@@ -11,3 +11,4 @@
 **/temp
 *.txt
 ./grobcovF2m.lib
+*.time

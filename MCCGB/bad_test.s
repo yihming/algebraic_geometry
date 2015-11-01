@@ -1,7 +1,7 @@
 LIB "simulation.lib"		;
 
 // The output file name.
-link out = "bad_test_lex.mp";
+link out = "bad_test.mp";
 link dbg_out = "bad_test.debug"	;
 link time_out = "bad_test.time"	;
 	
@@ -42,5 +42,6 @@ ideal polys = (a-1)*u - b*(x-1), (a-1)*(x+1)+bu,
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
 
-simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, time_out, debug_mode, sim_option) ;
+//simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, time_out, debug_mode, sim_option) ;
+simulate_all_MCGBs(null_ideal, nonnull_list, polys, sim_times, debug_mode, out) ;
 

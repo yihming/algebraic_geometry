@@ -143,7 +143,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, l
   all_polys = mergeList(all_polys, idealToList(M1));
   printf("Time of MCGBMain: %s.", string(time_KSW + time_mcgb));
   */
-  
+  /*
   ideal M2;
   list cgs2;
   timer = 0;
@@ -174,7 +174,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, l
   all_polys = mergeList(all_polys, idealToList(M4));
   fprintf(time_out, "Time of Completion: %s.", string(time_completion));
   printf("Time of Completion: %s.", string(time_completion));
-  
+  */
   
 
   /*
@@ -207,7 +207,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, l
   */
   
   // Print M2.
-  
+  /*
   fprintf(out, "---------- M_simpl ---------------" + newline);
   showCCGB(M2, all_polys, out);
   check_validity(idealToList(M2), Modcgs);
@@ -224,7 +224,7 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, l
   showCCGB(M4, all_polys, out);
   check_validity(idealToList(M4), Modcgs);
   
-
+  */
 
   // Print M5.
   /*
@@ -304,6 +304,94 @@ proc simulate(ideal E, list N, ideal F, int sim_times, link out, link dbg_out, l
   fprintf(out, "---------------- Groebner Cover ---------------" + newline); 
   fprintf(out, "%s.", GC);
   */
+  close(out);
+}
+
+proc init_print(ideal E, list N, ideal F, link out) {
+  fprintf(out, newline + "++++++++++++++++++");
+  fprintf(out, "The given ring is:");
+  fprintf(out, "%s"+newline, BR);
+
+  int i;
+
+  // Print the given parametric ideal.
+  fprintf(out, "F = {");
+  if (size(F) > 0) {
+    for (i = 1; i < size(F); i++) {
+      fprintf(out, "%s, ", F[i]);
+    }
+    fprintf(out, "%s" + newline + "}." + newline, F[size(F)]);
+  } else {
+    fprintf(out, newline + "}." + newline);
+  }
+
+  // Print the given parameter space.
+  fprintf(out, "E = {%s}" + newline, E);
+  fprintf(out, "N = {%s}." + newline, string(N));
+}
+
+/*
+  Generate all MCGBs from a common top-level CGB.
+ */
+proc simulate_all_MCGBs(ideal E, list N, ideal F, int sim_times, int debug_mode, link out) {
+  def BR = basering;
+  system("--no-warn", 1);
+  system("--ticks-per-sec", 1000);
+
+  set_global_rings_mcgb();
+  set_global_rings();
+  set_global_objects();
+  exportto(Top, debug_mode);
+  exportto(Top, out);
+
+  
+
+  int i, j;
+
+  ideal G_origin;
+  list Modcgs;
+
+  (G_origin, Modcgs) = cgb_mod(F, E, N, 1, out);
+  list all_polys = idealToList(G_origin);
+
+  exportto(Top, Modcgs);
+
+  setring @R;
+  list L_mcgbs;
+  ideal M;
+  list cgs;
+  list M_listRep;
+  
+  while (sim_times > 0) {
+    // mcgbMainRand is left for developing.
+    (M, cgs) = mcgbMainPhase2Rand(G_origin, Modcgs, 1);
+    M_listRep = idealToList(M);
+    if (!listContainsList(L_mcgbs, M_listRep)) {
+      L_mcgbs = insert(L_mcgbs, sortSetAsce(M_listRep), size(L_mcgbs));
+      all_polys = mergeList(all_polys, M_listRep);
+    }
+    sim_times = sim_times - 1;
+  } // End while.
+
+  all_polys = sortSetAsce(all_polys);
+
+  // Print all the generated MCGBs.
+  int mcgb_cnt = size(L_mcgbs);
+
+  for (i = 1; i <= mcgb_cnt; i++) {
+    fprintf("--------- M_%s ------------------"+newline, string(i));
+    showCCGB(L_mcgbs[i], all_polys, out);
+    check_validity(L_mcgbs[i], Modcgs);
+  }
+
+  // Print the original KSWCGB.
+  fprintf(out, "--------------- KSW ----------------" + newline);
+  fprintf(out, "%s" + newline, StringModCGS_mod(F, Modcgs, 0));
+  G_origin = sortSetAsce(G_origin);
+  fprintf(out, "%s" + newline, StringCGB(G_origin, all_polys));
+
+
+
   close(out);
 }
 

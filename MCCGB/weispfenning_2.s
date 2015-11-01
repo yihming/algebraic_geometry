@@ -3,7 +3,7 @@ LIB "simulation.lib"		;
 
 // The output file name.
 link dbg_out = "weispfenning_2.debug" ;
-link out = "weispfenning_2_lex.mp";
+link out = "weispfenning_2.mp";
 link time_out = "weispfenning_2.time" ;
 	
 // 0 -- no intermediate debug information is printed to the output file;
@@ -21,9 +21,9 @@ int sim_times = 15		;
 intvec sim_option = 1,1,1,1,0	;
 	
 // lex order.
-ring r = (0, v, u), (x, z, y), lp;
+ring r = (0, v, u), (z, y, x), lp;
 	
-ideal polys = u*y + x, v*z + x + 1;
+ideal polys = uy+x, vz+x+1;
 ideal null_ideal = 0  ;
 list nonnull_list = list()	;
 simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, time_out, debug_mode, sim_option) ;

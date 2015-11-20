@@ -30,4 +30,5 @@ ideal polys = (x-y-z)*w5, z*w4-z*w5, (x+y-1)*w4+(-z+1)*w5,
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
 
-simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+simulate_all_MCGBs(null_ideal, nonnull_list, polys, sim_times, debug_mode, out) ;

@@ -379,7 +379,7 @@ proc simulate_all_MCGBs(ideal E, list N, ideal F, int sim_times, int debug_mode,
   int mcgb_cnt = size(L_mcgbs);
 
   for (i = 1; i <= mcgb_cnt; i++) {
-    fprintf("--------- M_%s ------------------"+newline, string(i));
+    fprintf(out, "--------- M_%s ------------------"+newline, string(i));
     showCCGB(L_mcgbs[i], all_polys, out);
     check_validity(L_mcgbs[i], Modcgs);
   }

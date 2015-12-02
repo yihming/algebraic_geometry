@@ -33,4 +33,5 @@ ideal polys = x1^2+y1^2-2*a*x1-2*y1,
 ideal null_ideal = 0		;
 list nonnull_list = a2+1, b2+1, a+b	;
 	
-simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, time_out, debug_mode, sim_option) ;
+//simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, time_out, debug_mode, sim_option) ;
+simulate_all_MCGBs(null_ideal, nonnull_list, polys, sim_times, debug_mode, out) ;

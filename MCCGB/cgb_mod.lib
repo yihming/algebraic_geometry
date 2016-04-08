@@ -1051,7 +1051,7 @@ proc set_global_rings() {
   Rax[1] = 0;
   def D = ring(Rax);
   def @AXU = D + @U;
-
+  
   // Set as global.
   exportto(Top, @RUA);
   exportto(Top, @U);

@@ -6,6 +6,7 @@ from sympy.polys.monomials import monomial_mul, monomial_lcm, monomial_divides, 
 from sympy.polys.orderings import lex
 from sympy.polys.polyerrors import DomainError
 from sympy.polys.polyconfig import query
+from sympy.polys.groebnertools import spoly, red_groebner, is_minimal, groebner_lcm
 from sympy.core.symbol import Dummy
 from sympy.core.compatibility import range
 

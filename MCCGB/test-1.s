@@ -2,7 +2,7 @@
 LIB "simulation.lib"		;
 	
 // The output file name.
-link out = "test-1_lex.mp";
+link out = "test-1.mp";
 link dbg_out = "test-1.debug"	;
 
 // 0 -- no intermediate debug information is printed to the output file;
@@ -28,5 +28,5 @@ ideal polys = (u-v)*y + vx + (u+v)*z,
 ideal null_ideal = 0  ;
 list nonnull_list = list()	;
 
-simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
-
+//simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+simulate_all_MCGBs(null_ideal, nonnull_list, polys, sim_times, debug_mode, out) ;

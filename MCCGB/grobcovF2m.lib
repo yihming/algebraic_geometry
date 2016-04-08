@@ -2086,7 +2086,7 @@ EXAMPLE:  grobcov; shows an example"
   N=ideal(1);
   canop=1; // canop=0 for homogenizing the basis but not the ideal (not canonical)
            // canop=1 for working with the homogenized ideal
-  repop=0; // repop=0 for representing the segments in Prep
+  repop=0; // repo=0 for representing the segments in Prep
            // repop=1 for representing the segments in Crep
            // repop=2 for representing the segments in Prep and Crep
   extop=0; // extop=0 if only generic representation of the bases are to be computed

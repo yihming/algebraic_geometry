@@ -22,22 +22,9 @@ intvec sim_option = 1, 1, 1, 1, 0	;
 
 // degree reversed lex order.
 ring R = (0, a, b), (x, y), Dp;
-//	ideal I = ax2y, a2x2, a;
-
-//	ideal J = bxy2, ab2y2, b3-1 ;
-//	ideal polys = (a)*x2y+(a2)*x2+(-3a),(-4ab2)*y2+(-4b3+4) ;
-
-//	ideal polys = ab2y2+b3-1, ax2y+a2x2-3a ;
-//	ideal polys = ab2y2+b3-1, (a3b2+b3-1)*x2+3ab2y-3a2b2 ;
 
 ideal polys = (a-b)*x2-by2+ay, axy-ay2-by ;
 	
-/*ideal polys =  (ab2)*y2+(b3-1),
-	(a3b2+b3-1)*x2+(3ab2)*y+(-3a2b2),
- (a)*x2y+(a2)*x2+(-3a),
- (a2b2)*x2y+(-b3+1)*x2+(-3ab2)*y,
- (a3b2+b3-1)*x4+(-6a2b2)*x2+(9ab2);
-*/	
 ideal null_ideal = 0		;
 list nonnull_list = list()	;
 //simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, time_out, debug_mode, sim_option) ;

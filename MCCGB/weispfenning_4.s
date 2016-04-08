@@ -2,12 +2,12 @@
 LIB "simulation.lib"		;
 
 // The output file name.
-link out = "weispfenning_4_lex.mp"	;
+link out = "weispfenning_4.mp"	;
 link dbg_out = "weispfenning_4.debug"	;
 	
 // 0 -- no intermediate debug information is printed to the output file;
 // >0 -- otherwise.
-int debug_mode = 2;
+int debug_mode = 0;
 
 // Times of running Algorithm 1 to generate different MCGBs.
 int sim_times = 15		;
@@ -27,5 +27,6 @@ ideal polys = y + u*x + v, u*y + x + v;
 ideal null_ideal = 0  ;
 list nonnull_list = list()	;
 
-simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+//simulate(null_ideal, nonnull_list, polys, sim_times, out, dbg_out, debug_mode, sim_option) ;
+simulate_all_MCGBs(null_ideal, nonnull_list, polys, sim_times, debug_mode, out) ;
 
